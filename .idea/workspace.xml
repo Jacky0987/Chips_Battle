@@ -4,21 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c05d264c-b1a2-4aae-bbc7-1326ce11e04b" name="Changes" comment="Version Alpha 0.1: Basic Structure Constructed.">
-      <change afterPath="$PROJECT_DIR$/game/stock.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/game/user.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/Chips_Battle.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Chips_Battle.iml" afterDir="false" />
+    <list default="true" id="c05d264c-b1a2-4aae-bbc7-1326ce11e04b" name="Changes" comment="Version Alpha 0.2: Main functionality is completed but not yet tested.">
+      <change afterPath="$PROJECT_DIR$/game/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/game/leaderboard.py" beforeDir="false" afterPath="$PROJECT_DIR$/game/lottery.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/game/stock/stock.py" beforeDir="false" afterPath="$PROJECT_DIR$/game/market.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/game/user/history.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/game/user/user.md" beforeDir="false" afterPath="$PROJECT_DIR$/game/user.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/game/user/user.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/gui/stock/chart_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/gui/chart_window.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gui/stock/trading_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/gui/trading_window.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/database_test/SQLite3.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/acknowledgement.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/acknowledgement.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/error_handler/error_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/error_handler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/game/user.md" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -73,11 +62,11 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\Projects\Projects\Chips_Battle\wiki" />
       <recent name="D:\Projects\Projects\Chips_Battle\utils" />
       <recent name="D:\Projects\Projects\Chips_Battle\gui" />
       <recent name="D:\Projects\Projects\Chips_Battle\game" />
       <recent name="D:\Projects\Projects\Chips_Battle\game\user" />
-      <recent name="D:\Projects\Projects\Chips_Battle\gui\stock" />
     </key>
   </component>
   <component name="RunManager">
@@ -121,7 +110,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1715601849418</updated>
-      <workItem from="1715601851530" duration="11729000" />
+      <workItem from="1715601851530" duration="12463000" />
     </task>
     <task id="LOCAL-00001" summary="Version Alpha 0.1: Basic Structure Constructed.">
       <option name="closed" value="true" />
@@ -131,7 +120,15 @@
       <option name="project" value="LOCAL" />
       <updated>1715606380456</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Version Alpha 0.2: Main functionality is completed but not yet tested.">
+      <option name="closed" value="true" />
+      <created>1715616484637</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1715616484637</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -139,7 +136,8 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Version Alpha 0.1: Basic Structure Constructed." />
-    <option name="LAST_COMMIT_MESSAGE" value="Version Alpha 0.1: Basic Structure Constructed." />
+    <MESSAGE value="Version Alpha 0.2: Main functionality is completed but not yet tested." />
+    <option name="LAST_COMMIT_MESSAGE" value="Version Alpha 0.2: Main functionality is completed but not yet tested." />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Chips_Battle$user.coverage" NAME="user Coverage Results" MODIFIED="1715615868959" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/game" />
