@@ -63,3 +63,7 @@ class User:
         for trade in self.trades:
             trade_time, action, code, quantity, price = trade
             print(f"{trade_time} - {action} {quantity} shares of code {code} at {price}")
+
+    def get_current_cash(self):
+        """获取当前可用资金"""
+        return self.cash

@@ -27,12 +27,34 @@ class Stock:
         timestamps = [datetime.strptime(ts, '%Y-%m-%d %H:%M:%S') for ts, _ in self.price_history]
         prices = [price for _, price in self.price_history]
 
+        # 计算价格变化的百分比
+        percent_changes = []
+        for i in range(1, len(prices)):
+            change = (prices[i] - prices[i - 1]) / prices[i - 1] * 100
+            percent_changes.append(f'{change:.2f}%')
+        percent_changes.insert(0, 'N/A')  # 第一个数据点设置为'N/A'
+
         plt.figure(figsize=(10, 5))
         plt.plot(timestamps, prices, marker='o')
+
+        # 在每个数据点上添加带有颜色的百分比变化的文本
+        for i, (timestamp, price) in enumerate(zip(timestamps, prices)):
+            if i == 0:
+                # 第一个数据点设置为默认颜色（黑色）
+                plt.text(timestamp, price, percent_changes[i], ha='center', va='bottom', fontsize=8)
+            elif prices[i] > prices[i - 1]:
+                # 价格上升，设置为红色
+                plt.text(timestamp, price, percent_changes[i], ha='center', va='bottom', fontsize=8, color='red')
+            else:
+                # 价格下降，设置为绿色
+                plt.text(timestamp, price, percent_changes[i], ha='center', va='bottom', fontsize=8, color='green')
+
         plt.xlabel('Timestamp')
         plt.ylabel('Price')
         plt.title(f'Price History for {self.name} (Code: {self.code})')
         plt.grid(True)
+        plt.gca().xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%m-%d %H:%M:%S'))
+        plt.gcf().autofmt_xdate()
         plt.show()
 
     def update_rw_price(self, step_size=1.0, volatility=0.05):

@@ -23,4 +23,7 @@ class Market:
 
     def print_all_stocks(self):
         for stocks in self.stocks:
-            print(stocks)
+            print(stocks.code)
+            print(stocks.name)
+            print(f"Current Price: {stocks.current_price}")
+            print(f"Price History: {stocks.price_history}")

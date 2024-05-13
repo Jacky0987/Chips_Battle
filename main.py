@@ -2,12 +2,15 @@ from game.user import User
 from game.stock import Stock
 from game.market import Market
 
-# 创建市场和股票
-market = Market()
-stock1 = Stock('000001', 'Example Stock', 100.0)
+import time
 
-# 将股票添加到市场中
+# Initiate the market and add a stock to it.
+market = Market()
+
+stock1 = Stock('000001', 'Example Stock', 100.0)
 market.add_stock(stock1)
+
+
 
 # 创建用户
 user1 = User('Alice', 10000, 0)  # 0 表示普通用户权限
@@ -19,10 +22,17 @@ user1.buy_market_price_stock(stock1, 10)
 user1.view_holdings()
 
 # 更新股票价格（模拟市场变动）
-market.update_all_stocks()
+end_time = time.time() + 2
+
+while time.time() < end_time:
+    market.update_all_stocks()
+    time.sleep(1)  # 暂停1秒
+    print(f"Current price of {stock1.code}: {stock1.current_price}")
+
 
 # 用户卖出股票
 user1.sell_market_price_stock(stock1, 5)
+print(user1.get_current_cash())
 
 # 打印交易历史
 user1.show_history()
