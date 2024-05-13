@@ -10,8 +10,6 @@ market = Market()
 stock1 = Stock('000001', 'Example Stock', 100.0)
 market.add_stock(stock1)
 
-
-
 # 创建用户
 user1 = User('Alice', 10000, 0)  # 0 表示普通用户权限
 

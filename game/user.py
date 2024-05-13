@@ -67,3 +67,12 @@ class User:
     def get_current_cash(self):
         """获取当前可用资金"""
         return self.cash
+
+    def add_cash(self, amount):
+        """增加现金"""
+        self.cash += amount
+
+    def deduce_cash(self, amount):
+        """扣除现金"""
+        if self.cash >= amount:
+            self.cash -= amount
