@@ -1,46 +1,111 @@
+import threading
+import time
+import os
+from game.market import Market
 from game.user import User
 from game.stock import Stock
-from game.market import Market
-import tkinter as tk
-import time
-import utils.auth as auth
 
-# Initiate the user and market.
+# Initialize the market and stocks
 market = Market()
-stock1 = Stock('000001', 'Example Stock', 100.0)
-market.add_stock(stock1)
+apple = Stock("AAPL", "Apple Inc.", 150)
+FYRX = Stock("FYRX", "YR & FYX Entertainment", 280)
+market.add_stock(apple)
+market.add_stock(FYRX)
 
 
-# Start the authentication window.
-auth.start_auth_window()
+# User setup with default admin permission
+user = User("Guest", "", 10000, 1)
 
-# 创建用户
-user1 = User.get_user_by_name(user, auth.get_current_user())
+# Price update function
+def update_prices():
+    while True:
+        for stock in market.stocks:
+            stock.update_rw_price(market.world_environment)
+        time.sleep(1)  # Update every second
 
-# 用户购买股票
-user1.buy_market_price_stock(stock1, 10)
+# Start the price update thread
+price_update_thread = threading.Thread(target=update_prices, daemon=True)
+price_update_thread.start()
 
-# 打印用户持仓
-user1.view_holdings()
+options = {
+    'a': "Purchase stock",
+    'b': "Sell stock",
+    'c': "View your stocks",
+    'd': "View market",
+    'e': "Show certain stock graph",
+    'f': "Modify market stocks",
+    'g': "Show operation history",
+    'h': "Modify world environment",
+    'i': "Exit"
+}
 
-# 更新股票价格（模拟市场变动）
-end_time = time.time() + 2
-
-while time.time() < end_time:
-    market.update_all_stocks()
-    time.sleep(1)  # 暂停1秒
-    print(f"Current price of {stock1.code}: {stock1.current_price}")
 
 
-# 用户卖出股票
-user1.sell_market_price_stock(stock1, 5)
-print(user1.get_current_cash())
+while True:
+    print("\nChoose an option:")
+    for key, value in options.items():
+        print(f"{key}: {value}")
+    print(f"\nCurrent cash: J$ {user.get_current_cash():,.2f}")
+    choice = input("Your choice (a/b/c/d/e/f/g/h/i): ").lower()
 
-# 打印交易历史
-user1.show_history()
+    if choice == 'i':
+        print("Exiting the simulator.")
+        break
+    elif choice == 'a':
+        stock_code = input("Enter stock code to purchase: ")
+        quantity = int(input("Enter quantity to purchase: "))
+        stock = next((s for s in market.stocks if s.code == stock_code), None)
+        if stock:
+            user.buy_market_price_stock(stock, quantity)
+        else:
+            print("Stock not found.")
+    elif choice == 'b':
+        stock_code = input("Enter stock code to sell: ")
+        quantity = int(input("Enter quantity to sell: "))
+        stock = next((s for s in market.stocks if s.code == stock_code), None)
+        if stock:
+            user.sell_market_price_stock(stock, quantity)
+        else:
+            print("Stock not found.")
+    elif choice == 'c':
+        user.view_holdings()
+    elif choice == 'd':
+        market.print_all_stocks()
+    elif choice == 'e':
+        stock_code = input("Enter stock code to view its graph: ")
+        stock = next((s for s in market.stocks if s.code == stock_code), None)
+        if stock:
+            stock.draw_price_history()
+        else:
+            print("Stock not found.")
+    elif choice == 'f':
+        modification = input("Do you want to add or remove a stock? (add/remove): ")
+        if modification == 'add':
+            code = input("Enter new stock code: ")
+            name = input("Enter new stock name: ")
+            price = float(input("Enter initial price: "))
+            new_stock = Stock(code, name, price)
+            market.add_stock(new_stock)
+        elif modification == 'remove':
+            code = input("Enter stock code to remove: ")
+            stock = next((s for s in market.stocks if s.code == code), None)
+            if stock:
+                market.remove_stock(stock)
+            else:
+                print("Stock not found.")
+    elif choice == 'g':
+        user.show_history()
+    elif choice == 'h':
+        new_environment = int(input("Enter new world environment value (1-100): "))
+        market.world_environment = new_environment
+        print(f"World environment set to {new_environment}.")
+    else:
+        print("Invalid choice. Please select a valid option.")
 
-# 展示股票价格历史
-stock1.draw_price_history()
+    # Check if the user's cash is below zero after the operation
+    if user.get_current_cash() < 0:
+        print("Your cash balance is below zero. Exiting the simulator.")
+        break
 
-# 打印市场中的所有股票信息
-market.print_all_stocks()
+    input("Press Enter to return to the menu...")
+
