@@ -1,1 +1,0 @@
-# This file aimed to show charts of changes in stock prices over time.

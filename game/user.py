@@ -3,10 +3,11 @@ from functools import wraps
 
 
 class User:
-    def __init__(self, name, cash, permission):
+    def __init__(self, name, password, cash, permission):
         # User's identity and financial status
         # Single value attributes.
         self.name = name
+        self.password = password
         self.cash = cash
         self.permission = permission
 
@@ -76,3 +77,7 @@ class User:
         """扣除现金"""
         if self.cash >= amount:
             self.cash -= amount
+
+    def get_user_by_name(name):
+        """通过用户名获取用户对象"""
+

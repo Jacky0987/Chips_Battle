@@ -4,15 +4,19 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c05d264c-b1a2-4aae-bbc7-1326ce11e04b" name="Changes" comment="Alpha 0.3 with testing main.py. No interactions added into project yet.">
+    <list default="true" id="c05d264c-b1a2-4aae-bbc7-1326ce11e04b" name="Changes" comment="Alpha 0.3.1 for window arranges.">
+      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gui/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gui/gui.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/game/lottery.py" beforeDir="false" afterPath="$PROJECT_DIR$/game/minigame.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/game/minigame.py" beforeDir="false" afterPath="$PROJECT_DIR$/game/minigame.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/game/user.py" beforeDir="false" afterPath="$PROJECT_DIR$/game/user.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gui/chart_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/gui/chart_window.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gui/main_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/gui/main_window.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gui/trading_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/gui/trading_window.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gui/user_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/gui/login_window.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/chart_window.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/login_window.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/main_window.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/trading_window.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/auth.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -40,9 +44,21 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 7
-}]]></component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;Jacky0987&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Jacky0987/Chips_Battle.git&quot;,
+    &quot;accountId&quot;: &quot;6098d527-6479-4dcc-9fac-60a9f1a120ec&quot;
+  }
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 7
+}</component>
   <component name="ProjectId" id="2gPapTBSgKkp5vQSm5hNuojoSi3" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <ConfirmationsSetting value="2" id="Add" />
@@ -53,17 +69,19 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Python.auth.executor": "Run",
     "Python.main.executor": "Run",
     "Python.user.executor": "Run",
     "Python.user_window.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "dart.analysis.tool.window.visible": "false",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "org.jetbrains.plugins.github.ui.GithubSettingsConfigurable",
+    "settings.editor.selected.configurable": "editor.preferences.fonts.default",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -117,7 +135,12 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1715601849418</updated>
-      <workItem from="1715601851530" duration="14505000" />
+      <workItem from="1715601851530" duration="14574000" />
+      <workItem from="1715619347347" duration="65000" />
+      <workItem from="1715625783561" duration="223000" />
+      <workItem from="1715626017771" duration="65000" />
+      <workItem from="1715626090105" duration="368000" />
+      <workItem from="1715682393154" duration="4864000" />
     </task>
     <task id="LOCAL-00001" summary="Version Alpha 0.1: Basic Structure Constructed.">
       <option name="closed" value="true" />
@@ -151,22 +174,43 @@
       <option name="project" value="LOCAL" />
       <updated>1715618425089</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Alpha 0.3.1 for window arranges.">
+      <option name="closed" value="true" />
+      <created>1715619267949</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1715619267949</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Version Alpha 0.1: Basic Structure Constructed." />
     <MESSAGE value="Version Alpha 0.2: Main functionality is completed but not yet tested." />
     <MESSAGE value="Alpha 0.2 test passed. Basic functionality is working." />
     <MESSAGE value="Alpha 0.3 with testing main.py. No interactions added into project yet." />
-    <option name="LAST_COMMIT_MESSAGE" value="Alpha 0.3 with testing main.py. No interactions added into project yet." />
+    <MESSAGE value="Alpha 0.3.1 for window arranges." />
+    <option name="LAST_COMMIT_MESSAGE" value="Alpha 0.3.1 for window arranges." />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/Chips_Battle$auth.coverage" NAME="auth Coverage Results" MODIFIED="1715690127524" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils" />
     <SUITE FILE_PATH="coverage/Chips_Battle$user.coverage" NAME="user Coverage Results" MODIFIED="1715615868959" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/game" />
-    <SUITE FILE_PATH="coverage/Chips_Battle$main.coverage" NAME="main Coverage Results" MODIFIED="1715618341779" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Chips_Battle$main.coverage" NAME="main Coverage Results" MODIFIED="1715690271202" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Chips_Battle$user_window.coverage" NAME="user_window Coverage Results" MODIFIED="1715619141126" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/gui" />
   </component>
 </project>

@@ -1,1 +1,0 @@
-# This file contains the main window of the application.

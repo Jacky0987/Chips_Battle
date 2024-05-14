@@ -1,17 +1,21 @@
 from game.user import User
 from game.stock import Stock
 from game.market import Market
-
+import tkinter as tk
 import time
+import utils.auth as auth
 
-# Initiate the market and add a stock to it.
+# Initiate the user and market.
 market = Market()
-
 stock1 = Stock('000001', 'Example Stock', 100.0)
 market.add_stock(stock1)
 
+
+# Start the authentication window.
+auth.start_auth_window()
+
 # 创建用户
-user1 = User('Alice', 10000, 0)  # 0 表示普通用户权限
+user1 = User.get_user_by_name(user, auth.get_current_user())
 
 # 用户购买股票
 user1.buy_market_price_stock(stock1, 10)
