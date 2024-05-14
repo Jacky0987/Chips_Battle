@@ -9,7 +9,7 @@ class Stock:
         self.code = code
         self.name = name
         self.current_price = current_price
-        self.price_history = []
+        self.price_history = [(datetime.now().strftime('%Y-%m-%d %H:%M:%S'), current_price)]
         self.historical_mean = historical_mean if historical_mean is not None else current_price
         self.volatility = volatility
         self.pause_updates = 0
@@ -30,13 +30,16 @@ class Stock:
         timestamps = [datetime.strptime(ts, '%Y-%m-%d %H:%M:%S') for ts, _ in self.price_history]
         prices = [price for _, price in self.price_history]
         percent_changes = []
+
         for i in range(1, len(prices)):
             change = (prices[i] - prices[i - 1]) / prices[i - 1] * 100
             percent_changes.append(f'{change:.2f}%')
         percent_changes.insert(0, 'N/A')
+
         plt.figure(figsize=(10, 5))
         plt.plot(timestamps, prices, marker='o')
-        # 在每个数据点上添加带有颜色的百分比变化的文本 价格上升，设置为红色 价格下降，设置为绿色
+
+        # Add text for percent changes with color indication for rise or fall
         for i, (timestamp, price) in enumerate(zip(timestamps, prices)):
             if i == 0:
                 plt.text(timestamp, price, percent_changes[i], ha='center', va='bottom', fontsize=8)
@@ -44,6 +47,11 @@ class Stock:
                 plt.text(timestamp, price, percent_changes[i], ha='center', va='bottom', fontsize=8, color='red')
             else:
                 plt.text(timestamp, price, percent_changes[i], ha='center', va='bottom', fontsize=8, color='green')
+
+        # Add a horizontal line showing the initial stock price
+        initial_price = prices[0] if prices else 0
+        plt.axhline(y=initial_price, color='blue', linestyle='--', label=f'Initial Price: {initial_price}')
+        plt.legend()
 
         plt.xlabel('Timestamp')
         plt.ylabel('Price')

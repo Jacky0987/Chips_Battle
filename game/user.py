@@ -22,7 +22,7 @@ class User:
             self.stocks[stock.code] += quantity
             trade = (datetime.now(), 'BUY', stock.code, quantity, stock.get_current_price())
             self.trades.append(trade)
-            print(f"Bought {quantity} shares of {stock.name} at market price for J${stock.get_current_price() * quantity:.2f}.")
+            print(f"Bought {quantity} shares of {stock.name} at market price for J$ {stock.get_current_price() * quantity:,.2f}.")
         else:
             print("Insufficient funds to complete the purchase.")
 
@@ -32,12 +32,13 @@ class User:
             self.stocks[stock.code] -= quantity
             trade = (datetime.now(), 'SELL', stock.code, quantity, stock.get_current_price())
             self.trades.append(trade)
-            print(f"Sold {quantity} shares of {stock.name} at market price for J${stock.get_current_price():.2f}.")
+            print(f"Sold {quantity} shares of {stock.name} at market price for J${stock.get_current_price():,.2f}.")
+            print(f"You earned J$ {stock.get_current_price() * quantity:,.2f}. from the selling.")
+            print(f"You now have J$ {self.cash:,.2f}.")
         else:
             print("Insufficient shares to sell.")
 
     def view_holdings(self):
-        """展示持仓"""
         print("Your current stock holdings:")
         for code, quantity in self.stocks.items():
             print(f"{code}: {quantity} shares")

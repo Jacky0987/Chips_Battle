@@ -25,4 +25,4 @@ class Market:
         for stock in self.stocks:
             print(stock.code)
             print(stock.name)
-            print(f"Current Price: {stock.current_price}")
+            print(f"Current Price: J$ {stock.current_price:,.2f}")

@@ -14,7 +14,8 @@ market.add_stock(FYRX)
 
 
 # User setup with default admin permission
-user = User("Guest", "", 10000, 1)
+default_cash = 10000000
+user = User("Guest", "", default_cash, 1)
 
 # Price update function
 def update_prices():
@@ -46,6 +47,7 @@ while True:
     for key, value in options.items():
         print(f"{key}: {value}")
     print(f"\nCurrent cash: J$ {user.get_current_cash():,.2f}")
+    print(f"Current world environment: {market.world_environment}")
     choice = input("Your choice (a/b/c/d/e/f/g/h/i): ").lower()
 
     if choice == 'i':
@@ -101,7 +103,6 @@ while True:
         print(f"World environment set to {new_environment}.")
     else:
         print("Invalid choice. Please select a valid option.")
-
     # Check if the user's cash is below zero after the operation
     if user.get_current_cash() < 0:
         print("Your cash balance is below zero. Exiting the simulator.")
