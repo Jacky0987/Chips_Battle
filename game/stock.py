@@ -5,10 +5,14 @@ import random
 
 
 class Stock:
-    def __init__(self, code, name, current_price, historical_mean=None, volatility=0.05):
+    def __init__(self, code, name, current_price, initial_issued_shares, historical_mean=None, volatility=0.05):
         self.code = code
         self.name = name
+        self.initial_price = current_price
         self.current_price = current_price
+        self.initial_issued_shares = initial_issued_shares  # Normally it doesn't change. It is more like a constant attribute.
+        self.purchasable_shares = initial_issued_shares  # This is changing as shares are bought and sold.
+        self.trading_volume = 0
         self.price_history = [(datetime.now().strftime('%Y-%m-%d %H:%M:%S'), current_price)]
         self.historical_mean = historical_mean if historical_mean is not None else current_price
         self.volatility = volatility
@@ -34,7 +38,7 @@ class Stock:
         for i in range(1, len(prices)):
             change = (prices[i] - prices[i - 1]) / prices[i - 1] * 100
             percent_changes.append(f'{change:.2f}%')
-        percent_changes.insert(0, 'N/A')
+        percent_changes.insert(0, '')
 
         plt.figure(figsize=(10, 5))
         plt.plot(timestamps, prices, marker='o')
@@ -49,13 +53,12 @@ class Stock:
                 plt.text(timestamp, price, percent_changes[i], ha='center', va='bottom', fontsize=8, color='green')
 
         # Add a horizontal line showing the initial stock price
-        initial_price = prices[0] if prices else 0
-        plt.axhline(y=initial_price, color='blue', linestyle='--', label=f'Initial Price: {initial_price}')
+        plt.axhline(y=self.initial_price, color='blue', linestyle='--', label=f'Initial Price: {self.initial_price}')
         plt.legend()
 
         plt.xlabel('Timestamp')
         plt.ylabel('Price')
-        plt.title(f'Price History for {self.name} (Code: {self.code})')
+        plt.title(f' {self.name} (Code: {self.code}) for {self.initial_issued_shares} shares issued')
         plt.grid(True)
         plt.gca().xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%m-%d %H:%M:%S'))
         plt.gcf().autofmt_xdate()
@@ -66,8 +69,8 @@ class Stock:
             self.pause_updates -= 1
             return
 
-        environment_effect = (world_environment - 50) / 100
-        mean_reversion_factor = 0.005 + 0.005 * environment_effect
+        environment_effect = (world_environment - 50) / 100 + (self.trading_volume / self.initial_issued_shares / self.initial_price)
+        mean_reversion_factor = 0.005 + 0.002 * environment_effect
         deviation_from_mean = self.historical_mean - self.current_price
         random_noise = np.random.normal(0, self.current_price * self.volatility * (1 - 0.5 * abs(environment_effect)))
 

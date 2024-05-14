@@ -7,11 +7,10 @@ from game.stock import Stock
 
 # Initialize the market and stocks
 market = Market()
-apple = Stock("AAPL", "Apple Inc.", 150)
-FYRX = Stock("FYRX", "YR & FYX Entertainment", 280)
+apple = Stock("AAPL", "Apple Inc.", 150, 20000)
+FYRX = Stock("FYRX", "YR & FYX Entertainment", 280, 20000)
 market.add_stock(apple)
 market.add_stock(FYRX)
-
 
 # User setup with default admin permission
 default_cash = 10000000
@@ -86,7 +85,8 @@ while True:
             code = input("Enter new stock code: ")
             name = input("Enter new stock name: ")
             price = float(input("Enter initial price: "))
-            new_stock = Stock(code, name, price)
+            share = int(input("Enter initial share quantity: "))
+            new_stock = Stock(code, name, price, share)
             market.add_stock(new_stock)
         elif modification == 'remove':
             code = input("Enter stock code to remove: ")

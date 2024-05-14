@@ -20,6 +20,8 @@ class User:
             if stock.code not in self.stocks:
                 self.stocks[stock.code] = 0
             self.stocks[stock.code] += quantity
+            stock.purchasable_shares -= quantity
+            stock.trading_volume += quantity * stock.get_current_price()
             trade = (datetime.now(), 'BUY', stock.code, quantity, stock.get_current_price())
             self.trades.append(trade)
             print(f"Bought {quantity} shares of {stock.name} at market price for J$ {stock.get_current_price() * quantity:,.2f}.")
@@ -30,6 +32,8 @@ class User:
         if stock.code in self.stocks and self.stocks[stock.code] >= quantity:
             self.cash += stock.get_current_price() * quantity
             self.stocks[stock.code] -= quantity
+            stock.purchasable_shares += quantity
+            stock.trading_volume += quantity * stock.get_current_price()
             trade = (datetime.now(), 'SELL', stock.code, quantity, stock.get_current_price())
             self.trades.append(trade)
             print(f"Sold {quantity} shares of {stock.name} at market price for J${stock.get_current_price():,.2f}.")
