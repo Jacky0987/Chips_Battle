@@ -10,7 +10,7 @@ class Stock:
         self.name = name
         self.initial_price = current_price
         self.current_price = current_price
-        self.initial_issued_shares = initial_issued_shares  # Normally it doesn't change. It is more like a constant attribute.
+        self.initial_issued_shares = initial_issued_shares  # Normally it doesn't change. It is more like a constant.
         self.purchasable_shares = initial_issued_shares  # This is changing as shares are bought and sold.
         self.trading_volume = 0
         self.price_history = [(datetime.now().strftime('%Y-%m-%d %H:%M:%S'), current_price)]
@@ -24,6 +24,7 @@ class Stock:
         self.current_price = new_price
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         self.price_history.append((timestamp, new_price))
+
     def get_current_price(self):
         return self.current_price
 

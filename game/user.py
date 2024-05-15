@@ -46,6 +46,7 @@ class User:
         print("Your current stock holdings:")
         for code, quantity in self.stocks.items():
             print(f"{code}: {quantity} shares")
+        print(f"You have J$ {self.cash:,.2f}.")
 
     def show_history(self):
         print("Your trade history:")

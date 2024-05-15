@@ -16,17 +16,19 @@ market.add_stock(FYRX)
 default_cash = 10000000
 user = User("Guest", "", default_cash, 1)
 
+
 # Price update function
+time.sleep(1)
 def update_prices():
     while True:
         for stock in market.stocks:
             stock.update_rw_price(market.world_environment)
-        time.sleep(1)  # Update every second
+        time.sleep(5)  # Update every 5 seconds
+
 
 # Start the price update thread
 price_update_thread = threading.Thread(target=update_prices, daemon=True)
 price_update_thread.start()
-
 options = {
     'a': "Purchase stock",
     'b': "Sell stock",
@@ -36,22 +38,23 @@ options = {
     'f': "Modify market stocks",
     'g': "Show operation history",
     'h': "Modify world environment",
-    'i': "Exit"
+    'z': "Exit"
 }
-
-
 
 while True:
     print("\nChoose an option:")
     for key, value in options.items():
         print(f"{key}: {value}")
-    print(f"\nCurrent cash: J$ {user.get_current_cash():,.2f}")
+    print("===========================================================================")
+    print(f"Current user: {user.name}")
+    print(f"Current cash: J$ {user.get_current_cash():,.2f}")
     print(f"Current world environment: {market.world_environment}")
     choice = input("Your choice (a/b/c/d/e/f/g/h/i): ").lower()
 
-    if choice == 'i':
+    if choice == 'z':
         print("Exiting the simulator.")
         break
+
     elif choice == 'a':
         stock_code = input("Enter stock code to purchase: ")
         quantity = int(input("Enter quantity to purchase: "))
@@ -60,6 +63,7 @@ while True:
             user.buy_market_price_stock(stock, quantity)
         else:
             print("Stock not found.")
+
     elif choice == 'b':
         stock_code = input("Enter stock code to sell: ")
         quantity = int(input("Enter quantity to sell: "))
@@ -68,10 +72,13 @@ while True:
             user.sell_market_price_stock(stock, quantity)
         else:
             print("Stock not found.")
+
     elif choice == 'c':
         user.view_holdings()
+
     elif choice == 'd':
         market.print_all_stocks()
+
     elif choice == 'e':
         stock_code = input("Enter stock code to view its graph: ")
         stock = next((s for s in market.stocks if s.code == stock_code), None)
@@ -79,6 +86,7 @@ while True:
             stock.draw_price_history()
         else:
             print("Stock not found.")
+
     elif choice == 'f':
         modification = input("Do you want to add or remove a stock? (add/remove): ")
         if modification == 'add':
@@ -95,18 +103,22 @@ while True:
                 market.remove_stock(stock)
             else:
                 print("Stock not found.")
+
     elif choice == 'g':
         user.show_history()
+
     elif choice == 'h':
         new_environment = int(input("Enter new world environment value (1-100): "))
         market.world_environment = new_environment
         print(f"World environment set to {new_environment}.")
+
     else:
         print("Invalid choice. Please select a valid option.")
+
+
     # Check if the user's cash is below zero after the operation
     if user.get_current_cash() < 0:
         print("Your cash balance is below zero. Exiting the simulator.")
         break
 
     input("Press Enter to return to the menu...")
-
