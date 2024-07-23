@@ -23,7 +23,6 @@ options = {
     'h': "Modify world environment",
     'i': "Get Admin Access",
     'j': "Money Deposit or Withdrawal",
-    'k': "Blackjack",
     'z': "Save and Exit"
 }
 
