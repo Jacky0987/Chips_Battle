@@ -1,6 +1,7 @@
 import threading
 import time
 from game.stock import Stock
+import game.user as UserManager
 import sys
 import os
 
@@ -47,13 +48,12 @@ def game_menu(market, user):
             print(f"{key}: {value}")
         print("===========================================================================")
         print(f"Current user: {user.name}")
-        print(f"Current cash: J$ {user.get_current_cash(user):,.2f}")
+        print(f"Current cash: J$ {user.get_current_cash():,.2f} with admin = {user.permission}")
         print(f"Current world environment: {market.world_environment}")
         choice = input("Your choice (a/b/c/d/e/f/g/h/i): ").lower()
 
         if choice == 'z':
-            user.save_userdata("data\\user\\userdata.json")
-            """stock.save_stock_data("data\\stock\\stockdata.json")"""
+            user.save_userdata(f"data\\user\\{user.name}.json")
             market.save_stock_data()
             print("Exiting the simulator.")
             break
@@ -63,7 +63,7 @@ def game_menu(market, user):
             quantity = int(input("Enter quantity to purchase: "))
             stock = next((s for s in market.stocks if s.code == stock_code), None)
             if stock:
-                user.buy_market_price_stock(user, stock, quantity)
+                user.buy_market_price_stock( stock, quantity)
             else:
                 print("Stock not found.")
 
@@ -72,12 +72,12 @@ def game_menu(market, user):
             quantity = int(input("Enter quantity to sell: "))
             stock = next((s for s in market.stocks if s.code == stock_code), None)
             if stock:
-                user.sell_market_price_stock(user, stock, quantity)
+                user.sell_market_price_stock( stock, quantity)
             else:
                 print("Stock not found.")
 
         elif choice == 'c':
-            user.view_holdings(user)
+            user.view_holdings()
 
         elif choice == 'd':
             market.print_all_stocks()
@@ -109,7 +109,7 @@ def game_menu(market, user):
                     print("Stock not found.")
 
         elif choice == 'g':
-            user.show_history(user)
+            user.show_history()
 
         elif choice == 'h':
             new_environment = int(input("Enter new world environment value (1-100): "))
@@ -117,20 +117,20 @@ def game_menu(market, user):
             print(f"World environment set to {new_environment}.")
 
         elif choice == 'i':
-            user.get_admin(user)
+            user.get_admin()
 
         elif choice == 'j':
             operation = input("Do you want to deposit or withdraw money? (deposit/withdraw): ")
             if operation == 'deposit':
-                user.add_cash(user, float(input("Enter amount to deposit: ")))
+                user.add_cash( float(input("Enter amount to deposit: ")))
             elif operation == 'withdraw':
-                user.withdraw_cash(user, float(input("Enter amount to withdraw: ")))
+                user.withdraw_cash( float(input("Enter amount to withdraw: ")))
 
         else:
             print("Invalid choice. Please select a valid option.")
 
         # Check if the user's cash is below zero after the operation
-        if user.get_current_cash(user) < 0:
+        if user.get_current_cash() < 0:
             print("Your cash balance is below zero. Exiting the simulator.")
             break
 

@@ -2,9 +2,12 @@
 # Only able to register and login, and only saves username and password in a file.
 # This file DO NOT save any game data.
 
+
 import os
+import sys
 
 
+sys.path.append('../')  # 将父目录添加到系统路径
 # 检查文件是否存在，如果不存在则创建
 def file_initialize(file_path):
     if not os.path.exists(file_path):
@@ -14,7 +17,8 @@ def file_initialize(file_path):
 # 注册功能
 def register(username, password, file_path):
     with open(file_path, 'a') as f:
-        f.write(f"{username},{password}\n")
+        f.write(f"{username},{password}")
+        f.write("\n")
     print("注册成功！")
 
 

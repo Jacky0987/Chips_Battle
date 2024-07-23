@@ -21,11 +21,14 @@ market.save_stock_data()
 
 # User Setup (can be customized)
 default_cash = 10000000
+default_permission = 0
 
 # Main Menu
 # User & Password only saved in account.txt, no other data is saved
 # There is no Password attribute in User class which means the password is not stored in class User
 user_name, login_status = menu.auth_menu()
 if login_status:
-    current_user = User.load_userdata_from_name(User ,"data\\user\\userdata.json" , user_name)
+    current_user = User(user_name,  default_cash, default_permission)
+    current_user.save_userdata(f"data/user/{user_name}.json")
+    current_user = current_user.load_userdata_from_name(f"data/user/{user_name}.json", user_name)
     menu.game_menu(market, current_user)

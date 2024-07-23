@@ -3,9 +3,8 @@ from datetime import datetime
 
 
 class User:
-    def __init__(self, name, password, cash, permission):
+    def __init__(self, name , cash, permission):
         self.name = name
-        # self.password = password
         self.cash = cash
         self.permission = 0
         self.stocks = {}  # Stock holdings dictionary
@@ -101,23 +100,37 @@ class User:
         print(f"User data saved to {filename}.")
 
     def load_userdata_from_name(self, filename, name):
-        # Load user data from a file using JSON
-        with open(filename, "r") as f:
-            data = json.load(f)
-        if data["name"] == name:
-            self.name = data["name"]
-            self.cash = data["cash"]
-            self.permission = data["permission"]
-            self.stocks = data["stocks"]
-            self.trades = [
-                (trade_time, action, code, quantity, price)
-                for trade_time, action, code, quantity, price in data["trades"]
-            ]
-            print(f"User data loaded from {filename}.")
+        try:
+            # 尝试加载文件
+            with open(filename, "r") as f:
+                data = json.load(f)
+            if data["name"] == name:
+                self.name = data["name"]
+                self.cash = data["cash"]
+                self.permission = data["permission"]
+                self.stocks = data["stocks"]
+                self.trades = [
+                    (trade_time, action, code, quantity, price)
+                    for trade_time, action, code, quantity, price in data["trades"]
+                ]
+                print(f"User data loaded from {filename}.")
+                return self
+            else:
+                print(f"User data not found for {name}.")
+                return
+        except FileNotFoundError:
+            # 如果文件未找到，创建默认用户数据并保存
+            default_data = {
+                "name": name,
+                "cash": 0,  # 您可以根据需要设置默认现金值
+                "permission": 0,  # 您可以根据需要设置默认权限值
+                "stocks": {},
+                "trades": []
+            }
+            with open(filename, "w") as f:
+                json.dump(default_data, f)
+            print(f"Created default user data file {filename}.")
             return self
-        else:
-            print(f"User data not found for {name}.")
-            return
 
 
     def get_current_cash(self):
