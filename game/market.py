@@ -2,6 +2,7 @@ import json
 import os
 from datetime import datetime
 
+
 class Market:
     def __init__(self):
         self.stocks = []
@@ -32,10 +33,10 @@ class Market:
         for stock in self.stocks:
             print("========================================================")
             print(f"{stock.name} (Code: {stock.code})")
-            print(f"Current Market Capitalization: J$ {stock.current_price*stock.initial_issued_shares:.2f}")
+            print(f"Current Market Capitalization: J$ {stock.current_price * stock.initial_issued_shares:.2f}")
             print(f"Initial Price: J$ {stock.initial_price:,.2f}")
             print(f"Current Price: J$ {stock.current_price:,.2f}")
-            print(f"Changing Rate: {(stock.current_price - stock.initial_price)/stock.initial_price*100:.2f}%")
+            print(f"Changing Rate: {(stock.current_price - stock.initial_price) / stock.initial_price * 100:.2f}%")
             print(f"Trading Volume: J$ {stock.trading_volume:,.2f}")
             print(f"Initial Issued Shares: {stock.initial_issued_shares:,}")
             print(f"Purchasable Shares: {stock.purchasable_shares:,}")
@@ -48,9 +49,15 @@ class Market:
 
         for stock in self.stocks:
             file_path = os.path.join(directory, f"{stock.code}.json")
+
+            # 先清空文件内容
+            with open(file_path, 'w') as f:
+                pass
+
             def custom_encoder(obj):
                 if isinstance(obj, datetime):
                     return obj.strftime('%Y-%m-%d %H:%M:%S')
+
             json_data = json.dumps(stock.__dict__, default=custom_encoder)
 
             with open(file_path, 'w') as f:

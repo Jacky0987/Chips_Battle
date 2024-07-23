@@ -16,10 +16,17 @@ def file_initialize(file_path):
 
 # 注册功能
 def register(username, password, file_path):
+    with open(file_path, 'r') as f:
+        lines = f.readlines()
+        for line in lines:
+            existing_username, _ = line.strip().split(',')
+            if existing_username == username:
+                print("用户名已存在，请重新输入！")
+                return False
     with open(file_path, 'a') as f:
-        f.write(f"{username},{password}")
-        f.write("\n")
+        f.write(f"{username},{password}\n")
     print("注册成功！")
+    return True
 
 
 # 登录功能

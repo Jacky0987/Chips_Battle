@@ -1,7 +1,6 @@
 import threading
 import time
 from game.stock import Stock
-import game.user as UserManager
 import sys
 import os
 
@@ -9,8 +8,10 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
 game_dir = os.path.join(parent_dir, 'utils')
 sys.path.append(game_dir)  # 将 utils 目录添加到系统路径，以便能够导入
+sys.path.append('../')  # 将父目录添加到系统路径
 
 import utils.auth as auth  # 或者指定要导入的函数，例如 from user import function_name
+import minigame.blackjack as blackjack
 
 options = {
     'a': "Purchase stock",
@@ -23,6 +24,7 @@ options = {
     'h': "Modify world environment",
     'i': "Get Admin Access",
     'j': "Money Deposit or Withdrawal",
+    'k': "Blackjack",
     'z': "Save and Exit"
 }
 
@@ -112,9 +114,13 @@ def game_menu(market, user):
             user.show_history()
 
         elif choice == 'h':
-            new_environment = int(input("Enter new world environment value (1-100): "))
-            market.world_environment = new_environment
-            print(f"World environment set to {new_environment}.")
+            if user.permission == 1:
+                new_environment = int(input("Enter new world environment value (1-100): "))
+                market.world_environment = new_environment
+                print(f"World environment set to {new_environment}.")
+            else:
+                print("You do not have permission to modify the world environment.")
+
 
         elif choice == 'i':
             user.get_admin()
@@ -136,7 +142,6 @@ def game_menu(market, user):
 
         input("Press Enter to return to the menu...")
 
-
 def auth_menu():
     login_success = False  # 新增一个标志，用于判断是否登录成功
     while True:
@@ -149,9 +154,14 @@ def auth_menu():
         if choice == '1':
             name = input("Enter your name: ")
             password = input("Enter your password: ")
-            auth.register(name, password, "data\\account.txt")
+            login_success = auth.register(name, password, "data\\account.txt")
             # 注册成功后返回用户名和登录状态
-            return name, True
+            if not login_success:
+                print("Invalid username or password. Please try again.")
+                continue  # 继续下一次循环，而不是重新调用函数
+            else:
+                print("Registration successful. User: "f"{name}")
+                return name, True
             break
 
         elif choice == '2':
@@ -171,4 +181,4 @@ def auth_menu():
         else:
             print("Invalid choice. Please select a valid option.")
     if login_success:  # 如果登录成功，不再执行后续的循环
-        return
+        return name, login_success
