@@ -3,11 +3,11 @@ from datetime import datetime
 
 
 class User:
-    def __init__(self, name, password, cash, permission=0):
+    def __init__(self, name, password, cash, permission):
         self.name = name
         # self.password = password
         self.cash = cash
-        self.permission = permission
+        self.permission = 0
         self.stocks = {}  # Stock holdings dictionary
         self.trades = []  # List of trades made by the user
 
@@ -86,6 +86,7 @@ class User:
         return {
             "name": self.name,
             "cash": self.cash,
+            "permission": self.permission,
             "stocks": self.stocks,
             "trades": [
                 [trade_time, action, code, quantity, price]
@@ -98,6 +99,26 @@ class User:
         with open(filename, "w") as f:
             json.dump(self.to_dict(), f)
         print(f"User data saved to {filename}.")
+
+    def load_userdata_from_name(self, filename, name):
+        # Load user data from a file using JSON
+        with open(filename, "r") as f:
+            data = json.load(f)
+        if data["name"] == name:
+            self.name = data["name"]
+            self.cash = data["cash"]
+            self.permission = data["permission"]
+            self.stocks = data["stocks"]
+            self.trades = [
+                (trade_time, action, code, quantity, price)
+                for trade_time, action, code, quantity, price in data["trades"]
+            ]
+            print(f"User data loaded from {filename}.")
+            return self
+        else:
+            print(f"User data not found for {name}.")
+            return
+
 
     def get_current_cash(self):
         return self.cash
