@@ -20,6 +20,8 @@ options = {
     'f': "Modify market stocks",
     'g': "Show operation history",
     'h': "Modify world environment",
+    'i': "Get Admin Access",
+    'j': "Money Deposit or Withdrawal",
     'z': "Save and Exit"
 }
 
@@ -109,6 +111,16 @@ def game_menu(market, user):
             market.world_environment = new_environment
             print(f"World environment set to {new_environment}.")
 
+        elif choice == 'i':
+            user.get_admin()
+
+        elif choice == 'j':
+            operation = input("Do you want to deposit or withdraw money? (deposit/withdraw): ")
+            if operation == 'deposit':
+                user.add_cash(float(input("Enter amount to deposit: ")))
+            elif operation == 'withdraw':
+                user.withdraw_cash(float(input("Enter amount to withdraw: ")))
+
         else:
             print("Invalid choice. Please select a valid option.")
 
@@ -121,6 +133,7 @@ def game_menu(market, user):
 
 
 def auth_menu():
+    login_success = False  # 新增一个标志，用于判断是否登录成功
     while True:
         print("\nChoose an option:")
         print("1: Sign up")
@@ -131,7 +144,7 @@ def auth_menu():
         if choice == '1':
             name = input("Enter your name: ")
             password = input("Enter your password: ")
-            auth.register(name, password, "../account.txt")
+            auth.register(name, password, "data\\account.txt")
             # print("Registration successful.")
             auth_menu()
             break
@@ -139,12 +152,12 @@ def auth_menu():
         elif choice == '2':
             name = input("Enter your name: ")
             password = input("Enter your password: ")
-            if auth.login(name, password, "account.txt"):
+            if auth.login(name, password, "data\\account.txt"):
                 print("Login successful. User: "f"{name}")
+                login_success = True  # 登录成功，设置标志为 True
                 return name, True
             else:
                 print("Invalid username or password. Please try again.")
-                auth_menu()
 
         elif choice == '3':
             print("Exiting the simulator.")
@@ -152,3 +165,5 @@ def auth_menu():
 
         else:
             print("Invalid choice. Please select a valid option.")
+    if login_success:  # 如果登录成功，不再执行后续的循环
+        return

@@ -26,5 +26,5 @@ default_cash = 10000000
 # There is no Password attribute in User class which means the password is not stored in class User
 user_name, login_status = menu.auth_menu()
 if login_status:
-    user = User(user_name, "", default_cash, 1)
+    user = User(user_name, "", default_cash, 0)
     menu.game_menu(market, user)

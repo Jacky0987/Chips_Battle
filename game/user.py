@@ -1,12 +1,13 @@
 import json
 from datetime import datetime
 
+
 class User:
-    def __init__(self, name, password, cash, permission):
+    def __init__(self, name, password, cash, permission=0):
         self.name = name
         # self.password = password
         self.cash = cash
-        # self.permission = permission
+        self.permission = permission
         self.stocks = {}  # Stock holdings dictionary
         self.trades = []  # List of trades made by the user
 
@@ -60,7 +61,8 @@ class User:
             self.stocks[stock.code] -= quantity
             stock.purchasable_shares += quantity
             stock.trading_volume += quantity * stock.get_current_price()
-            trade = (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 'SELL', stock.code, quantity, stock.get_current_price())
+            trade = (
+            datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 'SELL', stock.code, quantity, stock.get_current_price())
             self.trades.append(trade)
             print(f"Sold {quantity} shares of {stock.name} at market price for J${stock.get_current_price():,.2f}.")
             print(f"You earned J$ {stock.get_current_price() * quantity:,.2f}. from the selling.")
@@ -101,8 +103,32 @@ class User:
         return self.cash
 
     def add_cash(self, amount):
-        self.cash += amount
+        if self.permission == 1:
+            self.cash += amount
+            print(f"Added J$ {amount:,.2f} to your account.")
+        else:
+            print("You do not have permission to add cash.")
 
     def deduce_cash(self, amount):
-        if self.cash >= amount:
-            self.cash -= amount
+        if self.permission == 1:
+            if self.cash >= amount:
+                self.cash -= amount
+                print(f"Deduced J$ {amount:,.2f} to your account.")
+            else:
+                print("Insufficient funds.")
+        else:
+            print("You do not have permission to deduct cash.")
+
+    def get_admin(self):
+        if self.permission == 1:
+            print("You are an admin.")
+            return False
+        else:
+            pwd = input("Enter password to get admin privileges: ")
+            if pwd == "admin":
+                self.permission = 1
+                print("You are now an admin.")
+                return True
+            else:
+                print("You are not an admin.")
+                return False
