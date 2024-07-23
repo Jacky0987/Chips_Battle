@@ -150,8 +150,8 @@ def auth_menu():
             name = input("Enter your name: ")
             password = input("Enter your password: ")
             auth.register(name, password, "data\\account.txt")
-            # print("Registration successful.")
-            auth_menu()
+            # 注册成功后返回用户名和登录状态
+            return name, True
             break
 
         elif choice == '2':
