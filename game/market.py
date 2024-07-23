@@ -1,3 +1,7 @@
+import json
+import os
+from datetime import datetime
+
 class Market:
     def __init__(self):
         self.stocks = []
@@ -35,3 +39,18 @@ class Market:
             print(f"Initial Issued Shares: {stock.initial_issued_shares:,}")
             print(f"Purchasable Shares: {stock.purchasable_shares:,}")
             print("========================================================")
+
+    def save_stock_data(self):
+        directory = 'data\\stock'
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        for stock in self.stocks:
+            file_path = os.path.join(directory, f"{stock.code}.json")
+            def custom_encoder(obj):
+                if isinstance(obj, datetime):
+                    return obj.strftime('%Y-%m-%d %H:%M:%S')
+            json_data = json.dumps(stock.__dict__, default=custom_encoder)
+
+            with open(file_path, 'w') as f:
+                f.write(json_data)

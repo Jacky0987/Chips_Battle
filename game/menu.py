@@ -32,7 +32,9 @@ def game_menu(market, user):
         while True:
             for stock in market.stocks:
                 stock.update_rw_price(market.world_environment)
+            market.save_stock_data()
             time.sleep(1)  # Update every 1 seconds
+
 
     # Start the price update thread
     price_update_thread = threading.Thread(target=update_prices, daemon=True)
@@ -51,6 +53,8 @@ def game_menu(market, user):
 
         if choice == 'z':
             user.save_userdata("data\\user\\userdata.json")
+            """stock.save_stock_data("data\\stock\\stockdata.json")"""
+            market.save_stock_data()
             print("Exiting the simulator.")
             break
 

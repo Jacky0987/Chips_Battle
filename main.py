@@ -17,6 +17,7 @@ apple = Stock("AAPL", "Apple Inc.", 150, 20000)
 FYRX = Stock("FYRX", "YR & FYX Entertainment", 280, 20000)
 market.add_stock(apple)
 market.add_stock(FYRX)
+market.save_stock_data()
 
 # User Setup (can be customized)
 default_cash = 10000000
