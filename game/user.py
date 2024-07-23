@@ -6,9 +6,9 @@ import pickle
 class User:
     def __init__(self, name, password, cash, permission):
         self.name = name
-        self.password = password
+        # self.password = password
         self.cash = cash
-        self.permission = permission
+        # self.permission = permission
         self.stocks = {}  # Stock holdings dictionary
         self.trades = []  # List of trades made by the user
 

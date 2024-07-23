@@ -20,13 +20,11 @@ class Stock:
         self.pause_updates = 0  # DEPRECATED
         self.last_four_prices = [current_price] * 4
 
-
     def update_price(self, new_price):
         from datetime import datetime
         self.current_price = new_price
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         self.price_history.append((timestamp, new_price))
-
 
     def draw_price_history(self):
         timestamps = [datetime.strptime(ts, '%Y-%m-%d %H:%M:%S') for ts, _ in self.price_history]
@@ -62,10 +60,10 @@ class Stock:
         plt.gcf().autofmt_xdate()
         plt.show()
 
-
     def update_rw_price(self, world_environment):
 
-        environment_effect = (world_environment - 50) / 100 + (self.trading_volume / self.initial_issued_shares / self.initial_price)
+        environment_effect = (world_environment - 50) / 100 + (
+                    self.trading_volume / self.initial_issued_shares / self.initial_price)
         mean_reversion_factor = 0.005 + 0.002 * environment_effect
         deviation_from_mean = self.historical_mean - self.current_price
         random_noise = np.random.normal(0, self.current_price * self.volatility * (1 - 0.5 * abs(environment_effect)))

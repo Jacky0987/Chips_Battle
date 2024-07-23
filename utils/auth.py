@@ -6,7 +6,7 @@ import os
 
 
 # 检查文件是否存在，如果不存在则创建
-def file_validation(file_path):
+def file_initialize(file_path):
     if not os.path.exists(file_path):
         open(file_path, 'w').close()
 

@@ -1,7 +1,16 @@
 import threading
 import time
 from game.stock import Stock
-import utils.auth as auth
+import sys
+import os
+
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+game_dir = os.path.join(parent_dir, 'utils')
+sys.path.append(game_dir)  # 将 utils 目录添加到系统路径，以便能够导入
+
+import utils.auth as auth  # 或者指定要导入的函数，例如 from user import function_name
 
 options = {
     'a': "Purchase stock",
@@ -122,7 +131,7 @@ def auth_menu():
         if choice == '1':
             name = input("Enter your name: ")
             password = input("Enter your password: ")
-            auth.register(name, password, "account.txt")
+            auth.register(name, password, "../account.txt")
             # print("Registration successful.")
             auth_menu()
             break
