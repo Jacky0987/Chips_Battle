@@ -132,7 +132,6 @@ class User:
             print(f"Created default user data file {filename}.")
             return self
 
-
     def get_current_cash(self):
         return self.cash
 

@@ -1,8 +1,7 @@
 from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
-import json
-import os
+
 
 class Stock:
     def __init__(self, code, name, current_price, initial_issued_shares, historical_mean=None, volatility=0.05):
@@ -79,23 +78,3 @@ class Stock:
 
     def get_price_history(self):
         return self.price_history
-
-"""    def stock_to_json(self):
-        def custom_encoder(obj):
-            if isinstance(obj, datetime.datetime):
-                return obj.strftime('%Y-%m-%d %H:%M:%S')
-
-        return json.dumps(stock.__dict__, default=custom_encoder)
-
-    def save_stock_to_json(self):
-        # 创建存储目录，如果不存在
-        directory = 'data\\stock'
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-
-        file_path = os.path.join(directory, 'tock.json')
-        json_data = self.stock_to_json(self)
-
-        with open(file_path, 'w') as f:
-            f.write(json_data)
-"""

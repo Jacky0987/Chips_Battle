@@ -12,7 +12,6 @@ class Market:
         if stock not in self.stocks:
             self.stocks.append(stock)
             print(f"Stock {stock.name} (Code: {stock.code}) has been added to the market.")
-
         else:
             print("This stock is already in the market.")
 
@@ -46,19 +45,13 @@ class Market:
         directory = 'data\\stock'
         if not os.path.exists(directory):
             os.makedirs(directory)
-
         for stock in self.stocks:
             file_path = os.path.join(directory, f"{stock.code}.json")
-
-            # 先清空文件内容
-            with open(file_path, 'w') as f:
-                pass
 
             def custom_encoder(obj):
                 if isinstance(obj, datetime):
                     return obj.strftime('%Y-%m-%d %H:%M:%S')
 
             json_data = json.dumps(stock.__dict__, default=custom_encoder)
-
             with open(file_path, 'w') as f:
                 f.write(json_data)

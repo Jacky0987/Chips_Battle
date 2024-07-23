@@ -11,7 +11,6 @@ sys.path.append(game_dir)  # 将 utils 目录添加到系统路径，以便能�
 sys.path.append('../')  # 将父目录添加到系统路径
 
 import utils.auth as auth  # 或者指定要导入的函数，例如 from user import function_name
-import minigame.blackjack as blackjack
 
 options = {
     'a': "Purchase stock",
@@ -31,6 +30,7 @@ options = {
 
 def game_menu(market, user):
     time.sleep(1)
+
     def update_prices():
         while True:
             for stock in market.stocks:
@@ -38,8 +38,6 @@ def game_menu(market, user):
             market.save_stock_data()
             time.sleep(1)  # Update every 1 seconds
 
-
-    # Start the price update thread
     price_update_thread = threading.Thread(target=update_prices, daemon=True)
     price_update_thread.start()
 
@@ -65,7 +63,7 @@ def game_menu(market, user):
             quantity = int(input("Enter quantity to purchase: "))
             stock = next((s for s in market.stocks if s.code == stock_code), None)
             if stock:
-                user.buy_market_price_stock( stock, quantity)
+                user.buy_market_price_stock(stock, quantity)
             else:
                 print("Stock not found.")
 
@@ -74,7 +72,7 @@ def game_menu(market, user):
             quantity = int(input("Enter quantity to sell: "))
             stock = next((s for s in market.stocks if s.code == stock_code), None)
             if stock:
-                user.sell_market_price_stock( stock, quantity)
+                user.sell_market_price_stock(stock, quantity)
             else:
                 print("Stock not found.")
 
@@ -121,16 +119,15 @@ def game_menu(market, user):
             else:
                 print("You do not have permission to modify the world environment.")
 
-
         elif choice == 'i':
             user.get_admin()
 
         elif choice == 'j':
             operation = input("Do you want to deposit or withdraw money? (deposit/withdraw): ")
             if operation == 'deposit':
-                user.add_cash( float(input("Enter amount to deposit: ")))
+                user.add_cash(float(input("Enter amount to deposit: ")))
             elif operation == 'withdraw':
-                user.withdraw_cash( float(input("Enter amount to withdraw: ")))
+                user.withdraw_cash(float(input("Enter amount to withdraw: ")))
 
         else:
             print("Invalid choice. Please select a valid option.")
@@ -141,6 +138,7 @@ def game_menu(market, user):
             break
 
         input("Press Enter to return to the menu...")
+
 
 def auth_menu():
     login_success = False  # 新增一个标志，用于判断是否登录成功
