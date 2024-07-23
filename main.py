@@ -2,7 +2,6 @@ from game import menu
 import utils.auth as auth
 from game.market import Market
 from game.user import User
-from game.stock import Stock
 from game.menu import *
 
 # Initialization (Do not modify)

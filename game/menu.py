@@ -21,7 +21,7 @@ options = {
     'f': "Modify market stocks",
     'g': "Show operation history",
     'h': "Modify world environment",
-    'z': "Exit"
+    'z': "Save and Exit"
 }
 
 
@@ -49,6 +49,7 @@ def game_menu(market, user):
         choice = input("Your choice (a/b/c/d/e/f/g/h/i): ").lower()
 
         if choice == 'z':
+            user.save_userdata("data\\user\\userdata.json")
             print("Exiting the simulator.")
             break
 
@@ -142,7 +143,6 @@ def auth_menu():
             if auth.login(name, password, "account.txt"):
                 print("Login successful. User: "f"{name}")
                 return name, True
-                break
             else:
                 print("Invalid username or password. Please try again.")
                 auth_menu()
