@@ -1,6 +1,7 @@
 # This file contains the User class which represents a user in the game.
 
 from datetime import datetime
+import pickle
 
 class User:
     def __init__(self, name, password, cash, permission):
@@ -9,24 +10,51 @@ class User:
         self.cash = cash
         self.permission = permission
         self.stocks = {}  # Stock holdings dictionary
-        self.lottery_tickets = []  # List of lottery tickets
         self.trades = []  # List of trades made by the user
 
-    # 修饰器函数，用于检查用户权限
-
     def buy_market_price_stock(self, stock, quantity):
-        if self.cash >= stock.get_current_price() * quantity:
-            self.cash -= stock.get_current_price() * quantity
-            if stock.code not in self.stocks:
-                self.stocks[stock.code] = 0
-            self.stocks[stock.code] += quantity
-            stock.purchasable_shares -= quantity
-            stock.trading_volume += quantity * stock.get_current_price()
-            trade = (datetime.now(), 'BUY', stock.code, quantity, stock.get_current_price())
-            self.trades.append(trade)
-            print(f"Bought {quantity} shares of {stock.name} at market price for J$ {stock.get_current_price() * quantity:,.2f}.")
-        else:
-            print("Insufficient funds to complete the purchase.")
+        # Check if the stock object is valid
+        if stock is None:
+            print("Error: Stock not found.")
+            return
+
+        # Ensure quantity is a numeric value and positive
+        if not isinstance(quantity, (int, float)) or quantity <= 0:
+            print("Error: Quantity must be a positive number.")
+            return
+
+        # Convert float quantity to integer if necessary
+        if isinstance(quantity, float):
+            print("Warning: Quantity should be an integer, converting quantity to integer.")
+            quantity = int(quantity)
+
+        # Check if the stock is available for purchase
+        if stock.purchasable_shares <= 0:
+            print(f"Error: No shares of {stock.name} are available for purchase at this time.")
+            return
+
+        # Check if sufficient shares are available to purchase
+        if quantity > stock.purchasable_shares:
+            print(f"Error: Only {stock.purchasable_shares} shares available, cannot purchase {quantity}.")
+            return
+
+        # Check if the user has enough cash to purchase the desired quantity of stock
+        total_cost = stock.get_current_price() * quantity
+        if self.cash < total_cost:
+            print(
+                f"Insufficient funds to complete the purchase. You need J$ {total_cost:,.2f}, but you have J$ {self.cash:,.2f}.")
+            return
+
+        # Proceed with the purchase
+        self.cash -= total_cost
+        if stock.code not in self.stocks:
+            self.stocks[stock.code] = 0
+        self.stocks[stock.code] += quantity
+        stock.purchasable_shares -= quantity
+        stock.trading_volume += quantity * stock.get_current_price()
+        trade = (datetime.now(), 'BUY', stock.code, quantity, stock.get_current_price())
+        self.trades.append(trade)
+        print(f"Bought {quantity} shares of {stock.name} at market price for J$ {total_cost:,.2f}.")
 
     def sell_market_price_stock(self, stock, quantity):
         if stock.code in self.stocks and self.stocks[stock.code] >= quantity:
@@ -63,3 +91,8 @@ class User:
     def deduce_cash(self, amount):
         if self.cash >= amount:
             self.cash -= amount
+
+    def save_userdata(self, filename):
+        # Save user data to a file using pickle
+        pickle.dump(self, open(filename, "wb"))
+

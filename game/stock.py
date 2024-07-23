@@ -2,6 +2,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 import random
+import plotly.graph_objects as go
 
 
 class Stock:
@@ -16,8 +17,9 @@ class Stock:
         self.price_history = [(datetime.now().strftime('%Y-%m-%d %H:%M:%S'), current_price)]
         self.historical_mean = historical_mean if historical_mean is not None else current_price
         self.volatility = volatility
-        self.pause_updates = 0
+        self.pause_updates = 0  # DEPRECATED
         self.last_four_prices = [current_price] * 4
+
 
     def update_price(self, new_price):
         from datetime import datetime
@@ -25,11 +27,6 @@ class Stock:
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         self.price_history.append((timestamp, new_price))
 
-    def get_current_price(self):
-        return self.current_price
-
-    def get_price_history(self):
-        return self.price_history
 
     def draw_price_history(self):
         timestamps = [datetime.strptime(ts, '%Y-%m-%d %H:%M:%S') for ts, _ in self.price_history]
@@ -44,7 +41,7 @@ class Stock:
         plt.figure(figsize=(10, 5))
         plt.plot(timestamps, prices, marker='o')
 
-        # Add text for percent changes with color indication for rise or fall
+        # Add text for percent changes with color indication for rise or fall 
         for i, (timestamp, price) in enumerate(zip(timestamps, prices)):
             if i == 0:
                 plt.text(timestamp, price, percent_changes[i], ha='center', va='bottom', fontsize=8)
@@ -65,10 +62,8 @@ class Stock:
         plt.gcf().autofmt_xdate()
         plt.show()
 
+
     def update_rw_price(self, world_environment):
-        if self.pause_updates > 0:
-            self.pause_updates -= 1
-            return
 
         environment_effect = (world_environment - 50) / 100 + (self.trading_volume / self.initial_issued_shares / self.initial_price)
         mean_reversion_factor = 0.005 + 0.002 * environment_effect
@@ -81,3 +76,9 @@ class Stock:
 
         new_price = max(new_price, 0.1 * self.historical_mean)
         self.update_price(new_price)
+
+    def get_current_price(self):
+        return self.current_price
+
+    def get_price_history(self):
+        return self.price_history
