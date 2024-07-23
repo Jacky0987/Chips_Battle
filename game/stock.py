@@ -1,8 +1,6 @@
 from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
-import random
-import plotly.graph_objects as go
 
 
 class Stock:
@@ -63,7 +61,7 @@ class Stock:
     def update_rw_price(self, world_environment):
 
         environment_effect = (world_environment - 50) / 100 + (
-                    self.trading_volume / self.initial_issued_shares / self.initial_price)
+                self.trading_volume / self.initial_issued_shares / self.initial_price)
         mean_reversion_factor = 0.005 + 0.002 * environment_effect
         deviation_from_mean = self.historical_mean - self.current_price
         random_noise = np.random.normal(0, self.current_price * self.volatility * (1 - 0.5 * abs(environment_effect)))

@@ -1,8 +1,9 @@
 from game import menu
-import utils.auth as auth
 from game.market import Market
 from game.user import User
 from game.menu import *
+
+import utils.auth as auth
 
 # Initialization (Do not modify)
 user_file_path = "account.txt"

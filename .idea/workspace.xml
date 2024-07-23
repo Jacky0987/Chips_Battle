@@ -4,11 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c05d264c-b1a2-4aae-bbc7-1326ce11e04b" name="Changes" comment="Beta 1.3 better user handling.">
-      <change afterPath="$PROJECT_DIR$/data/user/userdata.json" afterDir="false" />
+    <list default="true" id="c05d264c-b1a2-4aae-bbc7-1326ce11e04b" name="Changes" comment="Beta 1.3.1 more organized code">
+      <change afterPath="$PROJECT_DIR$/README_cn.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/game/menu.py" beforeDir="false" afterPath="$PROJECT_DIR$/game/menu.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/game/user.py" beforeDir="false" afterPath="$PROJECT_DIR$/game/user.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/user/userdata.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/user/userdata.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/game/stock.py" beforeDir="false" afterPath="$PROJECT_DIR$/game/stock.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -239,7 +240,23 @@
       <option name="project" value="LOCAL" />
       <updated>1721751033273</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="Beta 1.3.1 more organized code">
+      <option name="closed" value="true" />
+      <created>1721754206056</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1721754206056</updated>
+    </task>
+    <task id="LOCAL-00013" summary="Beta 1.3.1 more organized code">
+      <option name="closed" value="true" />
+      <created>1721754251872</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1721754251872</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -279,12 +296,13 @@
     <MESSAGE value="Beta 1.2 Refined Algorithm." />
     <MESSAGE value="Beta 1.2.1" />
     <MESSAGE value="Beta 1.3 better user handling." />
-    <option name="LAST_COMMIT_MESSAGE" value="Beta 1.3 better user handling." />
+    <MESSAGE value="Beta 1.3.1 more organized code" />
+    <option name="LAST_COMMIT_MESSAGE" value="Beta 1.3.1 more organized code" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Chips_Battle$auth.coverage" NAME="auth Coverage Results" MODIFIED="1715690127524" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils" />
     <SUITE FILE_PATH="coverage/Chips_Battle$user.coverage" NAME="user Coverage Results" MODIFIED="1715700710788" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/game" />
-    <SUITE FILE_PATH="coverage/Chips_Battle$main.coverage" NAME="main Coverage Results" MODIFIED="1721754125186" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Chips_Battle$main.coverage" NAME="main Coverage Results" MODIFIED="1721754355912" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Chips_Battle$user_window.coverage" NAME="user_window Coverage Results" MODIFIED="1715619141126" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/gui" />
   </component>
 </project>
