@@ -11,6 +11,7 @@ class Market:
         if stock not in self.stocks:
             self.stocks.append(stock)
             print(f"Stock {stock.name} (Code: {stock.code}) has been added to the market.")
+
         else:
             print("This stock is already in the market.")
 
