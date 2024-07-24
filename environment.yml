@@ -7,5 +7,3 @@ dependencies:
   - numpy
   - pandas
   - matplotlib
-  - json
-  - socket

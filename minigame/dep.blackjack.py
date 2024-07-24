@@ -288,4 +288,6 @@ def game_author():
     print("联系方式：Adding2003@gmail.com")
 
 if __name__ == "__main__":
-    main()"""
+    main()
+
+"""
