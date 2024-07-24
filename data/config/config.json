@@ -1,6 +1,6 @@
 {
     "EXCHANGE_RATE": 10000,
-    "default_cash": 200,
+    "default_cash": 50000000,
     "default_permission": 0,
-    "user_file_path": "account.txt"
+    "user_file_path": "data\\config\\account.txt"
 }

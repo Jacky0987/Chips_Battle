@@ -26,6 +26,9 @@ def market_init():
 
 
 def game_init():
+    # Default Initialization (Do not modify)
+    user_file_path = "data\\config\\account.txt"
+
     # Minigame Chips to J$ Exchange rate
     # is set to {EXCHANGE_RATE} J$ per 1 chip
     EXCHANGE_RATE = 10000
@@ -33,9 +36,6 @@ def game_init():
     # User Setup (can be customized)
     default_cash = 10000000
     default_permission = 0
-
-    # Initialization (Do not modify)
-    user_file_path = "account.txt"
 
     # 尝试读取 config.json 中的配置
     if os.path.exists("data\\config\\config.json"):
@@ -59,3 +59,7 @@ def game_init():
 
         return EXCHANGE_RATE, default_cash, default_permission, user_file_path
 
+
+def get_user_file_path():
+    _, _, _, user_file_path = game_init()
+    return user_file_path

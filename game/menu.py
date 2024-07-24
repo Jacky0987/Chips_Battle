@@ -4,6 +4,7 @@ from game.stock import Stock
 import sys
 import os
 import game.config as config
+from game.config import get_user_file_path
 
 
 EXCHANGE_RATE, _, _, _ = config.game_init()
@@ -160,7 +161,7 @@ def auth_menu():
         if choice == '1':
             name = input("Enter your name: ")
             password = input("Enter your password: ")
-            login_success = auth.register(name, password, "data\\account.txt")
+            login_success = auth.register(name, password, get_user_file_path())
             # 注册成功后返回用户名和登录状态
             if not login_success:
                 print("Invalid username or password. Please try again.")
@@ -173,7 +174,7 @@ def auth_menu():
         elif choice == '2':
             name = input("Enter your name: ")
             password = input("Enter your password: ")
-            if auth.login(name, password, "data\\account.txt"):
+            if auth.login(name, password, get_user_file_path()):
                 print("Login successful. User: "f"{name}")
                 login_success = True  # 登录成功，设置标志为 True
                 return name, True
