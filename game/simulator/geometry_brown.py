@@ -2,6 +2,7 @@ import datetime
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 class AdvancedStockSimulation:
     def __init__(self, initial_price, drift, volatility, time_period, num_simulations):
         self.initial_price = initial_price
@@ -12,11 +13,12 @@ class AdvancedStockSimulation:
         self.price_paths = []
 
     def simulate_price_path(self):
-        dt = 1/252  # Daily time step
+        dt = 1 / 252  # Daily time step
         num_steps = int(self.time_period * 252)  # Number of days in the simulation period
 
         # Generate random increments based on a normal distribution
-        increments = np.random.normal((self.drift - 0.5 * self.volatility**2) * dt, self.volatility * np.sqrt(dt), (self.num_simulations, num_steps))
+        increments = np.random.normal((self.drift - 0.5 * self.volatility ** 2) * dt, self.volatility * np.sqrt(dt),
+                                      (self.num_simulations, num_steps))
 
         # Calculate cumulative increments
         cumulative_increments = np.cumsum(increments, axis=1)
@@ -39,7 +41,10 @@ class AdvancedStockSimulation:
         plt.title('Stock Price Simulation')
         plt.show()
 
+
 # Example usage
+"""
 simulation = AdvancedStockSimulation(100, 0.1, 0.2, 1, 100)
 simulation.simulate_price_path()
 simulation.plot_price_paths()
+"""
