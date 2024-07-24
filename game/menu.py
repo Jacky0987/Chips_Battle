@@ -3,6 +3,10 @@ import time
 from game.stock import Stock
 import sys
 import os
+from game.config import *
+
+"""from main import EXCHANGE_RATE
+from main import current_user"""
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
@@ -23,6 +27,7 @@ options = {
     'h': "Modify world environment",
     'i': "Get Admin Access",
     'j': "Money Deposit or Withdrawal",
+    'k': "Minigame Menu",
     'z': "Save and Exit"
 }
 
@@ -128,6 +133,10 @@ def game_menu(market, user):
             elif operation == 'withdraw':
                 user.withdraw_cash(float(input("Enter amount to withdraw: ")))
 
+        elif choice == 'k':
+            print("Entering the minigame menu.")
+            minigame_menu(user)
+
         else:
             print("Invalid choice. Please select a valid option.")
 
@@ -179,3 +188,84 @@ def auth_menu():
             print("Invalid choice. Please select a valid option.")
     if login_success:  # 如果登录成功，不再执行后续的循环
         return name, login_success
+
+
+def multiplayer_menu():
+    print("\nChoose an option:")
+    print("1: Start a new game")
+    print("2: Join an existing game")
+    print("3: Exit")
+    choice = input("Your choice: ")
+
+    if choice == '1':
+        print("Starting a new game.")
+        return True
+
+    elif choice == '2':
+        print("Joining an existing game.")
+        return False
+
+    elif choice == '3':
+        print("Exiting the simulator.")
+        return False
+
+    else:
+        print("Invalid choice. Please select a valid option.")
+        return False
+
+def minigame_menu(current_user):
+
+    print("\nChoose an Minigame option:")
+    print("1: Start a new game")
+    print("2. Buy in Chips")
+    print("3: Sell in Chips")
+    print(f"Current Exchange Rate: 1 Chips = {EXCHANGE_RATE} J$")
+    print(f"Current User: {current_user.name}")
+    print(f"Current Chips: USD {current_user.chips}")
+    print("z: Exit")
+
+    choice = input("Your choice: ")
+
+    if choice == '1':
+        print("Choose a minigame to play.")
+        print("1: Blackjack")
+        print("2: Texas Hold'em")
+        print("3: Lottery")
+        print("z: Exit")
+
+        choice = input("Your choice: ")
+
+        if choice == '1':
+            print("Starting Blackjack.")
+            return True
+
+        elif choice == '2':
+            print("Starting Texas Hold'em.")
+            return True
+
+        elif choice == '3':
+            print("Starting Lottery.")
+            return True
+
+        elif choice == 'z':
+            print("Exiting the minigame menu.")
+
+        else:
+            print("Invalid choice. Please select a valid option.")
+            minigame_menu()
+        return True
+
+    elif choice == '2':
+        print("Buy in Chips.")
+        return True
+
+    elif choice == '3':
+        print("Sell in Chips.")
+        return True
+
+    elif choice == 'z':
+        print("Exiting the minigame menu.")
+
+    else:
+        print("Invalid choice. Please select a valid option.")
+        minigame_menu()

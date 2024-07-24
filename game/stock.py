@@ -17,6 +17,7 @@ class Stock:
         self.volatility = volatility
         self.pause_updates = 0  # DEPRECATED
         self.last_four_prices = [current_price] * 4
+        # self.estimated_dividends = 0  # DEPRECATED
 
     def update_price(self, new_price):
         from datetime import datetime

@@ -9,7 +9,8 @@ class User:
         self.permission = 0
         self.stocks = {}  # Stock holdings dictionary
         self.trades = []  # List of trades made by the user
-
+        self.chips = 0  # Number of minigame-chips the user has won
+# ============================================================
     def buy_market_price_stock(self, stock, quantity):
         # Check if the stock object is valid
         if stock is None:
@@ -81,6 +82,8 @@ class User:
             trade_time, action, code, quantity, price = trade
             print(f"{trade_time} - {action} {quantity} shares of code {code} at {price}")
 
+# ============================================================
+# Affecting by users' attributes.
     def to_dict(self):
         return {
             "name": self.name,
@@ -90,7 +93,8 @@ class User:
             "trades": [
                 [trade_time, action, code, quantity, price]
                 for trade_time, action, code, quantity, price in self.trades
-            ]
+            ],
+            "chips" : self.chips
         }
 
     def save_userdata(self, filename):
@@ -112,7 +116,8 @@ class User:
                 self.trades = [
                     (trade_time, action, code, quantity, price)
                     for trade_time, action, code, quantity, price in data["trades"]
-                ]
+                ],
+                self.chips = data["chips"]
                 print(f"User data loaded from {filename}.")
                 return self
             else:
@@ -125,13 +130,18 @@ class User:
                 "cash": 0,  # 您可以根据需要设置默认现金值
                 "permission": 0,  # 您可以根据需要设置默认权限值
                 "stocks": {},
-                "trades": []
+                "trades": [],
+                "chips" : 0
             }
             with open(filename, "w") as f:
                 json.dump(default_data, f)
             print(f"Created default user data file {filename}.")
             return self
 
+
+
+# ============================================================
+# User permission functions
     def get_current_cash(self):
         return self.cash
 
@@ -165,3 +175,18 @@ class User:
             else:
                 print("You are not an admin.")
                 return False
+
+# Reserved for shopping functions
+    def admin_add_cash(self, amount):
+        self.cash += amount
+        print(f"Added J$ {amount:,.2f} to your account.")
+        return True
+
+    def admin_deduce_cash(self, amount):
+        if self.cash >= amount:
+            self.cash -= amount
+            print(f"Deduced J$ {amount:,.2f} to your account.")
+            return True
+        else:
+            print("Insufficient funds.")
+            return False

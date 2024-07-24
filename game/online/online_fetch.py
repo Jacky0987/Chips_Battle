@@ -1,1 +1,0 @@
-# This file is used to fetch the online game data from the server.

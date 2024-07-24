@@ -1,0 +1,52 @@
+
+===================================
+LOCAL PLAYER MAIN MENU:
+
+a. Trading Options
+b. Information Management
+c. Data Modification
+d. Special Operations
+e. Minigame Functions
+z. Others
+===================================
+
+
+===================================
+=========Trading Options===========
+a1. Purchase Stock
+a2. Sell Stock
+a3. Money Deposit or Withdrawal
+===================================
+
+
+===================================
+======Information Management=======
+b1. View your stocks
+b2. View market
+b3. Show certain stock graph
+b4. Show operation history
+===================================
+
+
+===================================
+=======Data Modification===========
+c1. Modify market stocks
+c2. Modify world environment
+===================================
+
+
+===================================
+========Special Operations=========
+d1. Get Admin Access
+===================================
+
+
+===================================
+=========Minigame Functions========
+e1. Blackjacky
+e2. Texas Hold'em
+e3. Lottery Ticket
+===================================
+
+
+=========z. Save and Exit==========

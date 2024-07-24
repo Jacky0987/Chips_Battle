@@ -1,0 +1,6 @@
+{
+    "EXCHANGE_RATE": 10000,
+    "default_cash": 200,
+    "default_permission": 0,
+    "user_file_path": "account.txt"
+}
