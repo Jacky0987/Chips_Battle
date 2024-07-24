@@ -1,4 +1,4 @@
-import random
+"""import random
 import time
 
 # 游戏内容设定函数声明
@@ -289,3 +289,5 @@ def game_author():
 
 if __name__ == "__main__":
     main()
+
+"""
