@@ -1,7 +1,7 @@
 from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
-
+import matplotlib.animation as animation
 
 class Stock:
     def __init__(self, code, name, current_price, initial_issued_shares, historical_mean=None, volatility=0.05):
@@ -15,10 +15,10 @@ class Stock:
         self.price_history = [(datetime.now().strftime('%Y-%m-%d %H:%M:%S'), current_price)]
         self.historical_mean = historical_mean if historical_mean is not None else current_price
         self.volatility = volatility
-        self.pause_updates = 0  # DEPRECATED
         self.last_four_prices = [current_price] * 4
         # self.estimated_dividends = 0  # DEPRECATED
         # self.market_confidence = 1.0  # Affected by news and events.
+        # self.analyst_recommendations = 5  # Analyst's recommendation for the stock, 1-10 scale.
 
     def update_price(self, new_price):
         from datetime import datetime
@@ -58,6 +58,44 @@ class Stock:
         plt.grid(True)
         plt.gca().xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%m-%d %H:%M:%S'))
         plt.gcf().autofmt_xdate()
+        plt.show()
+
+    def draw_price_anime_history(self):
+        def update(frame):
+            timestamps = [datetime.strptime(ts, '%Y-%m-%d %H:%M:%S') for ts, _ in self.price_history]
+            prices = [price for _, price in self.price_history]
+            percent_changes = []
+
+            for i in range(1, len(prices)):
+                change = (prices[i] - prices[i - 1]) / prices[i - 1] * 100
+                percent_changes.append(f'{change:.2f}%')
+            percent_changes.insert(0, '')
+
+            plt.clf()  # Clear the current figure
+
+            plt.plot(timestamps, prices, marker='o')
+
+            # Add text for percent changes with color indication for rise or fall
+            for i, (timestamp, price) in enumerate(zip(timestamps, prices)):
+                if i == 0:
+                    plt.text(timestamp, price, percent_changes[i], ha='center', va='bottom', fontsize=8)
+                elif prices[i] > prices[i - 1]:
+                    plt.text(timestamp, price, percent_changes[i], ha='center', va='bottom', fontsize=8, color='red')
+                else:
+                    plt.text(timestamp, price, percent_changes[i], ha='center', va='bottom', fontsize=8, color='green')
+
+            # Add a horizontal line showing the initial stock price
+            plt.axhline(y=self.initial_price, color='blue', linestyle='--', label=f'Initial Price: {self.initial_price}')
+            plt.legend()
+
+            plt.xlabel('Timestamp')
+            plt.ylabel('Price')
+            plt.title(f' {self.name} (Code: {self.code}) for {self.initial_issued_shares} shares issued')
+            plt.grid(True)
+            plt.gca().xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%m-%d %H:%M:%S'))
+            plt.gcf().autofmt_xdate()
+
+        ani = animation.FuncAnimation(plt.gcf(), update, interval=1000, cache_frame_data=False)  # Update every 1 second  # Update every 1 second
         plt.show()
 
     def update_rw_price(self, world_environment):
