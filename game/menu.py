@@ -20,8 +20,12 @@ game_dir = os.path.join(parent_dir, 'utils')
 sys.path.append(game_dir)
 sys.path.append('../')
 
+default_geometry = "1028x768"
 
-def game_menu(market, user):
+
+
+
+def console_game_menu(market, user):
     time.sleep(1)
 
     # Start a thread to update stock prices every second
@@ -301,29 +305,47 @@ def minigame_menu(current_user):
         minigame_menu()
 
 
-def gui_game_menu(market, user):
+def game_menu(market, user):
+    def update_prices():
+        while True:
+            for stock in market.stocks:
+                stock.update_rw_price(market.world_environment)
+            market.save_stock_data()
+            time.sleep(1)  # Update every 1 seconds
+
+    price_update_thread = threading.Thread(target=update_prices, daemon=True)
+    price_update_thread.start()
+
     root = tk.Tk()
     root.title("Game Menu")
-    root.geometry("1028x768")
+    root.geometry(default_geometry)
+
+    def get_user_info():
+        return user.name, user.get_current_cash(), user.permission, market.world_environment
+
     def show_user_info():
         user_info_frame = tk.Frame(root)
         user_info_frame.pack()
 
+        name, cash, permission, world_environment = get_user_info()  # 获取最新的用户信息
+
         tk.Label(user_info_frame, text="===================================").pack()
-        tk.Label(user_info_frame, text=f"Current user: {user.name}").pack()
-        tk.Label(user_info_frame, text=f"Current cash: J$ {user.get_current_cash():,.2f} with admin = {user.permission}").pack()
-        tk.Label(user_info_frame, text=f"Current world environment: {market.world_environment}").pack()
+        tk.Label(user_info_frame, text=f"Current user: {name}").pack()
+        tk.Label(user_info_frame, text=f"Current cash: J$ {cash:,.2f} with admin = {permission}").pack()
+        tk.Label(user_info_frame, text=f"Current world environment: {world_environment}").pack()
         tk.Label(user_info_frame, text="===================================").pack()
+
     show_user_info()
     root.update()
 
     def handle_choice_a():
         sub_window_a = tk.Toplevel(root)
         sub_window_a.title("Trading Options")
+        sub_window_a.geometry(default_geometry)
 
         def handle_sub_choice_a1():
-            stock_code = tk.Entry(sub_window_a).get()
-            quantity = int(tk.Entry(sub_window_a).get())
+            stock_code = stock_code_entry.get()
+            quantity = int(quantity_entry.get())
             stock = next((s for s in market.stocks if s.code == stock_code), None)
             if stock:
                 user.buy_market_price_stock(stock, quantity)
@@ -331,8 +353,8 @@ def gui_game_menu(market, user):
                 tk.Label(sub_window_a, text="Stock not found.").pack()
 
         def handle_sub_choice_a2():
-            stock_code = tk.Entry(sub_window_a).get()
-            quantity = int(tk.Entry(sub_window_a).get())
+            stock_code = stock_code_sell_entry.get()
+            quantity = int(quantity_sell_entry.get())
             stock = next((s for s in market.stocks if s.code == stock_code), None)
             if stock:
                 user.sell_market_price_stock(stock, quantity)
@@ -340,31 +362,39 @@ def gui_game_menu(market, user):
                 tk.Label(sub_window_a, text="Stock not found.").pack()
 
         def handle_sub_choice_a3():
-            operation = tk.Entry(sub_window_a).get()
+            operation = operation_entry.get()
             if operation == 'deposit':
-                user.add_cash(float(tk.Entry(sub_window_a).get()))
+                user.add_cash(float(deposit_withdraw_amount_entry.get()))
             elif operation == 'withdraw':
-                user.withdraw_cash(float(tk.Entry(sub_window_a).get()))
+                user.deduce_cash(float(deposit_withdraw_amount_entry.get()))
 
         tk.Label(sub_window_a, text="Purchase Stock").pack()
-        tk.Entry(sub_window_a).pack()
+        stock_code_entry = tk.Entry(sub_window_a)
+        stock_code_entry.pack()
         tk.Label(sub_window_a, text="Enter quantity to purchase:").pack()
-        tk.Entry(sub_window_a).pack()
+        quantity_entry = tk.Entry(sub_window_a)
+        quantity_entry.pack()
         tk.Button(sub_window_a, text="Purchase", command=handle_sub_choice_a1).pack()
 
         tk.Label(sub_window_a, text="Sell Stock").pack()
-        tk.Entry(sub_window_a).pack()
+        stock_code_sell_entry = tk.Entry(sub_window_a)
+        stock_code_sell_entry.pack()
         tk.Label(sub_window_a, text="Enter quantity to sell:").pack()
-        tk.Entry(sub_window_a).pack()
+        quantity_sell_entry = tk.Entry(sub_window_a)
+        quantity_sell_entry.pack()
         tk.Button(sub_window_a, text="Sell", command=handle_sub_choice_a2).pack()
 
-        tk.Label(sub_window_a, text="Money Deposit or Withdrawal").pack()
-        tk.Entry(sub_window_a).pack()
+        tk.Label(sub_window_a, text="Money (deposit/withdraw)").pack()
+        operation_entry = tk.Entry(sub_window_a)
+        operation_entry.pack()
         tk.Button(sub_window_a, text="Perform", command=handle_sub_choice_a3).pack()
+        deposit_withdraw_amount_entry = tk.Entry(sub_window_a)
+        deposit_withdraw_amount_entry.pack()
 
     def handle_choice_b():
         sub_window_b = tk.Toplevel(root)
         sub_window_b.title("Information Management")
+        sub_window_b.geometry(default_geometry)
 
         def handle_sub_choice_b1():
             user.view_holdings()
@@ -373,7 +403,7 @@ def gui_game_menu(market, user):
             market.print_all_stocks()
 
         def handle_sub_choice_b3():
-            stock_code = tk.Entry(sub_window_b).get()
+            stock_code = stock_code_graph_entry.get()
             stock = next((s for s in market.stocks if s.code == stock_code), None)
             if stock:
                 stock.draw_price_history()
@@ -390,7 +420,8 @@ def gui_game_menu(market, user):
         tk.Button(sub_window_b, text="View", command=handle_sub_choice_b2).pack()
 
         tk.Label(sub_window_b, text="Show certain stock graph").pack()
-        tk.Entry(sub_window_b).pack()
+        stock_code_graph_entry = tk.Entry(sub_window_b)
+        stock_code_graph_entry.pack()
         tk.Button(sub_window_b, text="Show", command=handle_sub_choice_b3).pack()
 
         tk.Label(sub_window_b, text="Show operation history").pack()
@@ -399,19 +430,20 @@ def gui_game_menu(market, user):
     def handle_choice_c():
         sub_window_c = tk.Toplevel(root)
         sub_window_c.title("Data Modification")
+        sub_window_c.geometry(default_geometry)
 
         def handle_sub_choice_c1():
-            modification = tk.Entry(sub_window_c).get()
+            modification = modification_entry.get()
             if modification == 'add':
-                code = tk.Entry(sub_window_c).get()
-                name = tk.Entry(sub_window_c).get()
-                price = float(tk.Entry(sub_window_c).get())
-                share = int(tk.Entry(sub_window_c).get())
+                code = add_code_entry.get()
+                name = add_name_entry.get()
+                price = float(add_price_entry.get())
+                share = int(add_share_entry.get())
                 new_stock = Stock(code, name, price, share)
                 market.add_stock(new_stock)
                 market.save_stock_data()
-            elif modification == 'emove':
-                code = tk.Entry(sub_window_c).get()
+            elif modification =='remove':
+                code = remove_code_entry.get()
                 stock = next((s for s in market.stocks if s.code == code), None)
                 if stock:
                     market.remove_stock(stock)
@@ -420,23 +452,46 @@ def gui_game_menu(market, user):
 
         def handle_sub_choice_c2():
             if user.permission == 1:
-                new_environment = int(tk.Entry(sub_window_c).get())
+                new_environment = int(environment_entry.get())
                 market.world_environment = new_environment
                 tk.Label(sub_window_c, text=f"World environment set to {new_environment}.").pack()
             else:
                 tk.Label(sub_window_c, text="You do not have permission to modify the world environment.").pack()
 
         tk.Label(sub_window_c, text="Modify market stocks").pack()
-        tk.Entry(sub_window_c).pack()
+        modification_entry = tk.Entry(sub_window_c)
+        modification_entry.pack()
         tk.Button(sub_window_c, text="Modify", command=handle_sub_choice_c1).pack()
 
         tk.Label(sub_window_c, text="Modify world environment").pack()
-        tk.Entry(sub_window_c).pack()
+        environment_entry = tk.Entry(sub_window_c)
+        environment_entry.pack()
         tk.Button(sub_window_c, text="Modify", command=handle_sub_choice_c2).pack()
+
+        tk.Label(sub_window_c, text="Stock Code (Add)").pack()
+        add_code_entry = tk.Entry(sub_window_c)
+        add_code_entry.pack()
+
+        tk.Label(sub_window_c, text="Stock Name (Add)").pack()
+        add_name_entry = tk.Entry(sub_window_c)
+        add_name_entry.pack()
+
+        tk.Label(sub_window_c, text="Stock Price (Add)").pack()
+        add_price_entry = tk.Entry(sub_window_c)
+        add_price_entry.pack()
+
+        tk.Label(sub_window_c, text="Stock Share (Add)").pack()
+        add_share_entry = tk.Entry(sub_window_c)
+        add_share_entry.pack()
+
+        tk.Label(sub_window_c, text="Stock Code (Remove)").pack()
+        remove_code_entry = tk.Entry(sub_window_c)
+        remove_code_entry.pack()
 
     def handle_choice_d():
         sub_window_d = tk.Toplevel(root)
         sub_window_d.title("Special Operations")
+        sub_window_d.geometry(default_geometry)
 
         def handle_sub_choice_d1():
             user.get_admin()
@@ -447,6 +502,7 @@ def gui_game_menu(market, user):
     def handle_choice_e():
         sub_window_e = tk.Toplevel(root)
         sub_window_e.title("Minigame Functions")
+        sub_window_e.geometry(default_geometry)
 
         tk.Label(sub_window_e, text="Blackjack").pack()
         tk.Label(sub_window_e, text="Texas Hold'em").pack()
@@ -463,16 +519,68 @@ def gui_game_menu(market, user):
     tk.Button(root, text="Data Modification", command=handle_choice_c).pack()
     tk.Button(root, text="Special Operations", command=handle_choice_d).pack()
     tk.Button(root, text="Minigame Functions", command=handle_choice_e).pack()
-    tk.Button(root, text="Others", command=handle_choice_z).pack()
+    tk.Button(root, text="Save and Quit", command=handle_choice_z).pack()
 
     root.mainloop()
 
-    def update_prices():
-        while True:
-            for stock in market.stocks:
-                stock.update_rw_price(market.world_environment)
-            market.save_stock_data()
-            time.sleep(1)  # Update every 1 seconds
 
-    price_update_thread = threading.Thread(target=update_prices, daemon=True)
-    price_update_thread.start()
+def gui_auth_menu():
+    root = tk.Tk()
+    root.title("Authentication Menu")
+
+    login_success = False  # 新增一个标志，用于判断是否登录成功
+    username = None  # 用于存储用户名
+
+    def handle_signup():
+        name = username_register.get()
+        password = password_register.get()
+        if not name or not password:
+            messagebox.showerror("Registration Error", "Username and password cannot be empty.")
+            return
+        login_success = auth.register(name, password, get_user_file_path())
+        if not login_success:
+            messagebox.showerror("Registration Error", "Invalid username or password. Please try again.")
+            return
+        else:
+            messagebox.showinfo("Registration", "Registration successful.")
+            username = name  # 保存注册成功的用户名
+            return
+
+    def handle_login():
+        name = username_login.get()
+        password = password_login.get()
+        if not name or not password:
+            messagebox.showerror("Login Error", "Username and password cannot be empty.")
+            return
+        if auth.login(name, password, get_user_file_path()):
+            messagebox.showinfo("Login", "Login successful.")
+            login_success = True
+            username = name  # 保存登录成功的用户名
+            root.destroy()  # 登录成功关闭窗口
+            return
+        else:
+            messagebox.showerror("Login Error", "Invalid username or password. Please try again.")
+
+    username_register = tk.StringVar()
+    password_register = tk.StringVar()
+    username_login = tk.StringVar()
+    password_login = tk.StringVar()
+
+    tk.Label(root, text="Register Account:").pack()
+    tk.Entry(root, textvariable=username_register).pack()
+    tk.Entry(root, textvariable=password_register, show="*").pack()
+
+    tk.Label(root, text="Login Account:").pack()
+    tk.Entry(root, textvariable=username_login).pack()
+    tk.Entry(root, textvariable=password_login, show="*").pack()
+
+    tk.Button(root, text="Sign up", command=handle_signup).pack()
+    tk.Button(root, text="Log in", command=handle_login).pack()
+    tk.Button(root, text="Exit", command=root.destroy).pack()
+
+    root.mainloop()
+
+    if login_success:  # 如果登录成功，不再执行后续的循环
+        return username, login_success  # 返回用户名和登录成功标志
+    else:
+        return None, False  # 登录未成功，返回 None 和 False

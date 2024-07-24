@@ -1,93 +1,88 @@
+# 《Stock Trading Simulator Development Technical Documentation》
 
-# Technical Documentation for Stock Trading Simulation Program
+1、Overview
+This project is a stock trading simulator, mainly including modules such as Stock, Market, User, menu, and config. Through the collaboration of these modules, the simulation of stock trading, the management of user operations, and the storage and display of data are realized.
 
-## I. Introduction
-This technical documentation provides a detailed description of the architecture, design, and implementation details of the stock trading simulation program. The program aims to simulate the trading environment of the stock market, including user operations, stock trading logic, market status updates, and other functions.
+ 二、Module Description
 
-## II. Program Architecture
+# 1. `Stock` Module
+ - **Function**: Represents a single stock, responsible for storing relevant information about the stock, such as code, name, initial price, current price, initial issued shares, purchasable shares, trading volume, price history, etc. It also provides methods for updating the price, drawing the price history graph and animation history graph, and updating the random walk price according to the market environment.
+ - **Key Methods**:
+     - `update_price(new_price)`: Updates the current price of the stock and records the price history.
+     - `draw_price_history()`: Draws the stock price history graph, including the percentage change in price and the horizontal line of the initial price.
+     - `draw_price_anime_history()`: Draws the stock price animation history graph.
+     - `update_rw_price(world_environment)`: Updates the stock price based on the world environment and random factors.
+     - `get_current_price()`: Gets the current price of the stock.
+     - `get_price_history()`: Gets the price history of the stock.
 
-### 1. Module Structure
-The program mainly consists of the following modules:
-- `market.py`: Responsible for market-related operations, such as adding and removing stocks, updating stock prices, and printing market information.
-- `menu.py`: Contains the logic of the game menu and authentication menu, handling user input choices and corresponding operations.
-- `stock.py`: Defines the stock class, including attributes of stocks and methods for price update, price history record, chart drawing, etc.
-- `user.py`: Implements the user class, covering basic user information, stock trading operations, viewing holdings, showing trading history, and data saving functions.
+# 2. `Market` Module
+ - **Function**: Represents the market, responsible for managing the list of stocks and the world environment. Provides methods for adding stocks, removing stocks, updating the prices of all stocks, printing information about all stocks, and saving stock data.
+ - **Key Methods**:
+     - `add_stock(stock)`: Adds a stock to the market.
+     - `remove_stock(stock)`: Removes a stock from the market.
+     - `update_all_stocks()`: Updates the prices of all stocks in the market.
+     - `print_all_stocks()`: Prints detailed information about all stocks in the market.
+     - `save_stock_data()`: Saves the stock data to a file.
 
-### 2. Data Storage and Interaction
-- User data: Stored in a file in JSON format and saved and read through the `save_userdata` method of the `User` class.
-- Stock data: Stored in the relevant class objects in memory during program runtime.
+# 3. `User` Module
+ - **Function**: Represents the user, responsible for storing relevant information about the user, such as name, cash, permission, stock holdings, transaction records, and chips. Provides methods for buying stocks, selling stocks, viewing holdings, showing transaction history, saving user data, and loading user data from a file.
+ - **Key Methods**:
+     - `buy_market_price_stock(stock, quantity)`: Buys stocks at the market price.
+     - `sell_market_price_stock(stock, quantity)`: Sells stocks at the market price.
+     - `view_holdings()`: Views the user's stock holdings.
+     - `show_history()`: Shows the user's transaction history.
+     - `to_dict()`: Converts the user data into a dictionary format for easy storage as JSON.
+     - `save_userdata(filename)`: Saves the user data to a file.
+     - `load_userdata_from_name(filename, name)`: Loads the user data from a file.
+     - `get_current_cash()`: Gets the user's current cash.
+     - `add_cash(amount)`: Adds cash to the user (requires permission).
+     - `deduce_cash(amount)`: Deducts cash from the user (requires permission).
+     - `get_admin()`: Gets administrator privileges (requires password input).
 
-## III. Module Details
+# 4. `menu` Module
+ - **Function**: Provides the game's menu interface and interaction logic, including user authentication, the main game menu, multiplayer game menu, and mini-game menu. It also starts a thread to update the stock price in real time.
+ - **Key Methods**:
+     - `game_menu(market, user)`: The main game menu, handles various user choices, such as trading operations, information management, data modification, special operations, and mini-games.
+     - `auth_menu()`: The user authentication menu, handles user registration and login.
+     - `multiplayer_menu()`: The multiplayer game menu, handles the user's choice to start a new game or join an existing game.
+     - `minigame_menu(current_user)`: The mini-game menu, handles the user's choices in the mini-game, such as starting the game, buying or selling chips.
+     - `gui_game_menu(market, user)`: The graphical user interface of the main game menu, created using the `tkinter` library.
 
-### 1. `Market` Module (`market.py`)
-- `__init__` method: Initializes the market object, creates a list of stocks, and sets the default world environment value.
-    - `self.stocks`: Used to store stock objects in the market.
-    - `self.world_environment`: Represents the world environment factor that affects stock prices.
-- `add_stock` method: Adds a new stock to the market, ensuring it is added only if it doesn't already exist in the market, and prints the corresponding prompt message.
-- `remove_stock` method: Removes the specified stock from the market, and performs the removal operation only if the stock exists in the market, and prints a prompt.
-- `update_all_stocks` method: Iterates through all stocks in the market and calls the price update method of each stock.
-- `print_all_stocks` method: Prints detailed information of all stocks in the market, including the world environment value and various attributes of the stocks.
+# 5. `config` Module
+ - **Function**: Responsible for the initialization configuration of the game, including market initialization, game initialization (setting the exchange rate, default cash, default permission, and user file path), and obtaining the user file path.
+ - **Key Methods**:
+     - `market_init()`: Initializes the market and adds default stocks.
+     - `game_init()`: Initializes the game configuration, reads or creates the `config.json` file.
+     - `get_user_file_path()`: Gets the user file path.
 
-### 2. `Menu` Module (`menu.py`)
-- `options` dictionary: Defines the operation options available to the user in the menu and their descriptions.
-- `game_menu` function: Logic of the game main menu.
-    - Starts a thread `update_prices` for real-time stock price updates.
-    - Continuously waits for user input choices and performs corresponding operations based on the choices, such as buying and selling stocks, viewing holdings, market information, etc.
-    - Checks if the user's cash is below zero after the operation. If so, exits the simulation.
-- `auth_menu` function: Logic of the authentication menu.
-    - Provides options for registration, login, and exit.
-    - Performs corresponding authentication operations based on user input, provides prompts, and recursively calls to maintain menu availability.
+ 三、Development Key Technology Stack
+ - **Python Programming Language**: Used to implement the logic of the entire stock trading simulator.
+ - **matplotlib Library**: Used to draw the stock price history graph and animation history graph.
+ - **numpy Library**: Used to generate random numbers to simulate the random fluctuation of stock prices.
+ - **tkinter Library**: Used to create the graphical user interface of the main game menu.
+ - **json Library**: Used for data storage and reading, saving stock and user data in JSON format to files.
+ - **threading Library**: Used to create threads to achieve real-time updates of stock prices.
 
-### 3. `Stock` Module (`stock.py`)
-- `__init__` method: Initializes the attributes of the stock object, including code, name, initial price, initial issued shares, etc., and initializes the price history record.
-    - `self.code`: Stock code.
-    - `self.name`: Stock name.
-    - `self.initial_price`: Initial price.
-    - `self.current_price`: Current price.
-    - `self.initial_issued_shares`: Initial issued shares.
-    - `self.purchasable_shares`: Purchasable shares.
-    - `self.trading_volume`: Trading volume.
-    - `self.price_history`: Price history record.
-    - `self.historical_mean`: Historical average price.
-    - `self.volatility`: Volatility.
-- `update_price` method: Updates the current price of the stock and adds the timestamp and new price to the price history record.
-- `draw_price_history` method: Draws the stock price history line chart using the `matplotlib.pyplot` library and adds annotations such as percentage changes and initial price.
-- `update_rw_price` method: Calculates and updates the random walk price of the stock based on factors such as the world environment and trading volume.
-- `get_current_price` method: Returns the current price of the stock.
-- `get_price_history` method: Returns the price history record of the stock.
+ 四、Development Progress
+ - At present, the basic functions of the Stock, Market, User, menu, and config modules have been completed.
+ - Users can register, log in, and perform operations such as stock trading, information query, data modification in the main game menu.
+ - Stock prices can be updated in real time according to the market environment and saved to files.
+ - The graphical user interface of the main game menu has been initially created, but some functions are still being perfected.
+ - The multiplayer game function and mini-game expansion have not yet started development.
 
-### 4. `User` Module (`user.py`)
-- `__init__` method: Initializes the attributes of the user object, including username, cash, stock holdings, and trading records.
-    - `self.name`: Username.
-    - `self.cash`: Cash balance.
-    - `self.stocks`: Stock holdings dictionary with the stock code as the key and the holding quantity as the value.
-    - `self.trades`: Trading record list.
-- `buy_market_price_stock` method: User's stock purchase operation, including checks for stock validity, purchase quantity, and sufficient funds. Updates user's cash, stock holdings, and trading records upon successful purchase.
-- `sell_market_price_stock` method: User's stock selling operation, checks if the holding quantity is sufficient. Updates relevant data upon successful sale.
-- `view_holdings` method: Prints the user's current stock holdings and cash balance.
-- `show_history` method: Prints the user's trading history record.
-- `to_dict` method: Converts the relevant data of the user object into a dictionary format for JSON serialization.
-- `save_userdata` method: Saves the user data in JSON format to the specified file.
-- `get_current_cash` method: Returns the user's current cash balance.
-- `add_cash` method: Increases the user's cash balance.
-- `deduce_cash` method: Deducts the user's cash balance.
+ 五、Development Direction
+ - **Multiplayer Game Function**: Further implement the logic of multiplayer games, including player interaction and data synchronization.
+ - **Mini-game Expansion**: Add more mini-games to enrich the game experience.
+ - **Data Analysis and Visualization**: Analyze and visualize the stock trading data to provide users with more decision support.
+ - **Intelligent Trading Strategies**: Introduce some simple intelligent trading strategies for users to choose to use.
+ - **User Interface Optimization**: Continue to optimize the graphical user interface to improve the user experience.
 
-## IV. Key Technical Implementation Points
+ 六、Improvement Direction
+ - **Performance Optimization**: Optimize the algorithm for updating stock prices to improve the running efficiency of the program.
+ - **Data Validation and Error Handling**: Strengthen data validation and error handling to improve the stability of the program.
+ - **User Permission Management**: Further refine the user permission management to ensure that users can only perform operations within their permission scope.
+ - **Code Refactoring and Optimization**: Refactor and optimize the code to improve the readability and maintainability of the code.
+ - **Add Market Events and News**: Simulate the impact of market events and news on stock prices to increase the authenticity of the game.
+ - **Connection with Actual Market Data**: Consider connecting with actual market data to make the simulation closer to the real situation.
 
-### 1. Random Price Update
-The stock price update adopts a random walk model, considering factors such as the world environment, historical mean, and trading volume to simulate price fluctuations in the real market.
-
-### 2. Concurrent Processing
-In `game_menu`, a thread is used to update stock prices in real-time to simulate the dynamic changes in the market without blocking user input and processing.
-
-### 3. Data Serialization
-User data is serialized and saved using JSON to maintain the user's state and trading records between multiple program runs.
-
-## V. Runtime Environment
-- Python version: [Specific version]
-- Dependent libraries: `matplotlib`, `numpy`, `datetime`, `json`
-
-## VI. Future Improvement Directions
-- Add more market influence factors and trading strategies.
-- Optimize the price update algorithm to improve the authenticity of the simulation.
-- Provide more rich user interaction and interface display.
+The above content is for reference only, and you can adjust and improve it according to the actual needs and project situation.
