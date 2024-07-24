@@ -4,28 +4,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c05d264c-b1a2-4aae-bbc7-1326ce11e04b" name="Changes" comment="Much much more code added to the project. 1.0.2 Alpha">
-      <change afterPath="$PROJECT_DIR$/account.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/config/config.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/stock/BANK.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/game/config.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/game/menu_planner.txt" afterDir="false" />
+    <list default="true" id="c05d264c-b1a2-4aae-bbc7-1326ce11e04b" name="Changes" comment="Beta 1.1 Release: Config system">
+      <change afterPath="$PROJECT_DIR$/data/user/hi.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/user/ja.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/account.txt" beforeDir="false" afterPath="$PROJECT_DIR$/data/account.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/data/stock/AAPL.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/stock/AAPL.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/stock/BANK.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/stock/BANK.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/data/stock/FYRX.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/stock/FYRX.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/user/dqdwqdnqw.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/user/fk.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/user/hi.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/user/jacky.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/user/jacky.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/game/home/home.py" beforeDir="false" afterPath="$PROJECT_DIR$/game/home/home.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/game/home/shop.py" beforeDir="false" afterPath="$PROJECT_DIR$/game/home/shop.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/game/menu.py" beforeDir="false" afterPath="$PROJECT_DIR$/game/menu.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/game/online/multiplayer.py" beforeDir="false" afterPath="$PROJECT_DIR$/game/online/client.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/game/online/online_fetch.py" beforeDir="false" afterPath="$PROJECT_DIR$/game/online/server.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/game/stock.py" beforeDir="false" afterPath="$PROJECT_DIR$/game/stock.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/game/user.py" beforeDir="false" afterPath="$PROJECT_DIR$/game/user.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -170,7 +157,7 @@
       <workItem from="1721736721203" duration="21000" />
       <workItem from="1721748454828" duration="3355000" />
       <workItem from="1721761860629" duration="924000" />
-      <workItem from="1721792882842" duration="4665000" />
+      <workItem from="1721792882842" duration="5075000" />
     </task>
     <task id="LOCAL-00001" summary="Version Alpha 0.1: Basic Structure Constructed.">
       <option name="closed" value="true" />
@@ -364,7 +351,15 @@
       <option name="project" value="LOCAL" />
       <updated>1721762755336</updated>
     </task>
-    <option name="localTasksCounter" value="25" />
+    <task id="LOCAL-00025" summary="Beta 1.1 Release: Config system">
+      <option name="closed" value="true" />
+      <created>1721797575998</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1721797575998</updated>
+    </task>
+    <option name="localTasksCounter" value="26" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -413,13 +408,14 @@
     <MESSAGE value="Fixed new user can not create profile bug." />
     <MESSAGE value="Add bugged minigame. Update Release 1.0.1" />
     <MESSAGE value="Much much more code added to the project. 1.0.2 Alpha" />
-    <option name="LAST_COMMIT_MESSAGE" value="Much much more code added to the project. 1.0.2 Alpha" />
+    <MESSAGE value="Beta 1.1 Release: Config system" />
+    <option name="LAST_COMMIT_MESSAGE" value="Beta 1.1 Release: Config system" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Chips_Battle$auth.coverage" NAME="auth Coverage Results" MODIFIED="1715690127524" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils" />
     <SUITE FILE_PATH="coverage/Chips_Battle$user.coverage" NAME="user Coverage Results" MODIFIED="1715700710788" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/game" />
     <SUITE FILE_PATH="coverage/Chips_Battle$holdem.coverage" NAME="holdem Coverage Results" MODIFIED="1721761661176" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/minigame" />
-    <SUITE FILE_PATH="coverage/Chips_Battle$main.coverage" NAME="main Coverage Results" MODIFIED="1721797501337" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Chips_Battle$main.coverage" NAME="main Coverage Results" MODIFIED="1721797833273" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Chips_Battle$blackjack.coverage" NAME="blackjack Coverage Results" MODIFIED="1721761610528" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/minigame" />
     <SUITE FILE_PATH="coverage/Chips_Battle$user_window.coverage" NAME="user_window Coverage Results" MODIFIED="1715619141126" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/gui" />
   </component>

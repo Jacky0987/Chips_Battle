@@ -94,7 +94,7 @@ class User:
                 [trade_time, action, code, quantity, price]
                 for trade_time, action, code, quantity, price in self.trades
             ],
-            "chips" : self.chips
+            "chips": self.chips
         }
 
     def save_userdata(self, filename):
@@ -116,7 +116,7 @@ class User:
                 self.trades = [
                     (trade_time, action, code, quantity, price)
                     for trade_time, action, code, quantity, price in data["trades"]
-                ],
+                ]
                 self.chips = data["chips"]
                 print(f"User data loaded from {filename}.")
                 return self
@@ -131,14 +131,12 @@ class User:
                 "permission": 0,  # 您可以根据需要设置默认权限值
                 "stocks": {},
                 "trades": [],
-                "chips" : 0
+                "chips": 0
             }
             with open(filename, "w") as f:
                 json.dump(default_data, f)
             print(f"Created default user data file {filename}.")
             return self
-
-
 
 # ============================================================
 # User permission functions

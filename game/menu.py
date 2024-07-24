@@ -3,10 +3,10 @@ import time
 from game.stock import Stock
 import sys
 import os
-from game.config import *
+import game.config as config
 
-"""from main import EXCHANGE_RATE
-from main import current_user"""
+
+EXCHANGE_RATE, _, _, _ = config.game_init()
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
@@ -222,6 +222,7 @@ def minigame_menu(current_user):
     print(f"Current Exchange Rate: 1 Chips = {EXCHANGE_RATE} J$")
     print(f"Current User: {current_user.name}")
     print(f"Current Chips: USD {current_user.chips}")
+    print(f"Current Cash: J${current_user.cash}")
     print("z: Exit")
 
     choice = input("Your choice: ")
