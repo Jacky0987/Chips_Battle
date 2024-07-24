@@ -1,4 +1,4 @@
-import random
+"""import random
 
 # 名词解释
 # 庄家：游戏中第一个坐下的玩家默认为庄家。
@@ -185,4 +185,4 @@ if __name__ == "__main__":
         if bet <= money:  # 检查赌注是否小于等于玩家的筹码
             play_game()
         else:
-            print("您的赌注超过了当前拥有的筹码，请重新输入。")
+            print("您的赌注超过了当前拥有的筹码，请重新输入。")"""

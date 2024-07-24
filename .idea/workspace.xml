@@ -5,7 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c05d264c-b1a2-4aae-bbc7-1326ce11e04b" name="Changes" comment="Beta 1.1.3 Config System bug fixed.">
-      <change beforePath="$PROJECT_DIR$/environment.yml" beforeDir="false" afterPath="$PROJECT_DIR$/environment.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minigame/blackjack.py" beforeDir="false" afterPath="$PROJECT_DIR$/minigame/blackjack.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minigame/dep.blackjack.py" beforeDir="false" afterPath="$PROJECT_DIR$/minigame/dep.blackjack.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/minigame/holdem.py" beforeDir="false" afterPath="$PROJECT_DIR$/minigame/holdem.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -70,7 +73,7 @@
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "ToolWindowPlots.ShowToolbar": "false",
     "dart.analysis.tool.window.visible": "false",
-    "last_opened_file_path": "D:/Projects/Projects/Chips_Battle",
+    "last_opened_file_path": "C:/Users/Administrator/Documents/GitHub/Chips_Battle",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -153,6 +156,7 @@
       <workItem from="1721792882842" duration="5075000" />
       <workItem from="1721816326851" duration="919000" />
       <workItem from="1721817291047" duration="302000" />
+      <workItem from="1721817960603" duration="256000" />
     </task>
     <task id="LOCAL-00001" summary="Version Alpha 0.1: Basic Structure Constructed.">
       <option name="closed" value="true" />
