@@ -23,7 +23,7 @@ class StockMarketGameApp:
         self.nav_frame.pack(fill=tk.X, side=tk.TOP, padx=10, pady=5)
         
         # Add navigation buttons to the top
-        self.next_day_button = ttk.Button(self.nav_frame, text="Next Day")
+        self.next_day_button = ttk.Button(self.nav_frame, text="Confirm (Next Day)")
         self.next_day_button.pack(side=tk.LEFT, padx=10)
         
         self.next_week_button = ttk.Button(self.nav_frame, text="Next Week (5 Days)")
