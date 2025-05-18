@@ -1,88 +1,121 @@
-# 《Stock Trading Simulator Development Technical Documentation》
+```
+# 股票市场模拟器
 
-1、Overview
-This project is a stock trading simulator, mainly including modules such as Stock, Market, User, menu, and config. Through the collaboration of these modules, the simulation of stock trading, the management of user operations, and the storage and display of data are realized.
+一个基于Python的股票市场模拟游戏，允许用户在不冒真实资金风险的情况下，在逼真的
+市场环境中练习交易策略。
 
- 二、Module Description
+## 功能特点
 
-# 1. `Stock` Module
- - **Function**: Represents a single stock, responsible for storing relevant information about the stock, such as code, name, initial price, current price, initial issued shares, purchasable shares, trading volume, price history, etc. It also provides methods for updating the price, drawing the price history graph and animation history graph, and updating the random walk price according to the market environment.
- - **Key Methods**:
-     - `update_price(new_price)`: Updates the current price of the stock and records the price history.
-     - `draw_price_history()`: Draws the stock price history graph, including the percentage change in price and the horizontal line of the initial price.
-     - `draw_price_anime_history()`: Draws the stock price animation history graph.
-     - `update_rw_price(world_environment)`: Updates the stock price based on the world environment and random factors.
-     - `get_current_price()`: Gets the current price of the stock.
-     - `get_price_history()`: Gets the price history of the stock.
+- **逼真的市场模拟**：体验市场动态，包括价格波动、行业走势和影响股票价格的新闻
+事件
+- **多样化的股票组合**：交易跨越5个市场行业（科技、医疗保健、金融、能源、消
+费）的10种不同股票
+- **多种交易选项**：买入、卖出、卖空和平仓
+- **股息系统**：从符合条件的股票中获得定期股息支付
+- **新闻提要**：通过影响价格的市场和特定股票新闻保持信息更新
+- **高级图表**：通过多种图表类型可视化市场数据：
+  - 股票价格图表（线形图、蜡烛图、面积图）
+  - 投资组合价值跟踪
+  - 股票与投资组合之间的表现比较
+  - 行业表现分析
+- **投资组合管理**：跟踪您的持股、现金余额和整体表现
 
-# 2. `Market` Module
- - **Function**: Represents the market, responsible for managing the list of stocks and the world environment. Provides methods for adding stocks, removing stocks, updating the prices of all stocks, printing information about all stocks, and saving stock data.
- - **Key Methods**:
-     - `add_stock(stock)`: Adds a stock to the market.
-     - `remove_stock(stock)`: Removes a stock from the market.
-     - `update_all_stocks()`: Updates the prices of all stocks in the market.
-     - `print_all_stocks()`: Prints detailed information about all stocks in the market.
-     - `save_stock_data()`: Saves the stock data to a file.
+## 安装
 
-# 3. `User` Module
- - **Function**: Represents the user, responsible for storing relevant information about the user, such as name, cash, permission, stock holdings, transaction records, and chips. Provides methods for buying stocks, selling stocks, viewing holdings, showing transaction history, saving user data, and loading user data from a file.
- - **Key Methods**:
-     - `buy_market_price_stock(stock, quantity)`: Buys stocks at the market price.
-     - `sell_market_price_stock(stock, quantity)`: Sells stocks at the market price.
-     - `view_holdings()`: Views the user's stock holdings.
-     - `show_history()`: Shows the user's transaction history.
-     - `to_dict()`: Converts the user data into a dictionary format for easy storage as JSON.
-     - `save_userdata(filename)`: Saves the user data to a file.
-     - `load_userdata_from_name(filename, name)`: Loads the user data from a file.
-     - `get_current_cash()`: Gets the user's current cash.
-     - `add_cash(amount)`: Adds cash to the user (requires permission).
-     - `deduce_cash(amount)`: Deducts cash from the user (requires permission).
-     - `get_admin()`: Gets administrator privileges (requires password input).
+1. 克隆仓库：
+```bash
+git clone https://github.com/yourusername/stock_sim.git
+cd stock_sim
+```
+2. 安装所需依赖：
+```
+pip install -r requirements.txt
+```
+3. 运行应用程序：
+```
+python main.py
+```
+## 依赖项
+- Python 3.6+
+- Tkinter (用于GUI)
+- Matplotlib (用于图表)
+- NumPy (用于计算)
+- Pandas (用于数据处理)
+## 如何游玩
+1. 开始游戏 ：启动应用程序，开始时有10,000美元的虚拟现金
+2. 分析市场 ：使用股票列表和图表识别潜在投资
+3. 进行交易 ：
+   - 从列表中选择股票
+   - 输入股票数量
+   - 选择买入、卖出、卖空或平仓
+4. 监控表现 ：跟踪您的投资组合价值并与个股进行比较
+5. 响应新闻 ：对新闻提要中出现的市场新闻做出反应
+6. 推进时间 ：使用导航按钮按天、周或月推进
+7. 查看结果 ：在模拟结束时，接收表现评估
+## 游戏机制
+### 股票
+每只股票都有独特的特性：
 
-# 4. `menu` Module
- - **Function**: Provides the game's menu interface and interaction logic, including user authentication, the main game menu, multiplayer game menu, and mini-game menu. It also starts a thread to update the stock price in real time.
- - **Key Methods**:
-     - `game_menu(market, user)`: The main game menu, handles various user choices, such as trading operations, information management, data modification, special operations, and mini-games.
-     - `auth_menu()`: The user authentication menu, handles user registration and login.
-     - `multiplayer_menu()`: The multiplayer game menu, handles the user's choice to start a new game or join an existing game.
-     - `minigame_menu(current_user)`: The mini-game menu, handles the user's choices in the mini-game, such as starting the game, buying or selling chips.
-     - `gui_game_menu(market, user)`: The graphical user interface of the main game menu, created using the `tkinter` library.
+- 不同的基础价格和波动性
+- 特定行业的走势
+- 部分股票支付股息
+### 市场事件
+- 影响所有行业的经济事件
+- 特定行业新闻
+- 个股新闻
+- 股息支付
+### 交易选项
+- 买入 ：用可用现金购买股票
+- 卖出 ：卖出您拥有的股票
+- 卖空 ：借入并卖出股票，如果价格下跌则获利
+- 平仓 ：买回股票以结束卖空头寸
+## 项目结构
+```
+stock_market_simulator/
+│
+├── main.py                    # 主入口点
+│
+├── models/                    # 数据模型
+│   ├── stock.py               # 股票类
+│   ├── market.py              # 市场模拟器
+│   ├── portfolio.py           # 投资组合管理
+│   └── news.py                # 新闻生成
+│
+├── views/                     # UI组件
+│   ├── main_window.py         # 主应用窗口
+│   ├── charts/                # 图表相关视图
+│   │   ├── price_chart.py     # 股票价格图表
+│   │   ├── portfolio_chart.py # 投资组合价值图表
+│   │   ├── comparison_chart.py # 性能比较
+│   │   └── sector_chart.py    # 行业表现
+│   │
+│   ├── widgets/               # 自定义小部件
+│       ├── stock_list.py      # 股票列表表格
+│       ├── portfolio_view.py  # 投资组合摘要
+│       ├── trading_panel.py   # 交易界面
+│       └── news_feed.py       # 新闻提要小部件
+│
+├── controllers/               # 业务逻辑
+│   └── game_controller.py     # 主游戏逻辑
+│
+└── utils/                     # 实用函数
+    ├── config.py              # 游戏配置
+    └── constants.py           # 游戏常量
+```
+## 开发提升方向
+1. 实现实时数据集成 ：添加与真实市场数据API的集成，使用历史或实时数据进行更真实的模拟
+2. 增强AI交易对手 ：实现AI驱动的交易对手，与玩家竞争或提供交易建议
+3. 添加更多技术分析工具 ：实现移动平均线、RSI、MACD等高级技术指标
+4. 多用户支持 ：添加多用户功能，允许玩家之间进行竞争或协作
+5. 风险管理工具 ：实现止损单、限价单等高级订单类型和风险管理工具
+6. 场景模式 ：创建预设的市场场景（如牛市、熊市、金融危机等）供玩家练习
+7. 成就系统 ：添加成就和挑战系统，以增加游戏的可玩性和教育价值
+## 贡献
+欢迎贡献！请随时提交Pull Request。
 
-# 5. `config` Module
- - **Function**: Responsible for the initialization configuration of the game, including market initialization, game initialization (setting the exchange rate, default cash, default permission, and user file path), and obtaining the user file path.
- - **Key Methods**:
-     - `market_init()`: Initializes the market and adds default stocks.
-     - `game_init()`: Initializes the game configuration, reads or creates the `config.json` file.
-     - `get_user_file_path()`: Gets the user file path.
+## 许可证
+本项目采用MIT许可证 - 详情请参阅LICENSE文件。
 
- 三、Development Key Technology Stack
- - **Python Programming Language**: Used to implement the logic of the entire stock trading simulator.
- - **matplotlib Library**: Used to draw the stock price history graph and animation history graph.
- - **numpy Library**: Used to generate random numbers to simulate the random fluctuation of stock prices.
- - **tkinter Library**: Used to create the graphical user interface of the main game menu.
- - **json Library**: Used for data storage and reading, saving stock and user data in JSON format to files.
- - **threading Library**: Used to create threads to achieve real-time updates of stock prices.
-
- 四、Development Progress
- - At present, the basic functions of the Stock, Market, User, menu, and config modules have been completed.
- - Users can register, log in, and perform operations such as stock trading, information query, data modification in the main game menu.
- - Stock prices can be updated in real time according to the market environment and saved to files.
- - The graphical user interface of the main game menu has been initially created, but some functions are still being perfected.
- - The multiplayer game function and mini-game expansion have not yet started development.
-
- 五、Development Direction
- - **Multiplayer Game Function**: Further implement the logic of multiplayer games, including player interaction and data synchronization.
- - **Mini-game Expansion**: Add more mini-games to enrich the game experience.
- - **Data Analysis and Visualization**: Analyze and visualize the stock trading data to provide users with more decision support.
- - **Intelligent Trading Strategies**: Introduce some simple intelligent trading strategies for users to choose to use.
- - **User Interface Optimization**: Continue to optimize the graphical user interface to improve the user experience.
-
- 六、Improvement Direction
- - **Performance Optimization**: Optimize the algorithm for updating stock prices to improve the running efficiency of the program.
- - **Data Validation and Error Handling**: Strengthen data validation and error handling to improve the stability of the program.
- - **User Permission Management**: Further refine the user permission management to ensure that users can only perform operations within their permission scope.
- - **Code Refactoring and Optimization**: Refactor and optimize the code to improve the readability and maintainability of the code.
- - **Add Market Events and News**: Simulate the impact of market events and news on stock prices to increase the authenticity of the game.
- - **Connection with Actual Market Data**: Consider connecting with actual market data to make the simulation closer to the real situation.
-
-The above content is for reference only, and you can adjust and improve it according to the actual needs and project situation.
+## 致谢
+- 本项目是作为学习股票市场和交易策略的教育工具而创建的
+- 灵感来自真实世界的交易平台和市场模拟器

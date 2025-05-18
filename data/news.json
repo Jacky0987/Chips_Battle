@@ -1,0 +1,30 @@
+{
+    "market_news": [
+        {"headline": "Economic Boom: Markets Rally", "impact": {"sector": "all", "change": 3.0}},
+        {"headline": "Market Crash: Investors Panic", "impact": {"sector": "all", "change": -4.0}},
+        {"headline": "Tech Innovation Breakthrough", "impact": {"sector": "Technology", "change": 5.0}},
+        {"headline": "Healthcare Reform Announced", "impact": {"sector": "Healthcare", "change": 4.0}},
+        {"headline": "Banking Scandal Erupts", "impact": {"sector": "Finance", "change": -5.0}},
+        {"headline": "Oil Price Surge", "impact": {"sector": "Energy", "change": 6.0}},
+        {"headline": "Consumer Spending Drops", "impact": {"sector": "Consumer", "change": -3.0}},
+        {"headline": "New Tech Regulations", "impact": {"sector": "Technology", "change": -4.0}},
+        {"headline": "Medical Breakthrough", "impact": {"sector": "Healthcare", "change": 7.0}},
+        {"headline": "Interest Rates Cut", "impact": {"sector": "Finance", "change": 4.0}},
+        {"headline": "Renewable Energy Push", "impact": {"sector": "Energy", "change": -3.0}},
+        {"headline": "Retail Sales Boom", "impact": {"sector": "Consumer", "change": 5.0}},
+        {"headline": "Crypto Market Surges on Institutional Adoption", "impact": {"sector": "Crypto", "change": 8.0}},
+        {"headline": "Regulatory Crackdown on Cryptocurrencies", "impact": {"sector": "Crypto", "change": -7.0}},
+        {"headline": "Major Company Adds Bitcoin to Balance Sheet", "impact": {"sector": "Crypto", "change": 6.0}},
+        {"headline": "Security Breach at Major Crypto Exchange", "impact": {"sector": "Crypto", "change": -8.0}}
+    ],
+    "stock_news": [
+        {"headline": "TechGiant Launches New Product", "impact": {"stock": "TGT", "change": 8.0}},
+        {"headline": "MediHealth Recalls Drug", "impact": {"stock": "MHC", "change": -7.0}},
+        {"headline": "BankCorp Announces Expansion", "impact": {"stock": "BNK", "change": 6.0}},
+        {"headline": "Oil Spill at EnergyOne Facility", "impact": {"stock": "ENO", "change": -9.0}},
+        {"headline": "RetailShop Beats Earnings Estimates", "impact": {"stock": "RSP", "change": 7.0}},
+        {"headline": "Bitcoin Halving Event Approaches", "impact": {"stock": "BTC", "change": 10.0}},
+        {"headline": "Ethereum Completes Major Network Upgrade", "impact": {"stock": "ETH", "change": 12.0}},
+        {"headline": "Celebrity Endorses Dogecoin on Social Media", "impact": {"stock": "DOGE", "change": 15.0}}
+    ]
+}

@@ -4,15 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c05d264c-b1a2-4aae-bbc7-1326ce11e04b" name="Changes" comment="1.0.2 GUI tryout.">
-      <change afterPath="$PROJECT_DIR$/debug/test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/stock/AAPL.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/stock/AAPL.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/stock/BANK.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/stock/BANK.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/stock/FYRX.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/stock/FYRX.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/game/menu.py" beforeDir="false" afterPath="$PROJECT_DIR$/game/menu.py" afterDir="false" />
-    </list>
+    <list default="true" id="9e4b15b8-7cdc-4e71-bd77-5e4b10e2a428" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -25,471 +17,64 @@
       </list>
     </option>
   </component>
-  <component name="FlaskConsoleOptions" custom-start-script="import sys&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo&#10;locals().update(ScriptInfo(create_app=None).load_app().make_shell_context())&#10;print(&quot;Python %s on %s\nApp: %s [%s]\nInstance: %s&quot; % (sys.version, sys.platform, app.import_name, app.env, app.instance_path))">
-    <envs>
-      <env key="FLASK_APP" value="app" />
-    </envs>
-    <option name="myCustomStartScript" value="import sys&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo&#10;locals().update(ScriptInfo(create_app=None).load_app().make_shell_context())&#10;print(&quot;Python %s on %s\nApp: %s [%s]\nInstance: %s&quot; % (sys.version, sys.platform, app.import_name, app.env, app.instance_path))" />
-    <option name="myEnvs">
-      <map>
-        <entry key="FLASK_APP" value="app" />
-      </map>
-    </option>
-  </component>
   <component name="Git.Settings">
-    <option name="PUSH_AUTO_UPDATE" value="true" />
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory">{
-  &quot;lastFilter&quot;: {
-    &quot;state&quot;: &quot;OPEN&quot;,
-    &quot;assignee&quot;: &quot;Jacky0987&quot;
-  }
-}</component>
-  <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/Jacky0987/Chips_Battle.git&quot;,
-    &quot;accountId&quot;: &quot;6098d527-6479-4dcc-9fac-60a9f1a120ec&quot;
-  }
-}</component>
   <component name="ProjectColorInfo">{
-  &quot;associatedIndex&quot;: 7
+  &quot;associatedIndex&quot;: 4
 }</component>
-  <component name="ProjectId" id="2gPapTBSgKkp5vQSm5hNuojoSi3" />
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
-    <ConfirmationsSetting value="2" id="Add" />
-  </component>
+  <component name="ProjectId" id="2xEOlx9lX2UdjWDPOdqusY7RwUx" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
-    "ASKED_ADD_EXTERNAL_FILES": "true",
-    "Python.auth.executor": "Run",
-    "Python.blackjack.executor": "Run",
-    "Python.holdem.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
     "Python.main.executor": "Run",
-    "Python.menu.executor": "Run",
-    "Python.menu_gui.executor": "Run",
-    "Python.test.executor": "Run",
-    "Python.user.executor": "Run",
-    "Python.user_window.executor": "Run",
+    "Python.main_window.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "ToolWindowPlots.ShowToolbar": "false",
-    "dart.analysis.tool.window.visible": "false",
-    "last_opened_file_path": "C:/Users/Administrator/Documents/GitHub/Chips_Battle",
+    "git-widget-placeholder": "main",
+    "junie.onboarding.icon.badge.shown": "true",
+    "last_opened_file_path": "D:/Projects/Python/stock_sim",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "cn.yiiguxing.plugin.translate",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
-      <recent name="C:\Users\Administrator\Documents\GitHub\Chips_Battle\resources" />
-      <recent name="C:\Users\Administrator\Documents\GitHub\Chips_Battle\game\resources" />
-      <recent name="D:\Chips_Battle-master\data\config" />
-      <recent name="D:\Chips_Battle-master\data" />
-      <recent name="D:\Projects\Projects\Chips_Battle\game\simulator" />
+      <recent name="D:\Projects\Python\stock_sim\utils" />
     </key>
-  </component>
-  <component name="RunManager">
-    <configuration name="main" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
-      <module name="Chips_Battle" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-1d06a55b98c1-91d5c284f522-JavaScript-PY-241.15989.155" />
-        <option value="bundled-python-sdk-babbdf50b680-7c6932dee5e4-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-241.15989.155" />
+        <option value="bundled-js-predefined-d6986cc7102b-f27c65a3e318-JavaScript-PY-251.23774.444" />
+        <option value="bundled-python-sdk-890ed5b35930-d9c5bdb153f4-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-251.23774.444" />
       </set>
     </attachedChunks>
   </component>
-  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="c05d264c-b1a2-4aae-bbc7-1326ce11e04b" name="Changes" comment="" />
-      <created>1715601849418</created>
+      <changelist id="9e4b15b8-7cdc-4e71-bd77-5e4b10e2a428" name="Changes" comment="" />
+      <created>1747499921200</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1715601849418</updated>
-      <workItem from="1715601851530" duration="14574000" />
-      <workItem from="1715619347347" duration="65000" />
-      <workItem from="1715625783561" duration="223000" />
-      <workItem from="1715626017771" duration="65000" />
-      <workItem from="1715626090105" duration="368000" />
-      <workItem from="1715682393154" duration="15682000" />
-      <workItem from="1715701465312" duration="176000" />
-      <workItem from="1715701679973" duration="156000" />
-      <workItem from="1715701854224" duration="5890000" />
-      <workItem from="1715748956382" duration="2426000" />
-      <workItem from="1715751730735" duration="6807000" />
-      <workItem from="1715793880735" duration="1104000" />
-      <workItem from="1715842127376" duration="34000" />
-      <workItem from="1715842197410" duration="2804000" />
-      <workItem from="1716538787416" duration="595000" />
-      <workItem from="1716650925577" duration="87000" />
-      <workItem from="1721724475719" duration="4361000" />
-      <workItem from="1721736721203" duration="21000" />
-      <workItem from="1721748454828" duration="3355000" />
-      <workItem from="1721761860629" duration="924000" />
-      <workItem from="1721792882842" duration="5075000" />
-      <workItem from="1721816326851" duration="919000" />
-      <workItem from="1721817291047" duration="302000" />
-      <workItem from="1721817960603" duration="900000" />
-      <workItem from="1721820736698" duration="4606000" />
-      <workItem from="1721831114401" duration="1433000" />
-      <workItem from="1721843994329" duration="2675000" />
+      <updated>1747499921200</updated>
+      <workItem from="1747499922528" duration="3661000" />
+      <workItem from="1747546920185" duration="20000" />
     </task>
-    <task id="LOCAL-00001" summary="Version Alpha 0.1: Basic Structure Constructed.">
-      <option name="closed" value="true" />
-      <created>1715606380456</created>
-      <option name="number" value="00001" />
-      <option name="presentableId" value="LOCAL-00001" />
-      <option name="project" value="LOCAL" />
-      <updated>1715606380456</updated>
-    </task>
-    <task id="LOCAL-00002" summary="Version Alpha 0.2: Main functionality is completed but not yet tested.">
-      <option name="closed" value="true" />
-      <created>1715616484637</created>
-      <option name="number" value="00002" />
-      <option name="presentableId" value="LOCAL-00002" />
-      <option name="project" value="LOCAL" />
-      <updated>1715616484637</updated>
-    </task>
-    <task id="LOCAL-00003" summary="Alpha 0.2 test passed. Basic functionality is working.">
-      <option name="closed" value="true" />
-      <created>1715617296261</created>
-      <option name="number" value="00003" />
-      <option name="presentableId" value="LOCAL-00003" />
-      <option name="project" value="LOCAL" />
-      <updated>1715617296261</updated>
-    </task>
-    <task id="LOCAL-00004" summary="Alpha 0.3 with testing main.py. No interactions added into project yet.">
-      <option name="closed" value="true" />
-      <created>1715618425089</created>
-      <option name="number" value="00004" />
-      <option name="presentableId" value="LOCAL-00004" />
-      <option name="project" value="LOCAL" />
-      <updated>1715618425089</updated>
-    </task>
-    <task id="LOCAL-00005" summary="Alpha 0.3.1 for window arranges.">
-      <option name="closed" value="true" />
-      <created>1715619267949</created>
-      <option name="number" value="00005" />
-      <option name="presentableId" value="LOCAL-00005" />
-      <option name="project" value="LOCAL" />
-      <updated>1715619267949</updated>
-    </task>
-    <task id="LOCAL-00006" summary="important try.">
-      <option name="closed" value="true" />
-      <created>1715690582190</created>
-      <option name="number" value="00006" />
-      <option name="presentableId" value="LOCAL-00006" />
-      <option name="project" value="LOCAL" />
-      <updated>1715690582190</updated>
-    </task>
-    <task id="LOCAL-00007" summary="Beta 1.0&#10;Console Version of the game.&#10;Basic functionality is implemented.">
-      <option name="closed" value="true" />
-      <created>1715701094275</created>
-      <option name="number" value="00007" />
-      <option name="presentableId" value="LOCAL-00007" />
-      <option name="project" value="LOCAL" />
-      <updated>1715701094275</updated>
-    </task>
-    <task id="LOCAL-00008" summary="Beta 1.1 Update Plots and Stock Algorithms.">
-      <option name="closed" value="true" />
-      <created>1715704065031</created>
-      <option name="number" value="00008" />
-      <option name="presentableId" value="LOCAL-00008" />
-      <option name="project" value="LOCAL" />
-      <updated>1715704065031</updated>
-    </task>
-    <task id="LOCAL-00009" summary="Beta 1.2 Refined Algorithm.">
-      <option name="closed" value="true" />
-      <created>1715707172356</created>
-      <option name="number" value="00009" />
-      <option name="presentableId" value="LOCAL-00009" />
-      <option name="project" value="LOCAL" />
-      <updated>1715707172356</updated>
-    </task>
-    <task id="LOCAL-00010" summary="Beta 1.2.1">
-      <option name="closed" value="true" />
-      <created>1715766398931</created>
-      <option name="number" value="00010" />
-      <option name="presentableId" value="LOCAL-00010" />
-      <option name="project" value="LOCAL" />
-      <updated>1715766398931</updated>
-    </task>
-    <task id="LOCAL-00011" summary="Beta 1.3 better user handling.">
-      <option name="closed" value="true" />
-      <created>1721751033273</created>
-      <option name="number" value="00011" />
-      <option name="presentableId" value="LOCAL-00011" />
-      <option name="project" value="LOCAL" />
-      <updated>1721751033273</updated>
-    </task>
-    <task id="LOCAL-00012" summary="Beta 1.3.1 more organized code">
-      <option name="closed" value="true" />
-      <created>1721754206056</created>
-      <option name="number" value="00012" />
-      <option name="presentableId" value="LOCAL-00012" />
-      <option name="project" value="LOCAL" />
-      <updated>1721754206056</updated>
-    </task>
-    <task id="LOCAL-00013" summary="Beta 1.3.1 more organized code">
-      <option name="closed" value="true" />
-      <created>1721754251872</created>
-      <option name="number" value="00013" />
-      <option name="presentableId" value="LOCAL-00013" />
-      <option name="project" value="LOCAL" />
-      <updated>1721754251872</updated>
-    </task>
-    <task id="LOCAL-00014" summary="Beta 1.4: Saving files to local, better Readme">
-      <option name="closed" value="true" />
-      <created>1721754769252</created>
-      <option name="number" value="00014" />
-      <option name="presentableId" value="LOCAL-00014" />
-      <option name="project" value="LOCAL" />
-      <updated>1721754769252</updated>
-    </task>
-    <task id="LOCAL-00015" summary="Beta 1.4: Saving files to local, better Readme">
-      <option name="closed" value="true" />
-      <created>1721754791429</created>
-      <option name="number" value="00015" />
-      <option name="presentableId" value="LOCAL-00015" />
-      <option name="project" value="LOCAL" />
-      <updated>1721754791429</updated>
-    </task>
-    <task id="LOCAL-00016" summary="Beta 1.4.1 Update login logic">
-      <option name="closed" value="true" />
-      <created>1721755364041</created>
-      <option name="number" value="00016" />
-      <option name="presentableId" value="LOCAL-00016" />
-      <option name="project" value="LOCAL" />
-      <updated>1721755364041</updated>
-    </task>
-    <task id="LOCAL-00017" summary="Beta 1.4.2 Update data saving logic">
-      <option name="closed" value="true" />
-      <created>1721755978523</created>
-      <option name="number" value="00017" />
-      <option name="presentableId" value="LOCAL-00017" />
-      <option name="project" value="LOCAL" />
-      <updated>1721755978523</updated>
-    </task>
-    <task id="LOCAL-00018" summary="Version 1.0 Release: Full Functioning local save system.">
-      <option name="closed" value="true" />
-      <created>1721757055196</created>
-      <option name="number" value="00018" />
-      <option name="presentableId" value="LOCAL-00018" />
-      <option name="project" value="LOCAL" />
-      <updated>1721757055196</updated>
-    </task>
-    <task id="LOCAL-00019" summary="Version 1.0 Release: Full Functioning local save system.">
-      <option name="closed" value="true" />
-      <created>1721757059848</created>
-      <option name="number" value="00019" />
-      <option name="presentableId" value="LOCAL-00019" />
-      <option name="project" value="LOCAL" />
-      <updated>1721757059848</updated>
-    </task>
-    <task id="LOCAL-00020" summary="Fixed new user can not create profile bug.">
-      <option name="closed" value="true" />
-      <created>1721759727408</created>
-      <option name="number" value="00020" />
-      <option name="presentableId" value="LOCAL-00020" />
-      <option name="project" value="LOCAL" />
-      <updated>1721759727408</updated>
-    </task>
-    <task id="LOCAL-00021" summary="Fixed new user can not create profile bug.">
-      <option name="closed" value="true" />
-      <created>1721759844963</created>
-      <option name="number" value="00021" />
-      <option name="presentableId" value="LOCAL-00021" />
-      <option name="project" value="LOCAL" />
-      <updated>1721759844963</updated>
-    </task>
-    <task id="LOCAL-00022" summary="Add bugged minigame. Update Release 1.0.1">
-      <option name="closed" value="true" />
-      <created>1721761763618</created>
-      <option name="number" value="00022" />
-      <option name="presentableId" value="LOCAL-00022" />
-      <option name="project" value="LOCAL" />
-      <updated>1721761763618</updated>
-    </task>
-    <task id="LOCAL-00023" summary="Much much more code added to the project. 1.0.2 Alpha">
-      <option name="closed" value="true" />
-      <created>1721762687630</created>
-      <option name="number" value="00023" />
-      <option name="presentableId" value="LOCAL-00023" />
-      <option name="project" value="LOCAL" />
-      <updated>1721762687630</updated>
-    </task>
-    <task id="LOCAL-00024" summary="Much much more code added to the project. 1.0.2 Alpha">
-      <option name="closed" value="true" />
-      <created>1721762755336</created>
-      <option name="number" value="00024" />
-      <option name="presentableId" value="LOCAL-00024" />
-      <option name="project" value="LOCAL" />
-      <updated>1721762755336</updated>
-    </task>
-    <task id="LOCAL-00025" summary="Beta 1.1 Release: Config system">
-      <option name="closed" value="true" />
-      <created>1721797575998</created>
-      <option name="number" value="00025" />
-      <option name="presentableId" value="LOCAL-00025" />
-      <option name="project" value="LOCAL" />
-      <updated>1721797575998</updated>
-    </task>
-    <task id="LOCAL-00026" summary="Beta 1.1.3 Config System bug fixed.">
-      <option name="closed" value="true" />
-      <created>1721817327711</created>
-      <option name="number" value="00026" />
-      <option name="presentableId" value="LOCAL-00026" />
-      <option name="project" value="LOCAL" />
-      <updated>1721817327711</updated>
-    </task>
-    <task id="LOCAL-00027" summary="Beta 1.1.3 Config System bug fixed.">
-      <option name="closed" value="true" />
-      <created>1721817540111</created>
-      <option name="number" value="00027" />
-      <option name="presentableId" value="LOCAL-00027" />
-      <option name="project" value="LOCAL" />
-      <updated>1721817540111</updated>
-    </task>
-    <task id="LOCAL-00028" summary="Beta 1.1.3 Config System bug fixed.">
-      <option name="closed" value="true" />
-      <created>1721818393629</created>
-      <option name="number" value="00028" />
-      <option name="presentableId" value="LOCAL-00028" />
-      <option name="project" value="LOCAL" />
-      <updated>1721818393629</updated>
-    </task>
-    <task id="LOCAL-00029" summary="Deleted workflow.">
-      <option name="closed" value="true" />
-      <created>1721818681444</created>
-      <option name="number" value="00029" />
-      <option name="presentableId" value="LOCAL-00029" />
-      <option name="project" value="LOCAL" />
-      <updated>1721818681444</updated>
-    </task>
-    <task id="LOCAL-00030" summary="1.0.0 Final Release">
-      <option name="closed" value="true" />
-      <created>1721821391244</created>
-      <option name="number" value="00030" />
-      <option name="presentableId" value="LOCAL-00030" />
-      <option name="project" value="LOCAL" />
-      <updated>1721821391244</updated>
-    </task>
-    <task id="LOCAL-00031" summary="1.0.1 Updated menu.">
-      <option name="closed" value="true" />
-      <created>1721822566780</created>
-      <option name="number" value="00031" />
-      <option name="presentableId" value="LOCAL-00031" />
-      <option name="project" value="LOCAL" />
-      <updated>1721822566780</updated>
-    </task>
-    <task id="LOCAL-00032" summary="1.0.2 GUI tryout.">
-      <option name="closed" value="true" />
-      <created>1721825240738</created>
-      <option name="number" value="00032" />
-      <option name="presentableId" value="LOCAL-00032" />
-      <option name="project" value="LOCAL" />
-      <updated>1721825240738</updated>
-    </task>
-    <option name="localTasksCounter" value="33" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
-  <component name="Vcs.Log.History.Properties">
-    <option name="COLUMN_ID_ORDER">
-      <list>
-        <option value="Default.Root" />
-        <option value="Default.Author" />
-        <option value="Default.Date" />
-        <option value="Default.Subject" />
-        <option value="GitHub.CommitStatus" />
-      </list>
-    </option>
-  </component>
-  <component name="Vcs.Log.Tabs.Properties">
-    <option name="TAB_STATES">
-      <map>
-        <entry key="MAIN">
-          <value>
-            <State />
-          </value>
-        </entry>
-      </map>
-    </option>
-  </component>
-  <component name="VcsManagerConfiguration">
-    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="Version Alpha 0.1: Basic Structure Constructed." />
-    <MESSAGE value="Version Alpha 0.2: Main functionality is completed but not yet tested." />
-    <MESSAGE value="Alpha 0.2 test passed. Basic functionality is working." />
-    <MESSAGE value="Alpha 0.3 with testing main.py. No interactions added into project yet." />
-    <MESSAGE value="Alpha 0.3.1 for window arranges." />
-    <MESSAGE value="important try." />
-    <MESSAGE value="Beta 1.0&#10;Console Version of the game.&#10;Basic functionality is implemented." />
-    <MESSAGE value="Beta 1.1 Update Plots and Stock Algorithms." />
-    <MESSAGE value="Beta 1.2 Refined Algorithm." />
-    <MESSAGE value="Beta 1.2.1" />
-    <MESSAGE value="Beta 1.3 better user handling." />
-    <MESSAGE value="Beta 1.3.1 more organized code" />
-    <MESSAGE value="Beta 1.4: Saving files to local, better Readme" />
-    <MESSAGE value="Beta 1.4.1 Update login logic" />
-    <MESSAGE value="Beta 1.4.2 Update data saving logic" />
-    <MESSAGE value="Version 1.0 Release: Full Functioning local save system." />
-    <MESSAGE value="Fixed new user can not create profile bug." />
-    <MESSAGE value="Add bugged minigame. Update Release 1.0.1" />
-    <MESSAGE value="Much much more code added to the project. 1.0.2 Alpha" />
-    <MESSAGE value="Beta 1.1 Release: Config system" />
-    <MESSAGE value="Beta 1.1.3 Config System bug fixed." />
-    <MESSAGE value="Deleted workflow." />
-    <MESSAGE value="1.0.0 Final Release" />
-    <MESSAGE value="1.0.1 Updated menu." />
-    <MESSAGE value="1.0.2 GUI tryout." />
-    <option name="LAST_COMMIT_MESSAGE" value="1.0.2 GUI tryout." />
-  </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/Chips_Battle$menu_gui.coverage" NAME="menu_gui Coverage Results" MODIFIED="1721823941598" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/game" />
-    <SUITE FILE_PATH="coverage/Chips_Battle$auth.coverage" NAME="auth Coverage Results" MODIFIED="1715690127524" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils" />
-    <SUITE FILE_PATH="coverage/Chips_Battle$user.coverage" NAME="user Coverage Results" MODIFIED="1715700710788" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/game" />
-    <SUITE FILE_PATH="coverage/Chips_Battle$holdem.coverage" NAME="holdem Coverage Results" MODIFIED="1721761661176" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/minigame" />
-    <SUITE FILE_PATH="coverage/Chips_Battle$menu.coverage" NAME="menu Coverage Results" MODIFIED="1721844966799" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/game" />
-    <SUITE FILE_PATH="coverage/Chips_Battle$test.coverage" NAME="test Coverage Results" MODIFIED="1721844903713" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/debug" />
-    <SUITE FILE_PATH="coverage/Chips_Battle_master$main.coverage" NAME="main Coverage Results" MODIFIED="1721817202979" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/Chips_Battle$main.coverage" NAME="main Coverage Results" MODIFIED="1721846602993" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/Chips_Battle$blackjack.coverage" NAME="blackjack Coverage Results" MODIFIED="1721761610528" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/minigame" />
-    <SUITE FILE_PATH="coverage/Chips_Battle$user_window.coverage" NAME="user_window Coverage Results" MODIFIED="1715619141126" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/gui" />
+    <SUITE FILE_PATH="coverage/stock_sim$main.coverage" NAME="main Coverage Results" MODIFIED="1747503608033" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/stock_sim$main_window.coverage" NAME="main_window Coverage Results" MODIFIED="1747502687678" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/views" />
   </component>
 </project>

@@ -1,0 +1,218 @@
+[
+    {
+        "name": "TechGiant",
+        "symbol": "TGT",
+        "price": 150.0,
+        "volatility": 2.5,
+        "sector": "Technology",
+        "pays_dividend": true,
+        "dividend_yield": 0.5
+    },
+    {
+        "name": "MediHealth",
+        "symbol": "MHC",
+        "price": 85.0,
+        "volatility": 1.8,
+        "sector": "Healthcare",
+        "pays_dividend": true,
+        "dividend_yield": 1.2
+    },
+    {
+        "name": "BankCorp",
+        "symbol": "BNK",
+        "price": 65.0,
+        "volatility": 1.5,
+        "sector": "Finance",
+        "pays_dividend": true,
+        "dividend_yield": 2.5
+    },
+    {
+        "name": "EnergyOne",
+        "symbol": "ENO",
+        "price": 40.0,
+        "volatility": 2.2,
+        "sector": "Energy",
+        "pays_dividend": false,
+        "dividend_yield": 0
+    },
+    {
+        "name": "RetailShop",
+        "symbol": "RSP",
+        "price": 55.0,
+        "volatility": 1.7,
+        "sector": "Consumer",
+        "pays_dividend": true,
+        "dividend_yield": 1.0
+    },
+    {
+        "name": "StartupTech",
+        "symbol": "STU",
+        "price": 25.0,
+        "volatility": 3.5,
+        "sector": "Technology",
+        "pays_dividend": false,
+        "dividend_yield": 0
+    },
+    {
+        "name": "PharmaCure",
+        "symbol": "PHC",
+        "price": 120.0,
+        "volatility": 2.0,
+        "sector": "Healthcare",
+        "pays_dividend": true,
+        "dividend_yield": 0.8
+    },
+    {
+        "name": "InvestFund",
+        "symbol": "INF",
+        "price": 95.0,
+        "volatility": 1.6,
+        "sector": "Finance",
+        "pays_dividend": true,
+        "dividend_yield": 1.8
+    },
+    {
+        "name": "OilDrill",
+        "symbol": "ODL",
+        "price": 70.0,
+        "volatility": 2.3,
+        "sector": "Energy",
+        "pays_dividend": true,
+        "dividend_yield": 3.0
+    },
+    {
+        "name": "FoodMarket",
+        "symbol": "FMT",
+        "price": 45.0,
+        "volatility": 1.5,
+        "sector": "Consumer",
+        "pays_dividend": true,
+        "dividend_yield": 1.5
+    },
+    {
+        "name": "Bitcoin",
+        "symbol": "BTC",
+        "price": 42000.0,
+        "volatility": 4.5,
+        "sector": "Crypto",
+        "pays_dividend": false,
+        "dividend_yield": 0
+    },
+    {
+        "name": "Ethereum",
+        "symbol": "ETH",
+        "price": 2800.0,
+        "volatility": 4.2,
+        "sector": "Crypto",
+        "pays_dividend": false,
+        "dividend_yield": 0
+    },
+    {
+        "name": "Binance Coin",
+        "symbol": "BNB",
+        "price": 320.0,
+        "volatility": 3.8,
+        "sector": "Crypto",
+        "pays_dividend": false,
+        "dividend_yield": 0
+    },
+    {
+        "name": "Cardano",
+        "symbol": "ADA",
+        "price": 0.45,
+        "volatility": 5.0,
+        "sector": "Crypto",
+        "pays_dividend": false,
+        "dividend_yield": 0
+    },
+    {
+        "name": "Solana",
+        "symbol": "SOL",
+        "price": 120.0,
+        "volatility": 5.5,
+        "sector": "Crypto",
+        "pays_dividend": false,
+        "dividend_yield": 0
+    },
+    {
+        "name": "Ripple",
+        "symbol": "XRP",
+        "price": 0.55,
+        "volatility": 4.8,
+        "sector": "Crypto",
+        "pays_dividend": false,
+        "dividend_yield": 0
+    },
+    {
+        "name": "Dogecoin",
+        "symbol": "DOGE",
+        "price": 0.08,
+        "volatility": 6.5,
+        "sector": "Crypto",
+        "pays_dividend": false,
+        "dividend_yield": 0
+    },
+    {
+        "name": "Polkadot",
+        "symbol": "DOT",
+        "price": 6.5,
+        "volatility": 4.7,
+        "sector": "Crypto",
+        "pays_dividend": false,
+        "dividend_yield": 0
+    },
+    {
+        "name": "Chainlink",
+        "symbol": "LINK",
+        "price": 14.2,
+        "volatility": 4.3,
+        "sector": "Crypto",
+        "pays_dividend": false,
+        "dividend_yield": 0
+    },
+    {
+        "name": "Polygon",
+        "symbol": "MATIC",
+        "price": 0.65,
+        "volatility": 5.2,
+        "sector": "Crypto",
+        "pays_dividend": false,
+        "dividend_yield": 0
+    },
+    {
+        "name": "Avalanche",
+        "symbol": "AVAX",
+        "price": 28.5,
+        "volatility": 5.0,
+        "sector": "Crypto",
+        "pays_dividend": false,
+        "dividend_yield": 0
+    },
+    {
+        "name": "Uniswap",
+        "symbol": "UNI",
+        "price": 5.8,
+        "volatility": 4.9,
+        "sector": "Crypto",
+        "pays_dividend": false,
+        "dividend_yield": 0
+    },
+    {
+        "name": "Litecoin",
+        "symbol": "LTC",
+        "price": 68.0,
+        "volatility": 4.0,
+        "sector": "Crypto",
+        "pays_dividend": false,
+        "dividend_yield": 0
+    },
+    {
+        "name": "Shiba Inu",
+        "symbol": "SHIB",
+        "price": 0.00001,
+        "volatility": 7.0,
+        "sector": "Crypto",
+        "pays_dividend": false,
+        "dividend_yield": 0
+    }
+]

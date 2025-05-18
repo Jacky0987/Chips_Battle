@@ -1,0 +1,20 @@
+{
+  "game": {
+    "starting_cash": 30000,
+    "max_days": 300
+  },
+  "files": {
+    "stocks_file": "data/stocks.json",
+    "news_file": "data/news.json"
+  },
+  "ui": {
+    "window_width": 1600,
+    "window_height": 800,
+    "default_chart_type": "Line"
+  },
+  "simulation": {
+    "news_event_chance": 0.3,
+    "stock_news_chance": 0.2,
+    "market_volatility": 1.0
+  }
+}
