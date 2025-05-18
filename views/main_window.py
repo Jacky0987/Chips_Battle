@@ -11,6 +11,8 @@ from views.widgets.stock_list import StockList
 from views.widgets.portfolio_view import PortfolioView
 from views.widgets.trading_panel import TradingPanel
 from views.widgets.news_feed import NewsFeed
+# 在文件顶部导入成就视图
+from views.widgets.achievements_view import AchievementsView
 
 class StockMarketGameApp:
     def __init__(self, root):
@@ -48,6 +50,10 @@ class StockMarketGameApp:
         self.charts_tab = ttk.Frame(self.notebook)
         self.notebook.add(self.charts_tab, text="Charts")
         
+        # 创建成就标签页
+        self.achievements_tab = ttk.Frame(self.notebook)
+        self.notebook.add(self.achievements_tab, text="成就")
+        
         # Set up the main tab layout
         self.setup_main_tab()
         
@@ -56,6 +62,9 @@ class StockMarketGameApp:
         
         # Set up charts tab
         self.setup_charts_tab()
+        
+        # 设置成就标签页
+        self.setup_achievements_tab()
         
         # Create status bar (now without navigation buttons)
         self.status_frame = ttk.Frame(root)
@@ -143,6 +152,12 @@ class StockMarketGameApp:
         self.sector_chart = SectorChart(sector_frame)
         self.sector_chart.get_frame().pack(fill=tk.BOTH, expand=True)
 
+    def setup_achievements_tab(self):
+        """设置成就标签页"""
+        # 创建成就视图
+        self.achievements_view = AchievementsView(self.achievements_tab)
+        self.achievements_view.get_frame().pack(fill=tk.BOTH, expand=True)
+    
     def set_controller(self, controller):
         self.controller = controller
         print(f"[DEBUG] 设置控制器到主窗口")
@@ -196,6 +211,10 @@ class StockMarketGameApp:
         
         # Update news feed
         self.news_feed.update(market.news_feed)
+        
+        # 更新成就视图
+        self.achievements_view.set_achievement_manager(market.achievement_manager)
+        self.achievements_view.update_achievements()
         
     def on_stock_selected(self, symbols):
         """Handle stock selection from the main stock list"""

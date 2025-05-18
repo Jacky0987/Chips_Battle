@@ -1,0 +1,172 @@
+[
+    {
+        "id": "first_trade",
+        "name": "\u521d\u6b21\u4ea4\u6613",
+        "description": "\u5b8c\u6210\u60a8\u7684\u7b2c\u4e00\u7b14\u4ea4\u6613",
+        "category": "\u4ea4\u6613",
+        "icon": null,
+        "hidden": false,
+        "unlocked": false,
+        "unlock_date": null
+    },
+    {
+        "id": "day_trader",
+        "name": "\u65e5\u5185\u4ea4\u6613\u8005",
+        "description": "\u5728\u4e00\u5929\u5185\u5b8c\u621010\u7b14\u4ea4\u6613",
+        "category": "\u4ea4\u6613",
+        "icon": null,
+        "hidden": false,
+        "unlocked": false,
+        "unlock_date": null
+    },
+    {
+        "id": "big_spender",
+        "name": "\u5927\u624b\u7b14",
+        "description": "\u5355\u7b14\u4ea4\u6613\u91d1\u989d\u8d85\u8fc7$10,000",
+        "category": "\u4ea4\u6613",
+        "icon": null,
+        "hidden": false,
+        "unlocked": false,
+        "unlock_date": null
+    },
+    {
+        "id": "diversified",
+        "name": "\u591a\u5143\u5316\u6295\u8d44",
+        "description": "\u540c\u65f6\u6301\u67095\u79cd\u4e0d\u540c\u7684\u80a1\u7968",
+        "category": "\u4ea4\u6613",
+        "icon": null,
+        "hidden": false,
+        "unlocked": false,
+        "unlock_date": null
+    },
+    {
+        "id": "first_profit",
+        "name": "\u521d\u5c1d\u751c\u5934",
+        "description": "\u83b7\u5f97\u7b2c\u4e00\u7b14\u5229\u6da6",
+        "category": "\u5229\u6da6",
+        "icon": null,
+        "hidden": false,
+        "unlocked": false,
+        "unlock_date": null
+    },
+    {
+        "id": "double_money",
+        "name": "\u7ffb\u500d",
+        "description": "\u4f7f\u60a8\u7684\u6295\u8d44\u7ec4\u5408\u4ef7\u503c\u7ffb\u500d",
+        "category": "\u5229\u6da6",
+        "icon": null,
+        "hidden": false,
+        "unlocked": false,
+        "unlock_date": null
+    },
+    {
+        "id": "crypto_winner",
+        "name": "\u52a0\u5bc6\u8d27\u5e01\u8d62\u5bb6",
+        "description": "\u4ece\u52a0\u5bc6\u8d27\u5e01\u6295\u8d44\u4e2d\u83b7\u5229\u8d85\u8fc750%",
+        "category": "\u5229\u6da6",
+        "icon": null,
+        "hidden": false,
+        "unlocked": false,
+        "unlock_date": null
+    },
+    {
+        "id": "dividend_collector",
+        "name": "\u80a1\u606f\u6536\u85cf\u5bb6",
+        "description": "\u4ece\u80a1\u606f\u4e2d\u83b7\u5f97\u8d85\u8fc7$1,000",
+        "category": "\u5229\u6da6",
+        "icon": null,
+        "hidden": false,
+        "unlocked": false,
+        "unlock_date": null
+    },
+    {
+        "id": "short_seller",
+        "name": "\u5356\u7a7a\u8005",
+        "description": "\u6210\u529f\u5b8c\u6210\u4e00\u7b14\u5356\u7a7a\u4ea4\u6613",
+        "category": "\u98ce\u9669",
+        "icon": null,
+        "hidden": false,
+        "unlocked": false,
+        "unlock_date": null
+    },
+    {
+        "id": "risk_taker",
+        "name": "\u5192\u9669\u5bb6",
+        "description": "\u6295\u8d44\u6ce2\u52a8\u6027\u8d85\u8fc74\u7684\u80a1\u7968",
+        "category": "\u98ce\u9669",
+        "icon": null,
+        "hidden": false,
+        "unlocked": false,
+        "unlock_date": null
+    },
+    {
+        "id": "comeback_kid",
+        "name": "\u4e1c\u5c71\u518d\u8d77",
+        "description": "\u4ece20%\u7684\u4e8f\u635f\u4e2d\u6062\u590d",
+        "category": "\u98ce\u9669",
+        "icon": null,
+        "hidden": false,
+        "unlocked": false,
+        "unlock_date": null
+    },
+    {
+        "id": "week_survivor",
+        "name": "\u4e00\u5468\u751f\u5b58\u8005",
+        "description": "\u6210\u529f\u4ea4\u6613\u4e00\u5468\uff087\u5929\uff09",
+        "category": "\u65f6\u95f4",
+        "icon": null,
+        "hidden": false,
+        "unlocked": true,
+        "unlock_date": "2025-05-19 00:20:00"
+    },
+    {
+        "id": "month_master",
+        "name": "\u6708\u5ea6\u5927\u5e08",
+        "description": "\u6210\u529f\u4ea4\u6613\u4e00\u4e2a\u6708\uff0830\u5929\uff09",
+        "category": "\u65f6\u95f4",
+        "icon": null,
+        "hidden": false,
+        "unlocked": true,
+        "unlock_date": "2025-05-19 00:20:02"
+    },
+    {
+        "id": "market_veteran",
+        "name": "\u5e02\u573a\u8001\u624b",
+        "description": "\u5b8c\u6210\u6574\u4e2a\u6e38\u620f\u5468\u671f",
+        "category": "\u65f6\u95f4",
+        "icon": null,
+        "hidden": false,
+        "unlocked": false,
+        "unlock_date": null
+    },
+    {
+        "id": "market_crash",
+        "name": "\u5e78\u5b58\u8005",
+        "description": "\u5728\u5e02\u573a\u5d29\u76d8\u4e2d\u751f\u5b58\u4e0b\u6765",
+        "category": "\u9690\u85cf",
+        "icon": null,
+        "hidden": true,
+        "unlocked": false,
+        "unlock_date": null
+    },
+    {
+        "id": "perfect_timing",
+        "name": "\u5b8c\u7f8e\u65f6\u673a",
+        "description": "\u5728\u80a1\u7968\u4ef7\u683c\u6700\u4f4e\u70b9\u4e70\u5165\uff0c\u6700\u9ad8\u70b9\u5356\u51fa",
+        "category": "\u9690\u85cf",
+        "icon": null,
+        "hidden": true,
+        "unlocked": false,
+        "unlock_date": null
+    },
+    {
+        "id": "crypto_billionaire",
+        "name": "\u52a0\u5bc6\u8d27\u5e01\u4ebf\u4e07\u5bcc\u7fc1",
+        "description": "\u52a0\u5bc6\u8d27\u5e01\u6295\u8d44\u83b7\u5229\u8d85\u8fc71000%",
+        "category": "\u9690\u85cf",
+        "icon": null,
+        "hidden": true,
+        "unlocked": false,
+        "unlock_date": null
+    }
+]

@@ -4,6 +4,8 @@ import os
 from models.stock import Stock
 from models.portfolio import Portfolio
 from models.news import NewsGenerator
+# 在文件顶部导入成就管理器
+from models.achievement import AchievementManager
 
 
 class MarketSimulator:
@@ -51,6 +53,9 @@ class MarketSimulator:
         
         # Initialize ongoing events list
         self.ongoing_events = []
+        
+        # 初始化成就管理器
+        self.achievement_manager = AchievementManager()
     
     def load_config(self, config_file):
         """加载配置文件"""
@@ -240,6 +245,10 @@ class MarketSimulator:
                 shares_owned = self.portfolio.stocks[stock.symbol]
                 dividend_total = dividend * shares_owned
                 self.portfolio.cash += dividend_total
+                
+                # 记录股息交易
+                self.portfolio.add_dividend_transaction(self.current_day, stock.symbol, dividend_total)
+                
                 self.news_generator.add_dividend_news(
                     self.current_day, stock.name, stock.symbol, dividend_total
                 )
@@ -247,6 +256,14 @@ class MarketSimulator:
         # Update portfolio value history
         stock_prices = {stock.symbol: stock.price for stock in self.stocks}
         self.portfolio.update_net_worth(stock_prices)
+        
+        # 检查成就
+        unlocked_achievements = self.achievement_manager.check_achievements(self, self.portfolio)
+        
+        # 如果有新解锁的成就，添加到新闻提要
+        for achievement in unlocked_achievements:
+            self.news_generator.news_feed.insert(0, 
+                f"Day {self.current_day}: 🏆 成就解锁 - {achievement.name}: {achievement.description}")
         
         # 删除这段代码，因为它会导致卖出股票后的现金被重置
         # if self.portfolio.cash != current_cash:

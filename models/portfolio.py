@@ -143,6 +143,18 @@ class Portfolio:
 
         self.net_worth_history.append(net_worth)
         return net_worth
+        
+    # 添加新方法来记录股息交易
+    def add_dividend_transaction(self, day, symbol, amount):
+        """Record a dividend payment as a transaction"""
+        self.transaction_history.append({
+            "day": day,
+            "type": "DIVIDEND",
+            "symbol": symbol,
+            "shares": 0,
+            "price": 0,
+            "total": amount
+        })
 
     def get_summary(self, stock_dict):
         """Get a text summary of the portfolio"""
