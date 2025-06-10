@@ -1,0 +1,88 @@
+{
+  "companies": [
+    {
+      "company_id": "JC_TECH_001",
+      "name": "JackyCoin科技",
+      "symbol": "JCTECH",
+      "industry": "technology",
+      "company_type": "private",
+      "stage": "growth",
+      "founded_date": "2020-01-15",
+      "description": "专注于金融科技和区块链技术的创新公司",
+      "headquarters": "深圳市南山区",
+      "website": "www.jackytech.com",
+      "ceo_name": "张志强",
+      "metrics": {
+        "revenue": 150000000,
+        "profit": 25000000,
+        "assets": 300000000,
+        "liabilities": 100000000,
+        "employees": 350,
+        "market_share": 0.05,
+        "growth_rate": 0.35,
+        "debt_ratio": 0.33
+      },
+      "financials": {
+        "quarterly_reports": [],
+        "annual_reports": [],
+        "cash_flow": {},
+        "balance_sheet": {},
+        "income_statement": {}
+      },
+      "is_public": false,
+      "stock_price": 0.0,
+      "shares_outstanding": 0,
+      "market_cap": 0.0,
+      "ipo_price": null,
+      "ipo_date": null,
+      "news_events": [],
+      "performance_score": 78.5,
+      "risk_level": 3,
+      "created_by_user": null,
+      "last_updated": "2025-06-10T16:53:10.057028"
+    },
+    {
+      "company_id": "JC_MFG_001",
+      "name": "捷诚制造",
+      "symbol": "JCMFG",
+      "industry": "manufacturing",
+      "company_type": "public",
+      "stage": "mature",
+      "founded_date": "2015-03-20",
+      "description": "专业的精密制造和自动化设备供应商",
+      "headquarters": "苏州工业园区",
+      "website": "www.jcmfg.com",
+      "ceo_name": "李明华",
+      "metrics": {
+        "revenue": 800000000,
+        "profit": 80000000,
+        "assets": 1200000000,
+        "liabilities": 400000000,
+        "employees": 1500,
+        "market_share": 0.12,
+        "growth_rate": 0.15,
+        "debt_ratio": 0.33
+      },
+      "financials": {
+        "quarterly_reports": [],
+        "annual_reports": [],
+        "cash_flow": {},
+        "balance_sheet": {},
+        "income_statement": {}
+      },
+      "is_public": true,
+      "stock_price": 45.6,
+      "shares_outstanding": 100000000,
+      "market_cap": 4560000000.0,
+      "ipo_price": 25.0,
+      "ipo_date": "2022-06-15",
+      "news_events": [],
+      "performance_score": 72.3,
+      "risk_level": 2,
+      "created_by_user": null,
+      "last_updated": "2025-06-10T16:53:10.057028"
+    }
+  ],
+  "user_companies": {},
+  "last_updated": "2025-06-10T16:53:10.057028"
+}

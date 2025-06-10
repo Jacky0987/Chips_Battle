@@ -1,172 +1,317 @@
-[
-    {
-        "id": "first_trade",
-        "name": "\u521d\u6b21\u4ea4\u6613",
-        "description": "\u5b8c\u6210\u60a8\u7684\u7b2c\u4e00\u7b14\u4ea4\u6613",
-        "category": "\u4ea4\u6613",
-        "icon": null,
-        "hidden": false,
-        "unlocked": false,
-        "unlock_date": null
-    },
-    {
-        "id": "day_trader",
-        "name": "\u65e5\u5185\u4ea4\u6613\u8005",
-        "description": "\u5728\u4e00\u5929\u5185\u5b8c\u621010\u7b14\u4ea4\u6613",
-        "category": "\u4ea4\u6613",
-        "icon": null,
-        "hidden": false,
-        "unlocked": false,
-        "unlock_date": null
-    },
-    {
-        "id": "big_spender",
-        "name": "\u5927\u624b\u7b14",
-        "description": "\u5355\u7b14\u4ea4\u6613\u91d1\u989d\u8d85\u8fc7$10,000",
-        "category": "\u4ea4\u6613",
-        "icon": null,
-        "hidden": false,
-        "unlocked": false,
-        "unlock_date": null
-    },
-    {
-        "id": "diversified",
-        "name": "\u591a\u5143\u5316\u6295\u8d44",
-        "description": "\u540c\u65f6\u6301\u67095\u79cd\u4e0d\u540c\u7684\u80a1\u7968",
-        "category": "\u4ea4\u6613",
-        "icon": null,
-        "hidden": false,
-        "unlocked": false,
-        "unlock_date": null
-    },
-    {
-        "id": "first_profit",
-        "name": "\u521d\u5c1d\u751c\u5934",
-        "description": "\u83b7\u5f97\u7b2c\u4e00\u7b14\u5229\u6da6",
-        "category": "\u5229\u6da6",
-        "icon": null,
-        "hidden": false,
-        "unlocked": false,
-        "unlock_date": null
-    },
-    {
-        "id": "double_money",
-        "name": "\u7ffb\u500d",
-        "description": "\u4f7f\u60a8\u7684\u6295\u8d44\u7ec4\u5408\u4ef7\u503c\u7ffb\u500d",
-        "category": "\u5229\u6da6",
-        "icon": null,
-        "hidden": false,
-        "unlocked": false,
-        "unlock_date": null
-    },
-    {
-        "id": "crypto_winner",
-        "name": "\u52a0\u5bc6\u8d27\u5e01\u8d62\u5bb6",
-        "description": "\u4ece\u52a0\u5bc6\u8d27\u5e01\u6295\u8d44\u4e2d\u83b7\u5229\u8d85\u8fc750%",
-        "category": "\u5229\u6da6",
-        "icon": null,
-        "hidden": false,
-        "unlocked": false,
-        "unlock_date": null
-    },
-    {
-        "id": "dividend_collector",
-        "name": "\u80a1\u606f\u6536\u85cf\u5bb6",
-        "description": "\u4ece\u80a1\u606f\u4e2d\u83b7\u5f97\u8d85\u8fc7$1,000",
-        "category": "\u5229\u6da6",
-        "icon": null,
-        "hidden": false,
-        "unlocked": false,
-        "unlock_date": null
-    },
-    {
-        "id": "short_seller",
-        "name": "\u5356\u7a7a\u8005",
-        "description": "\u6210\u529f\u5b8c\u6210\u4e00\u7b14\u5356\u7a7a\u4ea4\u6613",
-        "category": "\u98ce\u9669",
-        "icon": null,
-        "hidden": false,
-        "unlocked": false,
-        "unlock_date": null
-    },
-    {
-        "id": "risk_taker",
-        "name": "\u5192\u9669\u5bb6",
-        "description": "\u6295\u8d44\u6ce2\u52a8\u6027\u8d85\u8fc74\u7684\u80a1\u7968",
-        "category": "\u98ce\u9669",
-        "icon": null,
-        "hidden": false,
-        "unlocked": false,
-        "unlock_date": null
-    },
-    {
-        "id": "comeback_kid",
-        "name": "\u4e1c\u5c71\u518d\u8d77",
-        "description": "\u4ece20%\u7684\u4e8f\u635f\u4e2d\u6062\u590d",
-        "category": "\u98ce\u9669",
-        "icon": null,
-        "hidden": false,
-        "unlocked": false,
-        "unlock_date": null
-    },
-    {
-        "id": "week_survivor",
-        "name": "\u4e00\u5468\u751f\u5b58\u8005",
-        "description": "\u6210\u529f\u4ea4\u6613\u4e00\u5468\uff087\u5929\uff09",
-        "category": "\u65f6\u95f4",
-        "icon": null,
-        "hidden": false,
-        "unlocked": true,
-        "unlock_date": "2025-05-19 00:20:00"
-    },
-    {
-        "id": "month_master",
-        "name": "\u6708\u5ea6\u5927\u5e08",
-        "description": "\u6210\u529f\u4ea4\u6613\u4e00\u4e2a\u6708\uff0830\u5929\uff09",
-        "category": "\u65f6\u95f4",
-        "icon": null,
-        "hidden": false,
-        "unlocked": true,
-        "unlock_date": "2025-05-19 00:20:02"
-    },
-    {
-        "id": "market_veteran",
-        "name": "\u5e02\u573a\u8001\u624b",
-        "description": "\u5b8c\u6210\u6574\u4e2a\u6e38\u620f\u5468\u671f",
-        "category": "\u65f6\u95f4",
-        "icon": null,
-        "hidden": false,
-        "unlocked": false,
-        "unlock_date": null
-    },
-    {
-        "id": "market_crash",
-        "name": "\u5e78\u5b58\u8005",
-        "description": "\u5728\u5e02\u573a\u5d29\u76d8\u4e2d\u751f\u5b58\u4e0b\u6765",
-        "category": "\u9690\u85cf",
-        "icon": null,
-        "hidden": true,
-        "unlocked": false,
-        "unlock_date": null
-    },
-    {
-        "id": "perfect_timing",
-        "name": "\u5b8c\u7f8e\u65f6\u673a",
-        "description": "\u5728\u80a1\u7968\u4ef7\u683c\u6700\u4f4e\u70b9\u4e70\u5165\uff0c\u6700\u9ad8\u70b9\u5356\u51fa",
-        "category": "\u9690\u85cf",
-        "icon": null,
-        "hidden": true,
-        "unlocked": false,
-        "unlock_date": null
-    },
-    {
-        "id": "crypto_billionaire",
-        "name": "\u52a0\u5bc6\u8d27\u5e01\u4ebf\u4e07\u5bcc\u7fc1",
-        "description": "\u52a0\u5bc6\u8d27\u5e01\u6295\u8d44\u83b7\u5229\u8d85\u8fc71000%",
-        "category": "\u9690\u85cf",
-        "icon": null,
-        "hidden": true,
-        "unlocked": false,
-        "unlock_date": null
-    }
-]
+{
+  "first_trade": {
+    "name": "初次交易",
+    "desc": "完成第一笔交易",
+    "reward": 1000,
+    "category": "trading",
+    "tier": "bronze",
+    "experience": 100,
+    "hidden": false
+  },
+  "trader_bronze": {
+    "name": "新手交易员",
+    "desc": "完成10笔交易",
+    "reward": 2000,
+    "category": "trading",
+    "tier": "bronze",
+    "experience": 200,
+    "hidden": false
+  },
+  "trader_silver": {
+    "name": "熟练交易员", 
+    "desc": "完成50笔交易",
+    "reward": 5000,
+    "category": "trading",
+    "tier": "silver",
+    "experience": 500,
+    "hidden": false
+  },
+  "trader_gold": {
+    "name": "专业交易员",
+    "desc": "完成200笔交易",
+    "reward": 15000,
+    "category": "trading",
+    "tier": "gold",
+    "experience": 1000,
+    "hidden": false
+  },
+  "profitable_trader": {
+    "name": "盈利交易者",
+    "desc": "总收益超过$10,000",
+    "reward": 5000,
+    "category": "profit",
+    "tier": "bronze",
+    "experience": 300,
+    "hidden": false
+  },
+  "profit_master": {
+    "name": "盈利大师",
+    "desc": "总收益超过$100,000",
+    "reward": 25000,
+    "category": "profit", 
+    "tier": "silver",
+    "experience": 800,
+    "hidden": false
+  },
+  "profit_legend": {
+    "name": "盈利传奇",
+    "desc": "总收益超过$500,000",
+    "reward": 100000,
+    "category": "profit",
+    "tier": "gold",
+    "experience": 2000,
+    "hidden": false
+  },
+  "day_trader": {
+    "name": "日内交易员",
+    "desc": "单日完成10笔交易",
+    "reward": 3000,
+    "category": "trading",
+    "tier": "bronze",
+    "experience": 250,
+    "hidden": false
+  },
+  "speed_trader": {
+    "name": "闪电交易员",
+    "desc": "单日完成25笔交易",
+    "reward": 8000,
+    "category": "trading",
+    "tier": "silver",
+    "experience": 600,
+    "hidden": false
+  },
+  "diversified": {
+    "name": "多元化投资",
+    "desc": "同时持有5种不同股票",
+    "reward": 2000,
+    "category": "portfolio",
+    "tier": "bronze",
+    "experience": 200,
+    "hidden": false
+  },
+  "portfolio_master": {
+    "name": "投资组合大师",
+    "desc": "同时持有10种不同股票",
+    "reward": 8000,
+    "category": "portfolio",
+    "tier": "silver",
+    "experience": 500,
+    "hidden": false
+  },
+  "millionaire": {
+    "name": "百万富翁",
+    "desc": "总资产达到$1,000,000",
+    "reward": 50000,
+    "category": "wealth",
+    "tier": "silver",
+    "experience": 1000,
+    "hidden": false
+  },
+  "multi_millionaire": {
+    "name": "千万富翁",
+    "desc": "总资产达到$10,000,000",
+    "reward": 200000,
+    "category": "wealth",
+    "tier": "gold",
+    "experience": 2500,
+    "hidden": false
+  },
+  "streak_trader": {
+    "name": "连胜交易员",
+    "desc": "连续5天登录",
+    "reward": 1500,
+    "category": "loyalty",
+    "tier": "bronze",
+    "experience": 150,
+    "hidden": false
+  },
+  "loyal_trader": {
+    "name": "忠实交易员",
+    "desc": "连续15天登录",
+    "reward": 5000,
+    "category": "loyalty",
+    "tier": "silver",
+    "experience": 400,
+    "hidden": false
+  },
+  "dedicated_trader": {
+    "name": "专注交易员",
+    "desc": "连续30天登录",
+    "reward": 15000,
+    "category": "loyalty",
+    "tier": "gold",
+    "experience": 800,
+    "hidden": false
+  },
+  "risk_manager": {
+    "name": "风险管理师",
+    "desc": "使用5次止损单",
+    "reward": 3000,
+    "category": "risk",
+    "tier": "bronze",
+    "experience": 200,
+    "hidden": false
+  },
+  "profit_taker": {
+    "name": "止盈专家",
+    "desc": "使用5次止盈单",
+    "reward": 3000,
+    "category": "risk",
+    "tier": "bronze",
+    "experience": 200,
+    "hidden": false
+  },
+  "limit_order_pro": {
+    "name": "限价单专家",
+    "desc": "成功执行20个限价单",
+    "reward": 5000,
+    "category": "advanced",
+    "tier": "silver",
+    "experience": 400,
+    "hidden": false
+  },
+  "short_seller": {
+    "name": "做空专家",
+    "desc": "成功完成10次做空交易",
+    "reward": 8000,
+    "category": "advanced",
+    "tier": "silver",
+    "experience": 500,
+    "hidden": false
+  },
+  "banker": {
+    "name": "银行客户",
+    "desc": "首次使用银行服务",
+    "reward": 2000,
+    "category": "banking",
+    "tier": "bronze",
+    "experience": 150,
+    "hidden": false
+  },
+  "loan_repayer": {
+    "name": "守信借贷人",
+    "desc": "按时偿还5笔贷款",
+    "reward": 5000,
+    "category": "banking",
+    "tier": "silver",
+    "experience": 300,
+    "hidden": false
+  },
+  "saver": {
+    "name": "储蓄专家",
+    "desc": "累计存款超过$50,000",
+    "reward": 3000,
+    "category": "banking",
+    "tier": "bronze",
+    "experience": 200,
+    "hidden": false
+  },
+  "perfect_trader": {
+    "name": "完美交易员",
+    "desc": "连续20笔交易无亏损",
+    "reward": 20000,
+    "category": "skill",
+    "tier": "gold",
+    "experience": 1500,
+    "hidden": false
+  },
+  "market_timer": {
+    "name": "市场择时专家",
+    "desc": "在市场下跌日获得正收益",
+    "reward": 10000,
+    "category": "skill",
+    "tier": "silver",
+    "experience": 600,
+    "hidden": false
+  },
+  "early_bird": {
+    "name": "早起的鸟儿",
+    "desc": "在早上6点前进行交易",
+    "reward": 1000,
+    "category": "special",
+    "tier": "bronze",
+    "experience": 100,
+    "hidden": true
+  },
+  "night_owl": {
+    "name": "夜猫子交易员",
+    "desc": "在晚上11点后进行交易",
+    "reward": 1000,
+    "category": "special",
+    "tier": "bronze",
+    "experience": 100,
+    "hidden": true
+  },
+  "bargain_hunter": {
+    "name": "抄底猎手",
+    "desc": "购买价格低于52周低点110%的股票",
+    "reward": 5000,
+    "category": "skill",
+    "tier": "silver",
+    "experience": 400,
+    "hidden": true
+  },
+  "momentum_rider": {
+    "name": "动量追随者",
+    "desc": "购买价格接近52周高点的股票并盈利",
+    "reward": 5000,
+    "category": "skill",
+    "tier": "silver",
+    "experience": 400,
+    "hidden": true
+  },
+  "crash_survivor": {
+    "name": "市场崩盘幸存者",
+    "desc": "在单日市场下跌超过5%时仍获得正收益",
+    "reward": 15000,
+    "category": "special",
+    "tier": "gold",
+    "experience": 1000,
+    "hidden": true
+  },
+  "quick_profit": {
+    "name": "快进快出",
+    "desc": "单笔交易在1分钟内完成并盈利",
+    "reward": 2000,
+    "category": "special",
+    "tier": "bronze",
+    "experience": 150,
+    "hidden": true
+  },
+  "level_up_master": {
+    "name": "升级大师",
+    "desc": "达到等级10",
+    "reward": 25000,
+    "category": "progress",
+    "tier": "gold",
+    "experience": 1000,
+    "hidden": false
+  },
+  "achievement_hunter": {
+    "name": "成就猎人",
+    "desc": "解锁20个成就",
+    "reward": 30000,
+    "category": "meta",
+    "tier": "gold",
+    "experience": 1500,
+    "hidden": false
+  },
+  "sector_specialist": {
+    "name": "行业专家",
+    "desc": "在同一行业持有价值超过$100,000的股票",
+    "reward": 8000,
+    "category": "portfolio",
+    "tier": "silver",
+    "experience": 500,
+    "hidden": false
+  },
+  "contrarian": {
+    "name": "逆向投资者",
+    "desc": "买入连续下跌3天的股票并在7天内盈利",
+    "reward": 10000,
+    "category": "skill",
+    "tier": "silver",
+    "experience": 600,
+    "hidden": true
+  }
+}
