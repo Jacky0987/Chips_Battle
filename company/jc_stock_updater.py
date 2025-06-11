@@ -347,7 +347,7 @@ class JCStockUpdater:
         }
         
         # 财务数据
-        analysis_data['financials'] = {
+        analysis_data['fundamentals'] = {
             'revenue': company.metrics.revenue,
             'profit': company.metrics.profit,
             'assets': company.metrics.assets,
@@ -369,39 +369,51 @@ class JCStockUpdater:
             'book_value_per_share': company.metrics.calculate_equity() / company.shares_outstanding if company.shares_outstanding > 0 else 0
         }
         
-        # 🔧 修复：添加价格历史数据
-        if symbol in self.price_cache:
-            analysis_data['price_history'] = self.price_cache[symbol][-90:]  # 最近90天数据
+        # 🔧 修复：价格历史数据（确保包含最新价格）
+        if symbol in self.price_history_cache and len(self.price_history_cache[symbol]) > 0:
+            # 使用真实的价格历史缓存
+            price_history_data = self.price_history_cache[symbol][-90:]  # 最近90天数据
+            analysis_data['price_history'] = [h['price'] for h in price_history_data]
+            
+            # 确保最新价格在历史数据中
+            if not analysis_data['price_history'] or analysis_data['price_history'][-1] != company.stock_price:
+                analysis_data['price_history'].append(company.stock_price)
+                
         else:
             # 如果没有缓存数据，生成模拟历史数据
             current_price = company.stock_price
             price_history = []
-            for i in range(30):  # 生成30天历史数据
-                base_price = current_price * (0.95 + 0.1 * (i / 30))  # 模拟价格变化
-                volatility = random.uniform(-0.05, 0.05)
-                price = base_price * (1 + volatility)
-                price_history.append(round(price, 2))
             
-            price_history.append(current_price)  # 添加当前价格
+            # 生成30天模拟历史数据
+            base_price = current_price * 0.9  # 从当前价格的90%开始
+            for i in range(30):
+                # 渐进式变化到当前价格
+                trend_factor = i / 29  # 0到1的渐进
+                price_level = base_price + (current_price - base_price) * trend_factor
+                
+                # 添加随机波动
+                volatility = random.uniform(-0.03, 0.03)
+                simulated_price = price_level * (1 + volatility)
+                
+                price_history.append(round(max(0.01, simulated_price), 2))
+            
+            # 确保最后一个价格是当前价格
+            price_history.append(current_price)
             analysis_data['price_history'] = price_history
         
-        # 技术指标数据
-        if symbol in self.technical_indicators:
-            analysis_data['technical_indicators'] = self.technical_indicators[symbol].copy()
-        else:
-            # 生成基础技术指标
-            prices = analysis_data['price_history']
-            analysis_data['technical_indicators'] = {
-                'ma5': sum(prices[-5:]) / 5 if len(prices) >= 5 else company.stock_price,
-                'ma20': sum(prices[-20:]) / 20 if len(prices) >= 20 else company.stock_price,
-                'ma60': sum(prices[-60:]) / 60 if len(prices) >= 60 else company.stock_price,
-                'rsi': random.uniform(30, 70),  # 模拟RSI
-                'macd': random.uniform(-0.5, 0.5),  # 模拟MACD
-                'bollinger_upper': company.stock_price * 1.05,
-                'bollinger_lower': company.stock_price * 0.95,
-                'avg_volume': random.randint(100000, 1000000),
-                'volume_ratio': random.uniform(0.8, 1.5)
-            }
+        # 技术指标数据（基于价格历史计算）
+        prices = analysis_data['price_history']
+        analysis_data['technical_indicators'] = {
+            'ma5': sum(prices[-5:]) / 5 if len(prices) >= 5 else company.stock_price,
+            'ma20': sum(prices[-20:]) / 20 if len(prices) >= 20 else company.stock_price,
+            'ma60': sum(prices[-60:]) / 60 if len(prices) >= 60 else company.stock_price,
+            'rsi': self._calculate_rsi_from_prices(prices) if len(prices) > 14 else 50,
+            'macd': self._calculate_macd_from_prices(prices) if len(prices) > 26 else 0,
+            'bollinger_upper': company.stock_price * 1.02,
+            'bollinger_lower': company.stock_price * 0.98,
+            'avg_volume': random.randint(100000, 1000000),
+            'volume_ratio': random.uniform(0.8, 1.5)
+        }
         
         # 市场情绪数据
         analysis_data['sentiment'] = {
@@ -410,21 +422,6 @@ class JCStockUpdater:
             'social_sentiment': 'positive' if company.performance_score > 60 else 'negative' if company.performance_score < 50 else 'neutral',
             'institutional_view': 'bullish' if company.performance_score > 75 else 'bearish' if company.performance_score < 35 else 'neutral'
         }
-        
-        # 价格历史
-        if symbol in self.price_history_cache:
-            history = self.price_history_cache[symbol][-60:]  # 最近60个数据点
-            analysis_data['price_history'] = [
-                {
-                    'timestamp': h['timestamp'],
-                    'price': h['price'],
-                    'volume': h.get('volume', 0)
-                } for h in history
-            ]
-        
-        # 技术指标
-        if symbol in self.technical_indicators:
-            analysis_data['technical_indicators'] = self.technical_indicators[symbol]
         
         # 新闻数据
         recent_news = company.news_events[-10:] if company.news_events else []
@@ -448,6 +445,46 @@ class JCStockUpdater:
         }
         
         return analysis_data
+    
+    def _calculate_rsi_from_prices(self, prices: List[float], period: int = 14) -> float:
+        """从价格列表计算RSI"""
+        if len(prices) < period + 1:
+            return 50.0
+        
+        gains = []
+        losses = []
+        
+        for i in range(1, period + 1):
+            change = prices[-i] - prices[-i-1]
+            if change > 0:
+                gains.append(change)
+                losses.append(0)
+            else:
+                gains.append(0)
+                losses.append(abs(change))
+        
+        avg_gain = sum(gains) / period
+        avg_loss = sum(losses) / period
+        
+        if avg_loss == 0:
+            return 100.0
+        
+        rs = avg_gain / avg_loss
+        rsi = 100 - (100 / (1 + rs))
+        
+        return round(rsi, 2)
+    
+    def _calculate_macd_from_prices(self, prices: List[float], fast: int = 12, slow: int = 26) -> float:
+        """从价格列表计算MACD"""
+        if len(prices) < slow:
+            return 0.0
+        
+        # 简化的MACD计算
+        ema_fast = sum(prices[-fast:]) / fast
+        ema_slow = sum(prices[-slow:]) / slow
+        
+        macd = ema_fast - ema_slow
+        return round(macd, 3)
     
     def get_available_jc_stocks(self) -> List[str]:
         """获取可用的JC股票代码列表"""

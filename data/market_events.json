@@ -946,5 +946,94 @@
       "TGT"
     ],
     "timestamp": "2025-06-11T16:40:05.577884+00:00"
+  },
+  {
+    "id": "event_055",
+    "title": "技术突破推动Energy板块大涨",
+    "description": "Energy领域取得重大技术突破，相关公司股票受到市场热捧。",
+    "impact": {
+      "sectors": [
+        "Technology"
+      ],
+      "effect": "positive",
+      "magnitude": 0.03,
+      "duration": "short_term"
+    },
+    "related_stocks": [
+      "AAPL",
+      "MSFT",
+      "GOOGL",
+      "NVDA"
+    ],
+    "timestamp": "2025-06-11T17:20:47.171317+00:00"
+  },
+  {
+    "id": "event_056",
+    "title": "社交媒体监管加强，Automotive板块波动",
+    "description": "监管机构对Automotive平台展开调查，市场情绪谨慎。",
+    "impact": {
+      "sectors": [
+        "Social Media"
+      ],
+      "effect": "negative",
+      "magnitude": 0.025,
+      "duration": "medium_term"
+    },
+    "related_stocks": [],
+    "timestamp": "2025-06-11T17:26:00.005768+00:00"
+  },
+  {
+    "id": "event_057",
+    "title": "物流瓶颈加剧，Consumer板块受压",
+    "description": "全球港口拥堵和运费上涨导致Consumer公司成本增加。",
+    "impact": {
+      "sectors": [
+        "Industrial"
+      ],
+      "effect": "negative",
+      "magnitude": 0.015,
+      "duration": "short_term"
+    },
+    "related_stocks": [
+      "CAT",
+      "FDX"
+    ],
+    "timestamp": "2025-06-11T17:27:45.385469+00:00"
+  },
+  {
+    "id": "event_058",
+    "title": "芯片供应短缺，Commodity行业承压",
+    "description": "全球芯片供应链瓶颈加剧，导致Commodity公司生产成本上升。",
+    "impact": {
+      "sectors": [
+        "Technology"
+      ],
+      "effect": "negative",
+      "magnitude": 0.02,
+      "duration": "short_term"
+    },
+    "related_stocks": [
+      "NVDA"
+    ],
+    "timestamp": "2025-06-11T17:28:39.470974+00:00"
+  },
+  {
+    "id": "event_059",
+    "title": "生物技术突破，Entertainment板块飙升",
+    "description": "新型医疗技术获批，Entertainment公司股价大幅上涨。",
+    "impact": {
+      "sectors": [
+        "Healthcare"
+      ],
+      "effect": "positive",
+      "magnitude": 0.04,
+      "duration": "medium_term"
+    },
+    "related_stocks": [
+      "PFE",
+      "MRNA",
+      "GILD"
+    ],
+    "timestamp": "2025-06-11T17:36:45.369237+00:00"
   }
 ]

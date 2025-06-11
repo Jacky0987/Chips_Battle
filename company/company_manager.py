@@ -21,6 +21,16 @@ class CompanyManager:
         self.stock_symbols: Dict[str, str] = {}    # {symbol: company_id}
         self.user_companies: Dict[str, List[str]] = {}  # {user_id: [company_ids]}
         self.storage_manager = CompanyStorageManager()
+        
+        # 初始化JC股票更新器
+        try:
+            from .jc_stock_updater import JCStockUpdater
+            self.jc_stock_updater = JCStockUpdater(self, main_app.market_data)
+            print("✅ JC股票更新器初始化成功")
+        except Exception as e:
+            print(f"❌ JC股票更新器初始化失败: {e}")
+            self.jc_stock_updater = None
+        
         self.load_companies()
         
     def load_companies(self):
@@ -44,6 +54,11 @@ class CompanyManager:
                     if company.is_public and company.symbol:
                         self.stock_symbols[company.symbol] = company.company_id
                 self.save_companies()
+            
+            # 启动JC股票更新器
+            if self.jc_stock_updater and len([c for c in self.companies.values() if c.is_public]) > 0:
+                print(f"🚀 启动JC股票价格更新器，监控 {len([c for c in self.companies.values() if c.is_public])} 只上市股票")
+                self.jc_stock_updater.start_price_updates()
                 
         except Exception as e:
             print(f"加载公司数据失败: {e}")
@@ -370,7 +385,7 @@ class CompanyManager:
         success, result = company.go_public(ipo_price, shares_to_issue)
         if success:
             # 将公司股票添加到市场数据
-            self.stock_symbols[company.symbol] = company_id
+            self.stock_symbols[company.symbol] = company.company_id
             self._add_to_market_data(company)
             self.save_companies()
             
@@ -933,19 +948,74 @@ class CompanyManager:
         
         return True, f"{result}\n💼 公司账户余额: J${company.company_cash:,.0f}"
 
-    def acquire_company(self, acquirer_id: str, target_symbol: str, offer_price: float) -> Tuple[bool, str]:
-        """公司收购功能"""
-        if acquirer_id not in self.companies:
-            return False, "❌ 收购方公司不存在"
+    def evaluate_acquisition(self, acquirer_id: str, target_symbol: str) -> Tuple[bool, str]:
+        """评估收购价格和可行性（第一步）"""
+        # 🔧 修复：支持股票代码作为收购方识别符
+        acquirer = self.find_company_by_identifier(acquirer_id, user_only=True)
+        if not acquirer:
+            # 提供详细的错误信息和用户公司列表
+            user_companies = self.get_user_companies(self.main_app.user_manager.current_user)
+            if user_companies:
+                suggestions = []
+                for uc in user_companies:
+                    suggestions.append(f"  • {uc.name}: 公司ID={uc.company_id}, 股票代码={uc.symbol}")
+                suggestions_text = "\n".join(suggestions)
+                
+                return False, f"""❌ 未找到收购方公司: {acquirer_id}
+
+💡 您拥有的公司:
+{suggestions_text}
+
+🔍 正确用法:
+  company acquire <您的公司ID或股票代码> <目标股票代码>"""
+            else:
+                return False, """❌ 您还没有创建任何公司
+
+💡 请先创建公司:
+  company wizard    # 创建向导
+  company create <公司名> <行业>"""
             
-        acquirer = self.companies[acquirer_id]
+        # 🔧 修复：同时支持通过股票代码和公司ID查找目标公司
+        target = None
+        
+        # 先尝试通过股票代码查找
         target = self.get_company_by_symbol(target_symbol)
         
+        # 如果没找到，再尝试通过公司ID查找
         if not target:
-            return False, f"❌ 目标公司 {target_symbol} 不存在"
+            target = self.find_company_by_identifier(target_symbol, user_only=False)
+        
+        if not target:
+            # 提供更详细的错误信息和建议
+            all_companies = list(self.companies.values())
+            if all_companies:
+                suggestions = []
+                for company in all_companies[:10]:  # 显示前10个公司
+                    status = "📈 已上市" if company.is_public else "🏢 未上市"
+                    suggestions.append(f"  • {company.name}: ID={company.company_id}, 代码={company.symbol} ({status})")
+                suggestions_text = "\n".join(suggestions)
+                
+                return False, f"""❌ 未找到目标公司: {target_symbol}
+
+💡 可选择的公司:
+{suggestions_text}
+{'...' if len(all_companies) > 10 else ''}
+
+🔍 使用方法:
+  company acquire <您的公司> <目标公司ID或股票代码>
+  
+📖 查看所有公司: company market"""
+            else:
+                return False, "❌ 系统中暂无其他公司可供收购"
             
         if not target.is_public:
-            return False, "❌ 目标公司未上市，无法收购"
+            return False, f"""❌ 目标公司 {target.name} ({target_symbol}) 未上市，无法收购
+
+💡 只有已上市的公司才能被收购
+📊 该公司当前状态: 未上市 (营收: J${target.metrics.revenue:,.0f})
+🚀 上市条件: 营收需达到1亿元且表现评分>70分
+
+📖 查看已上市公司: company market"""
             
         # 检查是否为收购方创始人
         if acquirer.created_by_user != self.main_app.user_manager.current_user:
@@ -955,16 +1025,115 @@ class CompanyManager:
         if acquirer.company_id == target.company_id:
             return False, "❌ 不能收购自己的公司"
             
-        # 计算收购成本
-        current_market_cap = target.market_cap
-        premium_required = offer_price - target.stock_price
+        # 计算收购估值
+        base_price = target.stock_price
+        market_cap = target.market_cap
         
-        if premium_required < target.stock_price * 0.2:  # 至少20%溢价
-            return False, f"❌ 收购价格过低，至少需要 {target.stock_price * 1.2:.2f} 的价格"
+        # 计算合理收购溢价（20%-50%不等，根据公司表现）
+        if target.performance_score > 80:
+            premium_rate = 0.35 + random.uniform(0.05, 0.15)  # 35%-50%
+        elif target.performance_score > 60:
+            premium_rate = 0.25 + random.uniform(0.05, 0.10)  # 25%-35%
+        else:
+            premium_rate = 0.20 + random.uniform(0.0, 0.10)   # 20%-30%
+        
+        acquisition_price = base_price * (1 + premium_rate)
+        total_cost = acquisition_price * target.shares_outstanding
+        
+        # 计算协同效应价值
+        synergy_value = self._calculate_synergy_value(acquirer, target)
+        
+        # 生成评估报告
+        evaluation_report = f"""
+🔍 收购评估报告 - {target.name} ({target.symbol})
+
+📊 目标公司基本信息:
+  公司名称: {target.name}
+  行业: {target.industry.value}
+  当前股价: J${base_price:.2f}
+  市值: J${market_cap:,.0f}
+  总股本: {target.shares_outstanding:,}股
+  表现评分: {target.performance_score:.1f}/100
+
+💰 收购价格评估:
+  当前股价: J${base_price:.2f}
+  收购溢价: {premium_rate*100:.1f}%
+  收购价格: J${acquisition_price:.2f}/股
+  总收购成本: J${total_cost:,.0f}
+
+🏢 收购方资金状况:
+  公司名称: {acquirer.name}
+  账户余额: J${acquirer.company_cash:,.0f}
+  资金充足度: {'✅ 充足' if acquirer.company_cash >= total_cost else f'❌ 不足（缺口: J${total_cost - acquirer.company_cash:,.0f}）'}
+
+📈 协同效应分析:
+{synergy_value['report']}
+
+💡 收购建议:
+"""
+        
+        if acquirer.company_cash < total_cost:
+            shortage = total_cost - acquirer.company_cash
+            evaluation_report += f"""  ❌ 资金不足，需要补充 J${shortage:,.0f}
+  💡 建议: company invest {acquirer_id} {shortage:,.0f}
+  
+⚠️  请先筹集足够资金再考虑收购"""
+        else:
+            roi_estimate = synergy_value.get('expected_roi', 0)
+            if roi_estimate > 0.15:
+                recommendation = "🟢 强烈推荐收购"
+            elif roi_estimate > 0.08:
+                recommendation = "🟡 谨慎推荐收购"
+            else:
+                recommendation = "🔴 不推荐收购"
+                
+            evaluation_report += f"""  {recommendation}
+  📊 预期ROI: {roi_estimate*100:.1f}%
+  🔄 整合难度: {'高' if abs(len(acquirer.staff_list) - len(target.staff_list)) > 50 else '中' if abs(len(acquirer.staff_list) - len(target.staff_list)) > 20 else '低'}
+  
+✅ 确认收购命令: company acquire {acquirer_id} {target.symbol} confirm"""
+        
+        return True, evaluation_report
+    
+    def confirm_acquire_company(self, acquirer_id: str, target_symbol: str) -> Tuple[bool, str]:
+        """确认执行收购（第二步）"""
+        # 重新验证收购条件
+        acquirer = self.find_company_by_identifier(acquirer_id, user_only=True)
+        if not acquirer:
+            return False, f"❌ 未找到收购方公司: {acquirer_id}"
             
-        total_cost = offer_price * target.shares_outstanding
+        # 🔧 修复：同时支持通过股票代码和公司ID查找目标公司
+        target = self.get_company_by_symbol(target_symbol)
+        if not target:
+            target = self.find_company_by_identifier(target_symbol, user_only=False)
+            
+        if not target:
+            return False, f"❌ 目标公司 {target_symbol} 不存在"
+            
+        if not target.is_public:
+            return False, f"❌ 目标公司 {target.name} 未上市，无法收购"
+            
+        if acquirer.created_by_user != self.main_app.user_manager.current_user:
+            return False, "❌ 您不是收购方公司的创始人"
+            
+        if acquirer.company_id == target.company_id:
+            return False, "❌ 不能收购自己的公司"
         
-        # 🔧 修复：应该使用收购方公司账户，而不是个人账户
+        # 重新计算收购价格（市场价格可能有波动）
+        base_price = target.stock_price
+        
+        # 计算收购溢价
+        if target.performance_score > 80:
+            premium_rate = 0.35 + random.uniform(0.05, 0.15)
+        elif target.performance_score > 60:
+            premium_rate = 0.25 + random.uniform(0.05, 0.10)
+        else:
+            premium_rate = 0.20 + random.uniform(0.0, 0.10)
+        
+        acquisition_price = base_price * (1 + premium_rate)
+        total_cost = acquisition_price * target.shares_outstanding
+        
+        # 检查资金充足性
         if acquirer.company_cash < total_cost:
             shortage = total_cost - acquirer.company_cash
             return False, f"""❌ 收购方公司账户资金不足
@@ -972,31 +1141,41 @@ class CompanyManager:
   现有: J${acquirer.company_cash:,.0f}
   缺口: J${shortage:,.0f}
   
-💡 建议: 使用 'company invest {acquirer_id} {shortage:,.0f}' 向公司注资"""
+💡 建议: company invest {acquirer_id} {shortage:,.0f}"""
             
         # 执行收购 - 使用公司账户
         acquirer.company_cash -= total_cost
         
-        # 合并公司数据 - 🔧 修复：员工合并需要同步到实际员工列表
+        # 🔧 新增：保存收购前的数据用于报告
+        original_revenue = acquirer.metrics.revenue
+        original_employees = len(acquirer.staff_list)
+        original_market_share = acquirer.metrics.market_share
+        
+        # 合并公司数据
         acquirer.metrics.revenue += target.metrics.revenue
-        acquirer.metrics.profit += target.metrics.profit * 0.8  # 整合成本
+        acquirer.metrics.profit += target.metrics.profit * 0.85  # 考虑整合成本
         acquirer.metrics.assets += target.metrics.assets
         
         # 🔧 修复：将目标公司员工合并到收购方员工列表
-        if hasattr(target, 'staff_list'):
+        acquired_employees = 0
+        if hasattr(target, 'staff_list') and target.staff_list:
             next_id_base = max([staff['id'] for staff in acquirer.staff_list], default=0)
             for i, staff in enumerate(target.staff_list, 1):
-                staff['id'] = next_id_base + i
-                staff['hire_date'] = datetime.now().isoformat()  # 标记为收购加入
-                acquirer.staff_list.append(staff)
+                # 70%的员工会被保留
+                if random.random() < 0.7:
+                    staff['id'] = next_id_base + i
+                    staff['hire_date'] = datetime.now().isoformat()
+                    staff['note'] = f"通过收购{target.name}加入"
+                    acquirer.staff_list.append(staff)
+                    acquired_employees += 1
             
-        # 🔧 修复：同步更新员工数量
+        # 同步更新员工数量
         acquirer.metrics.employees = len(acquirer.staff_list)
-        acquirer.metrics.market_share += target.metrics.market_share
+        acquirer.metrics.market_share += target.metrics.market_share * 0.8  # 80%市场份额保留
         
         # 从市场移除目标公司
-        if target_symbol in self.main_app.market_data.stocks:
-            del self.main_app.market_data.stocks[target_symbol]
+        if target.symbol in self.main_app.market_data.stocks:
+            del self.main_app.market_data.stocks[target.symbol]
             
         # 从公司列表移除
         del self.companies[target.company_id]
@@ -1006,9 +1185,9 @@ class CompanyManager:
         acquirer.news_events.append(CompanyNews(
             news_id=f"{acquirer.symbol}_acquisition_{datetime.now().strftime('%Y%m%d')}",
             title=news_title,
-            content=f"{acquirer.name}以每股{offer_price:.2f}元的价格成功收购{target.name}全部股份。",
+            content=f"{acquirer.name}以每股{acquisition_price:.2f}元的价格成功收购{target.name}全部股份，实现战略整合。",
             impact_type="positive",
-            impact_magnitude=0.1,
+            impact_magnitude=0.12,
             publish_date=datetime.now().isoformat(),
             category="management"
         ))
@@ -1017,215 +1196,76 @@ class CompanyManager:
         self.save_companies()
         self.main_app.market_data.save_stocks()
         
-        return True, f"✅ 成功收购 {target.name}！投入 J${total_cost:,.0f}"
+        # 生成收购完成报告
+        completion_report = f"""
+✅ 收购交易成功完成！
 
-    def start_joint_venture(self, company1_id: str, company2_symbol: str, investment_amount: float) -> Tuple[bool, str]:
-        """合资企业功能"""
-        if company1_id not in self.companies:
-            return False, "❌ 您的公司不存在"
-            
-        company1 = self.companies[company1_id]
-        company2 = self.get_company_by_symbol(company2_symbol)
-        
-        if not company2:
-            return False, f"❌ 合作伙伴公司 {company2_symbol} 不存在"
-            
-        # 检查权限
-        if company1.created_by_user != self.main_app.user_manager.current_user:
-            return False, "❌ 您不是该公司的创始人"
-            
-        # 检查是否为同一家公司
-        if company1.company_id == company2.company_id:
-            return False, "❌ 不能与自己的公司合资"
-            
-        # 🔧 修复：使用公司账户而非个人账户
-        if company1.company_cash < investment_amount:
-            shortage = investment_amount - company1.company_cash
-            return False, f"""❌ 公司账户资金不足
-  需要: J${investment_amount:,.0f}
-  现有: J${company1.company_cash:,.0f}
-  缺口: J${shortage:,.0f}
-  
-💡 建议: 使用 'company invest {company1_id} {shortage:,.0f}' 向公司注资"""
-            
-        if investment_amount < 5000000:  # 最低500万投资
-            return False, "❌ 合资投资金额不能少于 500万"
-            
-        # 执行合资 - 使用公司账户
-        company1.company_cash -= investment_amount
-        
-        # 计算合资收益（基于双方实力）
-        synergy_factor = (company1.performance_score + company2.performance_score) / 200
-        expected_return = investment_amount * synergy_factor * random.uniform(0.05, 0.15)
-        
-        # 延迟收益（添加到公司未来收入）
-        company1.metrics.assets += investment_amount * 0.7  # 部分资产化
-        
-        # 建立合作关系（可以在后续版本中扩展）
-        if not hasattr(company1, 'partnerships'):
-            company1.partnerships = []
-        company1.partnerships.append({
-            'partner': company2_symbol,
-            'investment': investment_amount,
-            'start_date': datetime.now().isoformat(),
-            'expected_return': expected_return
-        })
-        
-        # 生成新闻
-        news_title = f"{company1.name}与{company2.name}建立战略合作，投资{investment_amount/1e8:.1f}亿"
-        company1.news_events.append(CompanyNews(
-            news_id=f"{company1.symbol}_jv_{datetime.now().strftime('%Y%m%d')}",
-            title=news_title,
-            content=f"双方将在{company1.industry.value}领域开展深度合作。",
-            impact_type="positive",
-            impact_magnitude=0.08,
-            publish_date=datetime.now().isoformat(),
-            category="management"
-        ))
-        
-        self.save_companies()
-        
-        return True, f"✅ 合资企业建立成功！投资 J${investment_amount:,.0f}，预期年化收益 {expected_return/investment_amount*100:.1f}%"
+🤝 交易详情:
+  收购方: {acquirer.name} ({acquirer.symbol})
+  被收购方: {target.name} ({target.symbol})
+  收购价格: J${acquisition_price:.2f}/股 (溢价 {premium_rate*100:.1f}%)
+  交易总额: J${total_cost:,.0f}
 
-    def show_company_competition_analysis(self, company_id: str) -> str:
-        """显示公司竞争分析"""
-        if company_id not in self.companies:
-            return "❌ 公司不存在"
-            
-        company = self.companies[company_id]
-        
-        # 找出同行业竞争对手
-        competitors = []
-        for other_id, other_company in self.companies.items():
-            if (other_company.industry == company.industry and 
-                other_id != company_id and 
-                other_company.is_public):
-                competitors.append(other_company)
-        
-        # 按市值排序
-        competitors.sort(key=lambda x: x.market_cap, reverse=True)
-        
-        result = f"""
-🏢 {company.name} 竞争分析报告
+📊 整合效果:
+  新增营收: J${target.metrics.revenue:,.0f} (+{((target.metrics.revenue/original_revenue)*100):.1f}%)
+  保留员工: {acquired_employees}人 (保留率: {(acquired_employees/len(target.staff_list)*100):.1f}%)
+  市场份额: +{target.metrics.market_share*0.8:.2f}%
+  总员工数: {len(acquirer.staff_list)}人 (新增: {len(acquirer.staff_list)-original_employees}人)
 
-📊 行业概况:
-  行业分类: {company.industry.value.title()}
-  行业内公司数量: {len(competitors) + 1}
-  我司行业排名: {self._get_industry_rank(company, competitors)}
+💰 财务状况:
+  交易后余额: J${acquirer.company_cash:,.0f}
+  预期年化收益: J${target.metrics.profit*0.85:,.0f}
+  投资回报周期: {(total_cost/(target.metrics.profit*0.85)):.1f}年
 
-💪 竞争优势分析:
-{self._analyze_competitive_advantages(company, competitors)}
+🏆 战略价值:
+  • 实现规模经济效应
+  • 扩大市场影响力
+  • 获得{target.name}的核心资产和技术
+  • 增强行业竞争优势
 
-⚔️  主要竞争对手:
+💡 建议: 关注整合期员工稳定性，优化业务流程实现协同效应
 """
         
-        if competitors:
-            result += f"{'公司名称':<15} {'股价':<10} {'市值(亿)':<12} {'营收(亿)':<12} {'市盈率':<8} {'评分':<6}\n"
-            result += "─" * 75 + "\n"
-            
-            for competitor in competitors[:5]:  # 显示前5名竞争对手
-                pe_ratio = competitor.calculate_pe_ratio()
-                pe_str = f"{pe_ratio:.1f}" if pe_ratio else "N/A"
-                
-                result += f"{competitor.name[:14]:<15} J${competitor.stock_price:<9.2f} {competitor.market_cap/1e8:<11.1f} {competitor.metrics.revenue/1e8:<11.1f} {pe_str:<8} {competitor.performance_score:<5.1f}\n"
+        return True, completion_report
+    
+    def _calculate_synergy_value(self, acquirer, target) -> dict:
+        """计算收购协同效应价值"""
+        synergies = {}
+        
+        # 行业协同（同行业收购有更高协同效应）
+        if acquirer.industry == target.industry:
+            market_synergy = 0.15
+            synergies['market_synergy'] = f"🏭 行业协同效应: +{market_synergy*100:.1f}% (同行业整合优势)"
         else:
-            result += "  暂无公开上市的竞争对手\n"
+            market_synergy = 0.08
+            synergies['market_synergy'] = f"🔄 多元化效应: +{market_synergy*100:.1f}% (跨行业风险分散)"
         
-        result += f"""
+        # 规模协同
+        combined_revenue = acquirer.metrics.revenue + target.metrics.revenue
+        scale_effect = min(0.12, combined_revenue / 100000000 * 0.02)  # 每亿营收增加2%效率，最高12%
+        synergies['scale_effect'] = f"📈 规模经济: +{scale_effect*100:.1f}% (合并后营收: J${combined_revenue:,.0f})"
+        
+        # 员工协同（技能互补）
+        staff_synergy = min(0.08, (len(acquirer.staff_list) + len(target.staff_list)) / 200 * 0.05)
+        synergies['staff_synergy'] = f"👥 人才整合: +{staff_synergy*100:.1f}% (合并后团队: {len(acquirer.staff_list) + len(target.staff_list)}人)"
+        
+        # 市场协同
+        market_power = (acquirer.metrics.market_share + target.metrics.market_share) * 0.003
+        synergies['market_power'] = f"🎯 市场力量: +{market_power*100:.1f}% (合并市场份额: {(acquirer.metrics.market_share + target.metrics.market_share):.1f}%)"
+        
+        # 综合ROI估算
+        total_synergy = market_synergy + scale_effect + staff_synergy + market_power
+        synergies['expected_roi'] = total_synergy
+        
+        synergy_report = ""
+        for key, value in synergies.items():
+            if key != 'expected_roi':
+                synergy_report += f"  {value}\n"
+        
+        synergy_report += f"  💎 综合协同价值: +{total_synergy*100:.1f}% ROI"
+        
+        return {'report': synergy_report, 'expected_roi': total_synergy}
 
-📈 战略建议:
-{self._generate_competitive_strategy(company, competitors)}
-
-💡 投资建议:
-{self._generate_investment_recommendations(company, competitors)}
-"""
-        
-        return result
-
-    def _get_industry_rank(self, company: JCCompany, competitors: list) -> str:
-        """获取行业排名"""
-        all_companies = [company] + competitors
-        all_companies.sort(key=lambda x: x.market_cap if x.is_public else x.metrics.calculate_equity(), reverse=True)
-        
-        for i, comp in enumerate(all_companies, 1):
-            if comp.company_id == company.company_id:
-                return f"第{i}名/{len(all_companies)}"
-        return "未知"
-
-    def _analyze_competitive_advantages(self, company: JCCompany, competitors: list) -> str:
-        """分析竞争优势"""
-        advantages = []
-        
-        if not competitors:
-            return "  • 行业内暂无直接竞争对手，市场地位独特"
-        
-        avg_performance = sum(c.performance_score for c in competitors) / len(competitors)
-        avg_growth = sum(c.metrics.growth_rate for c in competitors) / len(competitors)
-        avg_market_share = sum(c.metrics.market_share for c in competitors) / len(competitors)
-        
-        if company.performance_score > avg_performance:
-            advantages.append(f"综合实力超越行业平均水平 {company.performance_score - avg_performance:.1f}分")
-        
-        if company.metrics.growth_rate > avg_growth:
-            advantages.append(f"增长率 {company.metrics.growth_rate*100:.1f}% 高于行业平均 {avg_growth*100:.1f}%")
-            
-        if company.metrics.market_share > avg_market_share:
-            advantages.append(f"市场份额 {company.metrics.market_share*100:.2f}% 领先同行")
-            
-        if company.metrics.debt_ratio < 0.3:
-            advantages.append("财务结构稳健，负债率较低")
-            
-        if company.risk_level <= 2:
-            advantages.append("经营风险相对较低")
-        
-        if not advantages:
-            advantages.append("需要在各方面努力追赶行业领先者")
-            
-        return "\n".join(f"  • {adv}" for adv in advantages)
-
-    def _generate_competitive_strategy(self, company: JCCompany, competitors: list) -> str:
-        """生成竞争策略建议"""
-        strategies = []
-        
-        if company.metrics.market_share < 0.1:
-            strategies.append("专注细分市场，通过差异化竞争获得立足点")
-            
-        if company.performance_score < 60:
-            strategies.append("优先进行内部管理优化和成本控制")
-            
-        if company.metrics.growth_rate < 0.05:
-            strategies.append("加大研发投入，寻找新的增长点")
-            
-        if len(competitors) > 3:
-            strategies.append("考虑通过收购整合行业资源")
-            
-        if not strategies:
-            strategies.append("保持现有优势，适度扩张市场份额")
-            
-        return "\n".join(f"  • {strategy}" for strategy in strategies)
-
-    def _generate_investment_recommendations(self, company: JCCompany, competitors: list) -> str:
-        """生成投资建议"""
-        recommendations = []
-        
-        # 基于公司表现给出建议
-        if company.performance_score >= 80:
-            recommendations.append("公司基本面优秀，适合长期持有")
-        elif company.performance_score >= 60:
-            recommendations.append("公司表现稳定，可考虑中期投资")
-        else:
-            recommendations.append("公司仍需改善，建议谨慎投资")
-            
-        # 基于竞争地位给出建议
-        if competitors:
-            avg_performance = sum(c.performance_score for c in competitors) / len(competitors)
-            if company.performance_score > avg_performance * 1.1:
-                recommendations.append("相对竞争对手有明显优势")
-            elif company.performance_score < avg_performance * 0.9:
-                recommendations.append("相对竞争对手处于劣势")
-                
-        return "\n".join(f"  • {rec}" for rec in recommendations)
-        
     def update_all_companies(self):
         """更新所有公司数据"""
         for company in self.companies.values():

@@ -807,17 +807,25 @@ class CommandProcessor:
                     self.app.print_to_output(message, color)
                     
                 elif subcommand == 'acquire':
-                    if len(parts) < 4:
-                        self.app.print_to_output("用法: company acquire <收购方ID> <目标股票代码> <收购价格>", '#FFAA00')
+                    if len(parts) < 3:
+                        self.app.print_to_output("用法:", '#FFAA00')
+                        self.app.print_to_output("  company acquire <收购方ID> <目标股票代码>     # 评估收购价格", '#FFAA00')
+                        self.app.print_to_output("  company acquire <收购方ID> <目标股票代码> confirm  # 确认收购", '#FFAA00')
                         return
                         
                     acquirer_id = parts[1]
                     target_symbol = parts[2]
-                    offer_price = float(parts[3])
                     
-                    success, message = self.app.company_manager.acquire_company(acquirer_id, target_symbol, offer_price)
-                    color = '#00FF00' if success else '#FF0000'
-                    self.app.print_to_output(message, color)
+                    if len(parts) >= 4 and parts[3].lower() == 'confirm':
+                        # 确认收购
+                        success, message = self.app.company_manager.confirm_acquire_company(acquirer_id, target_symbol)
+                        color = '#00FF00' if success else '#FF0000'
+                        self.app.print_to_output(message, color)
+                    else:
+                        # 评估收购价格
+                        success, message = self.app.company_manager.evaluate_acquisition(acquirer_id, target_symbol)
+                        color = '#AAFFFF' if success else '#FF0000'
+                        self.app.print_to_output(message, color)
                     
                 elif subcommand == 'joint':
                     if len(parts) < 4:
@@ -1512,17 +1520,25 @@ class CommandProcessor:
                 self.app.print_to_output(message, color)
                 
             elif action == 'acquire':
-                if len(parts) < 4:
-                    self.app.print_to_output("用法: company acquire <收购方ID> <目标股票代码> <收购价格>", '#FFAA00')
+                if len(parts) < 3:
+                    self.app.print_to_output("用法:", '#FFAA00')
+                    self.app.print_to_output("  company acquire <收购方ID> <目标股票代码>     # 评估收购价格", '#FFAA00')
+                    self.app.print_to_output("  company acquire <收购方ID> <目标股票代码> confirm  # 确认收购", '#FFAA00')
                     return
                     
                 acquirer_id = parts[1]
                 target_symbol = parts[2]
-                offer_price = float(parts[3])
                 
-                success, message = self.app.company_manager.acquire_company(acquirer_id, target_symbol, offer_price)
-                color = '#00FF00' if success else '#FF0000'
-                self.app.print_to_output(message, color)
+                if len(parts) >= 4 and parts[3].lower() == 'confirm':
+                    # 确认收购
+                    success, message = self.app.company_manager.confirm_acquire_company(acquirer_id, target_symbol)
+                    color = '#00FF00' if success else '#FF0000'
+                    self.app.print_to_output(message, color)
+                else:
+                    # 评估收购价格
+                    success, message = self.app.company_manager.evaluate_acquisition(acquirer_id, target_symbol)
+                    color = '#AAFFFF' if success else '#FF0000'
+                    self.app.print_to_output(message, color)
                 
             elif action == 'joint':
                 if len(parts) < 4:
@@ -1761,7 +1777,8 @@ class CommandProcessor:
 
 📈 资本运作:
   company ipo <公司ID> <价格> <股数>       - 🎯 申请IPO上市
-  company acquire <收购方ID> <目标代码> <价格> - 🤝 收购其他公司
+  company acquire <收购方ID> <目标代码>     - 🔍 评估收购价格和可行性
+  company acquire <收购方ID> <目标代码> confirm - 🤝 确认执行收购
   company joint <公司ID> <合作伙伴> <投资额> - 🤝 启动合资项目
 
 📊 专业分析 (JC股票专用):
