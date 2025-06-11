@@ -1035,5 +1035,52 @@
       "GILD"
     ],
     "timestamp": "2025-06-11T17:36:45.369237+00:00"
+  },
+  {
+    "id": "event_060",
+    "title": "全球经济放缓，E-commerce板块承压",
+    "description": "宏观经济数据显示增长放缓，E-commerce行业股票面临下行压力。",
+    "impact": {
+      "sectors": [
+        "E-commerce"
+      ],
+      "effect": "negative",
+      "magnitude": 0.02,
+      "duration": "medium_term"
+    },
+    "related_stocks": [],
+    "timestamp": "2025-06-11T17:53:22.493305+00:00"
+  },
+  {
+    "id": "event_061",
+    "title": "能源价格剧烈波动，Crypto资产受影响",
+    "description": "国际能源市场价格波动加剧，影响Crypto相关资产表现。",
+    "impact": {
+      "sectors": [
+        "Commodity"
+      ],
+      "effect": "negative",
+      "magnitude": 0.015,
+      "duration": "short_term"
+    },
+    "related_stocks": [],
+    "timestamp": "2025-06-11T18:14:39.121903+00:00"
+  },
+  {
+    "id": "event_062",
+    "title": "电商平台销量激增，Technology股票走高",
+    "description": "Technology公司报告在线销售大幅增长，吸引投资者关注。",
+    "impact": {
+      "sectors": [
+        "E-commerce"
+      ],
+      "effect": "positive",
+      "magnitude": 0.022,
+      "duration": "medium_term"
+    },
+    "related_stocks": [
+      "BABA"
+    ],
+    "timestamp": "2025-06-11T18:22:16.321296+00:00"
   }
 ]

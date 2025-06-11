@@ -100,7 +100,8 @@ class LoginWindow:
         """尝试登录"""
         self.main_gui.print_to_output(f"🔐 正在验证用户 '{username}'...", '#FFAA00')
         
-        if self.user_manager.login_user(username, password):
+        success, message = self.user_manager.login_user(username, password)
+        if success:
             self.main_gui.print_to_output(f"✅ 登录成功！欢迎回来，{username}！", '#00FF00')
             self.main_gui.print_to_output("🔄 正在加载用户数据...", '#00FFAA')
             
@@ -118,7 +119,7 @@ class LoginWindow:
             remaining = self.max_attempts - self.login_attempts
             
             if remaining > 0:
-                self.main_gui.print_to_output(f"❌ 登录失败！用户名或密码错误。剩余尝试次数: {remaining}", '#FF6600')
+                self.main_gui.print_to_output(f"❌ 登录失败！{message}。剩余尝试次数: {remaining}", '#FF6600')
                 self.main_gui.print_to_output("JackyCoin-Login> ", '#FFFF00', end='')
             else:
                 self.main_gui.print_to_output("🚫 登录尝试次数过多，系统即将退出...", '#FF0000')
@@ -145,13 +146,16 @@ class LoginWindow:
             self.main_gui.print_to_output(f"💰 初始资金: J$100,000", '#FFFF00')
             
             # 自动登录新注册的用户
-            if self.user_manager.login_user(username, password):
+            login_success, login_message = self.user_manager.login_user(username, password)
+            if login_success:
                 self.is_login_active = False
                 try:
                     self.main_gui.command_entry.unbind('<Return>')
                 except:
                     pass
                 self.callback()
+            else:
+                self.show_error(f"自动登录失败: {login_message}")
         else:
             self.show_error(message)
             
@@ -164,16 +168,20 @@ class LoginWindow:
         import uuid
         guest_id = f"guest_{str(uuid.uuid4())[:8]}"
         
-        if self.user_manager.register_user(guest_id, "guest123", email="guest@temp.com"):
-            self.user_manager.login_user(guest_id, "guest123")
-            self.is_login_active = False
-            try:
-                self.main_gui.command_entry.unbind('<Return>')
-            except:
-                pass
-            self.callback()
+        register_success, register_message = self.user_manager.register_user(guest_id, "guest123", email="guest@temp.com")
+        if register_success:
+            login_success, login_message = self.user_manager.login_user(guest_id, "guest123")
+            if login_success:
+                self.is_login_active = False
+                try:
+                    self.main_gui.command_entry.unbind('<Return>')
+                except:
+                    pass
+                self.callback()
+            else:
+                self.show_error(f"游客模式登录失败: {login_message}")
         else:
-            self.show_error("游客模式登录失败")
+            self.show_error(f"游客模式创建失败: {register_message}")
             
     def show_error(self, message):
         """显示错误信息"""

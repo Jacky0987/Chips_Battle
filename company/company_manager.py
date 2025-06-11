@@ -42,9 +42,9 @@ class CompanyManager:
             # 重建股票代码映射
             self.stock_symbols = {}
             for company in self.companies.values():
-                if company.is_public and company.symbol:
-                    self.stock_symbols[company.symbol] = company.company_id
-            
+                    if company.is_public and company.symbol:
+                        self.stock_symbols[company.symbol] = company.company_id
+                        
             # 如果没有数据，创建示例公司
             if not self.companies:
                 print("创建示例公司数据...")
@@ -73,6 +73,15 @@ class CompanyManager:
                 self._fallback_save()
         except Exception as e:
             print(f"保存公司数据失败: {e}")
+            
+    def save_user_data(self):
+        """保存用户数据"""
+        try:
+            # 保存用户的现金数据
+            if hasattr(self.main_app, 'user_manager') and hasattr(self.main_app.user_manager, 'save_user_data'):
+                self.main_app.user_manager.save_user_data(self.main_app.user_manager.current_user, self.main_app.cash)
+        except Exception as e:
+            print(f"保存用户数据失败: {e}")
     
     def _fallback_save(self):
         """备用保存方法"""
@@ -948,425 +957,702 @@ class CompanyManager:
         
         return True, f"{result}\n💼 公司账户余额: J${company.company_cash:,.0f}"
 
-    def evaluate_acquisition(self, acquirer_id: str, target_symbol: str) -> Tuple[bool, str]:
-        """评估收购价格和可行性（第一步）"""
-        # 🔧 修复：支持股票代码作为收购方识别符
-        acquirer = self.find_company_by_identifier(acquirer_id, user_only=True)
-        if not acquirer:
-            # 提供详细的错误信息和用户公司列表
-            user_companies = self.get_user_companies(self.main_app.user_manager.current_user)
-            if user_companies:
-                suggestions = []
-                for uc in user_companies:
-                    suggestions.append(f"  • {uc.name}: 公司ID={uc.company_id}, 股票代码={uc.symbol}")
-                suggestions_text = "\n".join(suggestions)
-                
-                return False, f"""❌ 未找到收购方公司: {acquirer_id}
-
-💡 您拥有的公司:
-{suggestions_text}
-
-🔍 正确用法:
-  company acquire <您的公司ID或股票代码> <目标股票代码>"""
-            else:
-                return False, """❌ 您还没有创建任何公司
-
-💡 请先创建公司:
-  company wizard    # 创建向导
-  company create <公司名> <行业>"""
+    def evaluate_acquisition(self, target_id: str) -> Tuple[bool, str]:
+        """评估收购价格 - 支持上市和未上市公司"""
+        company = self.find_company_by_identifier(target_id)
+        if not company:
+            return False, "❌ 未找到指定公司"
+        
+        if company.created_by_user == self.main_app.user_manager.current_user:
+            return False, "❌ 不能收购自己创建的公司"
+        
+        # 🔧 修复股本数据异常
+        if company.is_public and company.shares_outstanding < 100000:
+            # 股本异常小，自动修正为合理数值
+            company.shares_outstanding = random.randint(50000000, 100000000)
+            company.market_cap = company.stock_price * company.shares_outstanding
+            self.save_companies()
+        
+        # 差异化估值计算
+        if company.is_public:
+            # 上市公司：市场估值 + 综合调整
+            base_value = company.market_cap
             
-        # 🔧 修复：同时支持通过股票代码和公司ID查找目标公司
-        target = None
-        
-        # 先尝试通过股票代码查找
-        target = self.get_company_by_symbol(target_symbol)
-        
-        # 如果没找到，再尝试通过公司ID查找
-        if not target:
-            target = self.find_company_by_identifier(target_symbol, user_only=False)
-        
-        if not target:
-            # 提供更详细的错误信息和建议
-            all_companies = list(self.companies.values())
-            if all_companies:
-                suggestions = []
-                for company in all_companies[:10]:  # 显示前10个公司
-                    status = "📈 已上市" if company.is_public else "🏢 未上市"
-                    suggestions.append(f"  • {company.name}: ID={company.company_id}, 代码={company.symbol} ({status})")
-                suggestions_text = "\n".join(suggestions)
-                
-                return False, f"""❌ 未找到目标公司: {target_symbol}
+            # 📊 综合估值调整因子
+            financial_score = self._calculate_financial_score(company)
+            premium_rate = 0.2 + (financial_score - 50) * 0.006  # 20%-50%基础溢价
+            premium_rate = max(0.1, min(0.6, premium_rate))
+            
+            estimated_value = base_value * (1 + premium_rate)
+            
+            valuation_report = f"""
+📊 上市公司收购估值 - {company.name} ({company.symbol})
 
-💡 可选择的公司:
-{suggestions_text}
-{'...' if len(all_companies) > 10 else ''}
-
-🔍 使用方法:
-  company acquire <您的公司> <目标公司ID或股票代码>
+💹 股票信息:
+  当前股价: J${company.stock_price:.2f}
+  总股本: {company.shares_outstanding:,}股
+  市值: J${company.market_cap:,.0f}
   
-📖 查看所有公司: company market"""
-            else:
-                return False, "❌ 系统中暂无其他公司可供收购"
-            
-        if not target.is_public:
-            return False, f"""❌ 目标公司 {target.name} ({target_symbol}) 未上市，无法收购
+💰 财务分析:
+  总资产: J${company.metrics.assets:,.0f}
+  净资产: J${company.metrics.calculate_equity():,.0f}
+  年收入: J${company.metrics.revenue:,.0f}
+  年利润: J${company.metrics.profit:,.0f}
+  资产负债率: {company.metrics.debt_ratio*100:.1f}%
+  净资产收益率: {company.metrics.calculate_roe()*100:.1f}%
 
-💡 只有已上市的公司才能被收购
-📊 该公司当前状态: 未上市 (营收: J${target.metrics.revenue:,.0f})
-🚀 上市条件: 营收需达到1亿元且表现评分>70分
-
-📖 查看已上市公司: company market"""
-            
-        # 检查是否为收购方创始人
-        if acquirer.created_by_user != self.main_app.user_manager.current_user:
-            return False, "❌ 您不是收购方公司的创始人"
-            
-        # 检查是否为同一家公司
-        if acquirer.company_id == target.company_id:
-            return False, "❌ 不能收购自己的公司"
-            
-        # 计算收购估值
-        base_price = target.stock_price
-        market_cap = target.market_cap
-        
-        # 计算合理收购溢价（20%-50%不等，根据公司表现）
-        if target.performance_score > 80:
-            premium_rate = 0.35 + random.uniform(0.05, 0.15)  # 35%-50%
-        elif target.performance_score > 60:
-            premium_rate = 0.25 + random.uniform(0.05, 0.10)  # 25%-35%
-        else:
-            premium_rate = 0.20 + random.uniform(0.0, 0.10)   # 20%-30%
-        
-        acquisition_price = base_price * (1 + premium_rate)
-        total_cost = acquisition_price * target.shares_outstanding
-        
-        # 计算协同效应价值
-        synergy_value = self._calculate_synergy_value(acquirer, target)
-        
-        # 生成评估报告
-        evaluation_report = f"""
-🔍 收购评估报告 - {target.name} ({target.symbol})
-
-📊 目标公司基本信息:
-  公司名称: {target.name}
-  行业: {target.industry.value}
-  当前股价: J${base_price:.2f}
-  市值: J${market_cap:,.0f}
-  总股本: {target.shares_outstanding:,}股
-  表现评分: {target.performance_score:.1f}/100
-
-💰 收购价格评估:
-  当前股价: J${base_price:.2f}
+📈 综合评估:
+  财务评分: {financial_score:.1f}/100
   收购溢价: {premium_rate*100:.1f}%
-  收购价格: J${acquisition_price:.2f}/股
-  总收购成本: J${total_cost:,.0f}
+  估值方法: 市场价值 + 财务调整
+  收购价格: J${estimated_value:,.0f}
 
-🏢 收购方资金状况:
-  公司名称: {acquirer.name}
-  账户余额: J${acquirer.company_cash:,.0f}
-  资金充足度: {'✅ 充足' if acquirer.company_cash >= total_cost else f'❌ 不足（缺口: J${total_cost - acquirer.company_cash:,.0f}）'}
+💡 收购建议: company acquire {target_id} {estimated_value:.0f}
+"""
+        else:
+            # 未上市公司：财务指标估值
+            revenue_multiple = self._get_industry_revenue_multiple(company.industry)
+            profit_multiple = self._get_industry_profit_multiple(company.industry)
+            
+            # 多种估值方法
+            revenue_valuation = company.metrics.revenue * revenue_multiple
+            profit_valuation = max(0, company.metrics.profit * profit_multiple)
+            asset_valuation = company.metrics.calculate_equity() * 1.2
+            
+            # 加权平均估值
+            base_value = (revenue_valuation * 0.4 + profit_valuation * 0.4 + asset_valuation * 0.2)
+            
+            # 财务调整
+            financial_score = self._calculate_financial_score(company)
+            premium_rate = 0.25 + (financial_score - 50) * 0.007  # 25%-60%基础溢价
+            premium_rate = max(0.15, min(0.7, premium_rate))
+            
+            estimated_value = base_value * (1 + premium_rate)
+            
+            valuation_report = f"""
+📊 未上市公司收购估值 - {company.name}
 
-📈 协同效应分析:
-{synergy_value['report']}
+💼 公司概况:
+  行业分类: {company.industry.value.title()}
+  发展阶段: {company.stage.value.title()}
+  员工数量: {len(company.staff_list) if hasattr(company, 'staff_list') and company.staff_list else company.metrics.employees}人
+  
+💰 财务分析:
+  年收入: J${company.metrics.revenue:,.0f}
+  年利润: J${company.metrics.profit:,.0f}
+  总资产: J${company.metrics.assets:,.0f}
+  净资产: J${company.metrics.calculate_equity():,.0f}
+  资产负债率: {company.metrics.debt_ratio*100:.1f}%
+  
+📊 估值分析:
+  收入倍数法: J${revenue_valuation:,.0f} ({revenue_multiple:.1f}倍)
+  利润倍数法: J${profit_valuation:,.0f} ({profit_multiple:.1f}倍)
+  资产评估法: J${asset_valuation:,.0f}
+  加权估值: J${base_value:,.0f}
+  财务评分: {financial_score:.1f}/100
+  收购溢价: {premium_rate*100:.1f}%
+  最终价格: J${estimated_value:,.0f}
 
-💡 收购建议:
+💡 收购建议: company acquire {target_id} {estimated_value:.0f}
 """
         
-        if acquirer.company_cash < total_cost:
-            shortage = total_cost - acquirer.company_cash
-            evaluation_report += f"""  ❌ 资金不足，需要补充 J${shortage:,.0f}
-  💡 建议: company invest {acquirer_id} {shortage:,.0f}
-  
-⚠️  请先筹集足够资金再考虑收购"""
-        else:
-            roi_estimate = synergy_value.get('expected_roi', 0)
-            if roi_estimate > 0.15:
-                recommendation = "🟢 强烈推荐收购"
-            elif roi_estimate > 0.08:
-                recommendation = "🟡 谨慎推荐收购"
-            else:
-                recommendation = "🔴 不推荐收购"
-                
-            evaluation_report += f"""  {recommendation}
-  📊 预期ROI: {roi_estimate*100:.1f}%
-  🔄 整合难度: {'高' if abs(len(acquirer.staff_list) - len(target.staff_list)) > 50 else '中' if abs(len(acquirer.staff_list) - len(target.staff_list)) > 20 else '低'}
-  
-✅ 确认收购命令: company acquire {acquirer_id} {target.symbol} confirm"""
+        return True, valuation_report
+
+    def _calculate_financial_score(self, company) -> float:
+        """计算公司财务评分 (0-100)"""
+        score = 50  # 基础分
         
-        return True, evaluation_report
+        # 盈利能力 (30分)
+        if company.metrics.profit > 0:
+            roe = company.metrics.calculate_roe()
+            profit_score = min(roe * 300, 30)  # ROE每1%贡献3分，最多30分
+            score += profit_score
+        else:
+            score -= 15  # 亏损扣分
+        
+        # 成长性 (25分)
+        growth_score = min(company.metrics.growth_rate * 100, 25)
+        score += growth_score
+        
+        # 财务健康度 (25分)
+        if company.metrics.debt_ratio < 0.3:
+            score += 15
+        elif company.metrics.debt_ratio < 0.6:
+            score += 10
+        elif company.metrics.debt_ratio < 0.8:
+            score += 5
+        else:
+            score -= 10
+        
+        # 市场地位 (10分)
+        market_score = company.metrics.market_share * 200
+        score += min(market_score, 10)
+        
+        # 资产效率 (10分)
+        roa = company.metrics.calculate_roa()
+        asset_score = min(roa * 100, 10)
+        score += asset_score
+        
+        return max(0, min(100, score))
+
+    def _get_industry_revenue_multiple(self, industry):
+        """获取行业收入倍数"""
+        industry_multiples = {
+            IndustryCategory.TECHNOLOGY: random.uniform(8, 15),
+            IndustryCategory.FINANCE: random.uniform(3, 8),
+            IndustryCategory.HEALTHCARE: random.uniform(5, 12),
+            IndustryCategory.ENERGY: random.uniform(2, 6),
+            IndustryCategory.MANUFACTURING: random.uniform(1, 4),
+            IndustryCategory.RETAIL: random.uniform(1, 3),
+            IndustryCategory.REAL_ESTATE: random.uniform(4, 10),
+            IndustryCategory.TRANSPORTATION: random.uniform(2, 5),
+            IndustryCategory.TELECOMMUNICATIONS: random.uniform(3, 7),
+            IndustryCategory.UTILITIES: random.uniform(2, 5),
+            IndustryCategory.CONSUMER_GOODS: random.uniform(2, 6),
+            IndustryCategory.AGRICULTURE: random.uniform(1, 3),
+        }
+        return industry_multiples.get(industry, random.uniform(2, 8))
     
-    def confirm_acquire_company(self, acquirer_id: str, target_symbol: str) -> Tuple[bool, str]:
-        """确认执行收购（第二步）"""
-        # 重新验证收购条件
-        acquirer = self.find_company_by_identifier(acquirer_id, user_only=True)
-        if not acquirer:
-            return False, f"❌ 未找到收购方公司: {acquirer_id}"
-            
-        # 🔧 修复：同时支持通过股票代码和公司ID查找目标公司
-        target = self.get_company_by_symbol(target_symbol)
-        if not target:
-            target = self.find_company_by_identifier(target_symbol, user_only=False)
-            
-        if not target:
-            return False, f"❌ 目标公司 {target_symbol} 不存在"
-            
-        if not target.is_public:
-            return False, f"❌ 目标公司 {target.name} 未上市，无法收购"
-            
-        if acquirer.created_by_user != self.main_app.user_manager.current_user:
-            return False, "❌ 您不是收购方公司的创始人"
-            
-        if acquirer.company_id == target.company_id:
-            return False, "❌ 不能收购自己的公司"
+    def _get_industry_profit_multiple(self, industry):
+        """获取行业利润倍数"""
+        industry_multiples = {
+            IndustryCategory.TECHNOLOGY: random.uniform(20, 35),
+            IndustryCategory.FINANCE: random.uniform(12, 25),
+            IndustryCategory.HEALTHCARE: random.uniform(15, 30),
+            IndustryCategory.ENERGY: random.uniform(8, 18),
+            IndustryCategory.MANUFACTURING: random.uniform(10, 20),
+            IndustryCategory.RETAIL: random.uniform(8, 15),
+            IndustryCategory.REAL_ESTATE: random.uniform(12, 25),
+            IndustryCategory.TRANSPORTATION: random.uniform(8, 15),
+            IndustryCategory.TELECOMMUNICATIONS: random.uniform(10, 20),
+            IndustryCategory.UTILITIES: random.uniform(10, 18),
+            IndustryCategory.CONSUMER_GOODS: random.uniform(12, 22),
+            IndustryCategory.AGRICULTURE: random.uniform(8, 15),
+        }
+        return industry_multiples.get(industry, random.uniform(10, 25))
+
+    def sell_company(self, company_id: str, price: float = None) -> Tuple[bool, str]:
+        """出售公司功能 - 增强版估值"""
+        company = self.find_company_by_identifier(company_id)
+        if not company:
+            return False, "❌ 未找到指定公司"
         
-        # 重新计算收购价格（市场价格可能有波动）
-        base_price = target.stock_price
+        if company.created_by_user != self.main_app.user_manager.current_user:
+            return False, "❌ 只能出售自己创建的公司"
         
-        # 计算收购溢价
-        if target.performance_score > 80:
-            premium_rate = 0.35 + random.uniform(0.05, 0.15)
-        elif target.performance_score > 60:
-            premium_rate = 0.25 + random.uniform(0.05, 0.10)
-        else:
-            premium_rate = 0.20 + random.uniform(0.0, 0.10)
-        
-        acquisition_price = base_price * (1 + premium_rate)
-        total_cost = acquisition_price * target.shares_outstanding
-        
-        # 检查资金充足性
-        if acquirer.company_cash < total_cost:
-            shortage = total_cost - acquirer.company_cash
-            return False, f"""❌ 收购方公司账户资金不足
-  需要: J${total_cost:,.0f}
-  现有: J${acquirer.company_cash:,.0f}
-  缺口: J${shortage:,.0f}
+        if price is None:
+            # 显示估值报告
+            # 🔧 修复股本数据异常
+            if company.is_public and company.shares_outstanding < 100000:
+                company.shares_outstanding = random.randint(50000000, 100000000)
+                company.market_cap = company.stock_price * company.shares_outstanding
+                self.save_companies()
+            
+            if company.is_public:
+                # 上市公司出售估值
+                base_value = company.market_cap
+                premium = base_value * 0.1  # 10%溢价
+                estimated_value = base_value + premium
+                
+                # 员工遣散费计算
+                staff_count = len(company.staff_list) if hasattr(company, 'staff_list') and company.staff_list else 0
+                severance_cost = staff_count * 50000
+                
+                net_proceeds = estimated_value - severance_cost
+                
+                report = f"""
+📊 公司出售估值报告 - {company.name}
+
+💰 资产评估:
+  上市状态: 📈 已上市
+  估值方法: 市场估值 + 综合分析
   
-💡 建议: company invest {acquirer_id} {shortage:,.0f}"""
+💹 股票信息:
+  股价: J${company.stock_price:.2f}每股
+  总股本: {company.shares_outstanding:,}股
+  市值: J${company.market_cap:,.0f}
+  
+💼 财务状况:
+  总资产: J${company.metrics.assets:,.0f}
+  总负债: J${company.metrics.liabilities:,.0f}
+  净资产: J${company.metrics.calculate_equity():,.0f}
+  年收入: J${company.metrics.revenue:,.0f}
+  年利润: J${company.metrics.profit:,.0f}
+  现金储备: J${company.company_cash:,.0f}
+
+👥 人力资源:
+  员工数量: {staff_count}人
+  员工遣散费: J${severance_cost:,.0f} (每人5万)
+
+🎯 估算价值:
+  市值: J${base_value:,.0f}
+  市场溢价: J${premium:,.0f}
+  总估值: J${estimated_value:,.0f}
+  员工补偿: -J${severance_cost:,.0f}
+  实际收益: J${net_proceeds:,.0f}
+
+📋 出售方式:
+  1. 市场出售 (推荐价格): company sell {company_id} {estimated_value:.0f}
+  2. 快速出售 (85%价格): company sell {company_id} {estimated_value * 0.85:.0f}
+  3. 自定义价格: company sell {company_id} <您的报价>
+
+⚠️  注意: 出售公司后将无法撤销，请慎重考虑！
+"""
+            else:
+                # 未上市公司出售估值
+                revenue_multiple = self._get_industry_revenue_multiple(company.industry)
+                profit_multiple = self._get_industry_profit_multiple(company.industry)
+                
+                revenue_valuation = company.metrics.revenue * revenue_multiple
+                profit_valuation = max(0, company.metrics.profit * profit_multiple)
+                asset_valuation = company.metrics.calculate_equity()
+                
+                # 综合估值
+                base_value = (revenue_valuation * 0.4 + profit_valuation * 0.3 + asset_valuation * 0.3)
+                premium = base_value * 0.15  # 15%溢价
+                estimated_value = base_value + premium
+                
+                # 员工遣散费
+                staff_count = len(company.staff_list) if hasattr(company, 'staff_list') and company.staff_list else 0
+                severance_cost = staff_count * 50000
+                
+                net_proceeds = estimated_value - severance_cost
+                
+                report = f"""
+📊 公司出售估值报告 - {company.name}
+
+💰 资产评估:
+  上市状态: 🔒 未上市
+  估值方法: 财务指标估值
+  
+💼 财务状况:
+  年收入: J${company.metrics.revenue:,.0f}
+  年利润: J${company.metrics.profit:,.0f}
+  总资产: J${company.metrics.assets:,.0f}
+  净资产: J${company.metrics.calculate_equity():,.0f}
+  现金储备: J${company.company_cash:,.0f}
+
+📊 估值分析:
+  收入倍数法: J${revenue_valuation:,.0f} ({revenue_multiple:.1f}倍)
+  利润倍数法: J${profit_valuation:,.0f} ({profit_multiple:.1f}倍)
+  资产评估法: J${asset_valuation:,.0f}
+  综合估值: J${base_value:,.0f}
+  出售溢价: J${premium:,.0f}
+
+👥 人力资源:
+  员工数量: {staff_count}人
+  员工遣散费: J${severance_cost:,.0f}
+
+🎯 最终估值:
+  出售价格: J${estimated_value:,.0f}
+  员工补偿: -J${severance_cost:,.0f}
+  实际收益: J${net_proceeds:,.0f}
+
+📋 出售方式:
+  1. 推荐价格: company sell {company_id} {estimated_value:.0f}
+  2. 快速出售: company sell {company_id} {estimated_value * 0.85:.0f}
+  3. 自定义价格: company sell {company_id} <您的报价>
+"""
             
-        # 执行收购 - 使用公司账户
-        acquirer.company_cash -= total_cost
-        
-        # 🔧 新增：保存收购前的数据用于报告
-        original_revenue = acquirer.metrics.revenue
-        original_employees = len(acquirer.staff_list)
-        original_market_share = acquirer.metrics.market_share
-        
-        # 合并公司数据
-        acquirer.metrics.revenue += target.metrics.revenue
-        acquirer.metrics.profit += target.metrics.profit * 0.85  # 考虑整合成本
-        acquirer.metrics.assets += target.metrics.assets
-        
-        # 🔧 修复：将目标公司员工合并到收购方员工列表
-        acquired_employees = 0
-        if hasattr(target, 'staff_list') and target.staff_list:
-            next_id_base = max([staff['id'] for staff in acquirer.staff_list], default=0)
-            for i, staff in enumerate(target.staff_list, 1):
-                # 70%的员工会被保留
-                if random.random() < 0.7:
-                    staff['id'] = next_id_base + i
-                    staff['hire_date'] = datetime.now().isoformat()
-                    staff['note'] = f"通过收购{target.name}加入"
-                    acquirer.staff_list.append(staff)
-                    acquired_employees += 1
+            return True, report
+        else:
+            # 执行出售
+            # 🔧 修复股本数据异常
+            if company.is_public and company.shares_outstanding < 100000:
+                company.shares_outstanding = random.randint(50000000, 100000000)
+                company.market_cap = company.stock_price * company.shares_outstanding
             
-        # 同步更新员工数量
-        acquirer.metrics.employees = len(acquirer.staff_list)
-        acquirer.metrics.market_share += target.metrics.market_share * 0.8  # 80%市场份额保留
-        
-        # 从市场移除目标公司
-        if target.symbol in self.main_app.market_data.stocks:
-            del self.main_app.market_data.stocks[target.symbol]
+            if company.is_public:
+                market_value = company.market_cap
+                reasonable_min = market_value * 0.5
+                reasonable_max = market_value * 1.5
+            else:
+                estimated_value = company.metrics.calculate_equity()
+                reasonable_min = estimated_value * 0.5
+                reasonable_max = estimated_value * 1.5
             
-        # 从公司列表移除
-        del self.companies[target.company_id]
+            if price < reasonable_min or price > reasonable_max:
+                return False, f"❌ 出售价格不合理，建议范围: J${reasonable_min:,.0f} - J${reasonable_max:,.0f}"
+            
+            # 计算员工遣散费
+            staff_count = len(company.staff_list) if hasattr(company, 'staff_list') and company.staff_list else 0
+            severance_cost = staff_count * 50000
+            
+            # 检查是否足够支付遣散费
+            if price < severance_cost:
+                return False, f"❌ 出售价格不足以支付员工遣散费 J${severance_cost:,.0f}"
+            
+            # 执行出售
+            net_proceeds = price - severance_cost
+            self.main_app.cash += net_proceeds
+            
+            # 从用户公司列表中移除
+            self.user_companies[self.main_app.user_manager.current_user].remove(company.company_id)
+            
+            # 生成出售新闻
+            if company.is_public:
+                news = f"{company.name}被收购，交易价格 J${price:,.0f}"
+                company.generate_news_event()
+            
+            # 保存数据
+            self.save_companies()
+            self.save_user_data()
+            
+            return True, f"✅ 成功出售 {company.name}，获得收益 J${net_proceeds:,.0f}（已扣除员工遣散费 J${severance_cost:,.0f}）"
+
+    def delist_company(self, company_id: str) -> Tuple[bool, str]:
+        """撤回IPO退市功能"""
+        company = self.find_company_by_identifier(company_id)
+        if not company:
+            return False, "❌ 未找到指定公司"
         
-        # 生成收购新闻
-        news_title = f"{acquirer.name}成功收购{target.name}，斥资{total_cost/1e8:.1f}亿元"
-        acquirer.news_events.append(CompanyNews(
-            news_id=f"{acquirer.symbol}_acquisition_{datetime.now().strftime('%Y%m%d')}",
-            title=news_title,
-            content=f"{acquirer.name}以每股{acquisition_price:.2f}元的价格成功收购{target.name}全部股份，实现战略整合。",
-            impact_type="positive",
-            impact_magnitude=0.12,
-            publish_date=datetime.now().isoformat(),
-            category="management"
-        ))
+        if company.created_by_user != self.main_app.user_manager.current_user:
+            return False, "❌ 只能操作自己创建的公司"
+        
+        if not company.is_public:
+            return False, "❌ 公司尚未上市，无需退市"
+        
+        # 计算退市成本和影响
+        # 股东补偿：按当前市值的80%退还
+        shareholder_compensation = company.market_cap * 0.8
+        
+        # 退市费用：法律费用、监管费用等
+        delisting_cost = company.market_cap * 0.05  # 5%的退市费用
+        
+        # 总成本
+        total_cost = shareholder_compensation + delisting_cost
+        
+        # 检查公司资金是否充足
+        available_funds = company.company_cash + company.metrics.calculate_equity()
+        
+        if available_funds < total_cost:
+            return False, f"""❌ 退市资金不足
+💰 退市成本分析:
+  股东补偿: J${shareholder_compensation:,.0f} (市值80%)
+  退市费用: J${delisting_cost:,.0f} (市值5%)
+  总成本: J${total_cost:,.0f}
+  可用资金: J${available_funds:,.0f}
+  资金缺口: J${total_cost - available_funds:,.0f}
+
+💡 建议: 先向公司注资或提高公司盈利能力"""
+        
+        # 预览退市影响
+        report = f"""
+📋 退市预览 - {company.name} ({company.symbol})
+
+💹 当前上市状态:
+  股价: J${company.stock_price:.2f}
+  股本: {company.shares_outstanding:,}股
+  市值: J${company.market_cap:,.0f}
+  IPO日期: {company.ipo_date[:10] if company.ipo_date else 'N/A'}
+
+💰 退市成本:
+  股东补偿: J${shareholder_compensation:,.0f}
+  退市费用: J${delisting_cost:,.0f}
+  总成本: J${total_cost:,.0f}
+
+📊 退市后状态:
+  公司类型: 私人公司
+  估值方式: 财务指标估值
+  股票交易: 停止
+  
+⚠️  退市影响:
+  • 失去公开市场流动性
+  • 融资渠道受限
+  • 监管要求降低
+  • 估值可能下降
+
+确认退市请输入: company delist {company_id} confirm
+"""
+        
+        return True, report
+
+    def confirm_delist_company(self, company_id: str) -> Tuple[bool, str]:
+        """确认执行退市"""
+        company = self.find_company_by_identifier(company_id)
+        if not company or not company.is_public:
+            return False, "❌ 公司状态异常"
+        
+        if company.created_by_user != self.main_app.user_manager.current_user:
+            return False, "❌ 只能操作自己创建的公司"
+        
+        # 计算成本
+        shareholder_compensation = company.market_cap * 0.8
+        delisting_cost = company.market_cap * 0.05
+        total_cost = shareholder_compensation + delisting_cost
+        
+        # 执行退市
+        company.is_public = False
+        company.stock_price = 0.0
+        old_shares = company.shares_outstanding
+        company.shares_outstanding = 0
+        company.market_cap = 0.0
+        from company.company_types import CompanyType
+        company.company_type = CompanyType.PRIVATE
+        
+        # 扣除退市成本
+        company.company_cash -= total_cost
+        company.metrics.assets -= total_cost
+        
+        # 生成退市新闻
+        company.generate_news_event('management')
         
         # 保存数据
         self.save_companies()
-        self.main_app.market_data.save_stocks()
         
-        # 生成收购完成报告
-        completion_report = f"""
-✅ 收购交易成功完成！
-
-🤝 交易详情:
-  收购方: {acquirer.name} ({acquirer.symbol})
-  被收购方: {target.name} ({target.symbol})
-  收购价格: J${acquisition_price:.2f}/股 (溢价 {premium_rate*100:.1f}%)
-  交易总额: J${total_cost:,.0f}
-
-📊 整合效果:
-  新增营收: J${target.metrics.revenue:,.0f} (+{((target.metrics.revenue/original_revenue)*100):.1f}%)
-  保留员工: {acquired_employees}人 (保留率: {(acquired_employees/len(target.staff_list)*100):.1f}%)
-  市场份额: +{target.metrics.market_share*0.8:.2f}%
-  总员工数: {len(acquirer.staff_list)}人 (新增: {len(acquirer.staff_list)-original_employees}人)
-
-💰 财务状况:
-  交易后余额: J${acquirer.company_cash:,.0f}
-  预期年化收益: J${target.metrics.profit*0.85:,.0f}
-  投资回报周期: {(total_cost/(target.metrics.profit*0.85)):.1f}年
-
-🏆 战略价值:
-  • 实现规模经济效应
-  • 扩大市场影响力
-  • 获得{target.name}的核心资产和技术
-  • 增强行业竞争优势
-
-💡 建议: 关注整合期员工稳定性，优化业务流程实现协同效应
+        return True, f"""✅ {company.name} 成功退市
+        
+📊 退市完成:
+  原股本: {old_shares:,}股
+  补偿金额: J${shareholder_compensation:,.0f}
+  退市费用: J${delisting_cost:,.0f}
+  公司余额: J${company.company_cash:,.0f}
+  
+💼 公司现状:
+  类型: 私人公司
+  员工: {len(company.staff_list) if hasattr(company, 'staff_list') and company.staff_list else 0}人
+  资产: J${company.metrics.assets:,.0f}
 """
-        
-        return True, completion_report
-    
-    def _calculate_synergy_value(self, acquirer, target) -> dict:
-        """计算收购协同效应价值"""
-        synergies = {}
-        
-        # 行业协同（同行业收购有更高协同效应）
-        if acquirer.industry == target.industry:
-            market_synergy = 0.15
-            synergies['market_synergy'] = f"🏭 行业协同效应: +{market_synergy*100:.1f}% (同行业整合优势)"
-        else:
-            market_synergy = 0.08
-            synergies['market_synergy'] = f"🔄 多元化效应: +{market_synergy*100:.1f}% (跨行业风险分散)"
-        
-        # 规模协同
-        combined_revenue = acquirer.metrics.revenue + target.metrics.revenue
-        scale_effect = min(0.12, combined_revenue / 100000000 * 0.02)  # 每亿营收增加2%效率，最高12%
-        synergies['scale_effect'] = f"📈 规模经济: +{scale_effect*100:.1f}% (合并后营收: J${combined_revenue:,.0f})"
-        
-        # 员工协同（技能互补）
-        staff_synergy = min(0.08, (len(acquirer.staff_list) + len(target.staff_list)) / 200 * 0.05)
-        synergies['staff_synergy'] = f"👥 人才整合: +{staff_synergy*100:.1f}% (合并后团队: {len(acquirer.staff_list) + len(target.staff_list)}人)"
-        
-        # 市场协同
-        market_power = (acquirer.metrics.market_share + target.metrics.market_share) * 0.003
-        synergies['market_power'] = f"🎯 市场力量: +{market_power*100:.1f}% (合并市场份额: {(acquirer.metrics.market_share + target.metrics.market_share):.1f}%)"
-        
-        # 综合ROI估算
-        total_synergy = market_synergy + scale_effect + staff_synergy + market_power
-        synergies['expected_roi'] = total_synergy
-        
-        synergy_report = ""
-        for key, value in synergies.items():
-            if key != 'expected_roi':
-                synergy_report += f"  {value}\n"
-        
-        synergy_report += f"  💎 综合协同价值: +{total_synergy*100:.1f}% ROI"
-        
-        return {'report': synergy_report, 'expected_roi': total_synergy}
 
-    def update_all_companies(self):
-        """更新所有公司数据"""
-        for company in self.companies.values():
-            # 更新表现评分
-            company.update_performance_score()
-            
-            # 随机生成新闻事件
-            if random.random() < 0.05:  # 5%概率
-                company.generate_news_event()
-                
-            # 更新公开公司股价
-            if company.is_public:
-                self._update_stock_price(company)
-                
+    def secondary_offering(self, company_id: str, offering_price: float, shares_to_issue: int) -> Tuple[bool, str]:
+        """股票增发功能 - 增强版"""
+        company = self.find_company_by_identifier(company_id)
+        if not company:
+            return False, "❌ 未找到指定公司"
+        
+        if company.created_by_user != self.main_app.user_manager.current_user:
+            return False, "❌ 只能操作自己创建的公司"
+        
+        if not company.is_public:
+            return False, "❌ 公司尚未上市，无法进行股票增发"
+        
+        # 🔧 修复股本数据异常
+        if company.shares_outstanding < 100000:
+            company.shares_outstanding = random.randint(50000000, 100000000)
+            company.market_cap = company.stock_price * company.shares_outstanding
+            self.save_companies()
+        
+        # 价格控制：不能偏离市价±50%
+        price_lower = company.stock_price * 0.5
+        price_upper = company.stock_price * 1.5
+        if offering_price < price_lower or offering_price > price_upper:
+            return False, f"""❌ 增发价格偏离市场价过多
+  当前股价: J${company.stock_price:.2f}
+  建议价格区间: J${price_lower:.2f} - J${price_upper:.2f}
+  您的价格: J${offering_price:.2f}"""
+        
+        # 股本限制：单次增发不超过现有股本50%
+        max_issuance = int(company.shares_outstanding * 0.5)
+        if shares_to_issue > max_issuance:
+            return False, f"""❌ 增发股数过多
+  现有股本: {company.shares_outstanding:,}股
+  最大增发: {max_issuance:,}股 (现有股本的50%)
+  您的增发: {shares_to_issue:,}股"""
+        
+        if shares_to_issue <= 0:
+            return False, "❌ 增发股数必须大于0"
+        
+        # 计算募集资金
+        proceeds = offering_price * shares_to_issue
+        
+        # 计算股价稀释效应
+        old_market_cap = company.market_cap
+        new_total_shares = company.shares_outstanding + shares_to_issue
+        
+        # 新市值 = 原市值 + 募集资金（部分反映市场信心）
+        market_confidence = random.uniform(0.7, 1.0)  # 市场对增发的信心
+        new_market_cap = old_market_cap + (proceeds * market_confidence)
+        new_stock_price = new_market_cap / new_total_shares
+        
+        # 执行增发
+        company.shares_outstanding = new_total_shares
+        company.stock_price = new_stock_price
+        company.market_cap = new_market_cap
+        company.company_cash += proceeds
+        company.metrics.assets += proceeds
+        
+        # 生成增发新闻
+        news_content = f"{company.name}完成股票增发，发行{shares_to_issue:,}股，募集资金J${proceeds:,.0f}"
+        company.generate_news_event('management')
+        
+        # 保存数据
         self.save_companies()
         
-    def _update_stock_price(self, company: JCCompany):
-        """更新股票价格"""
-        # 基于公司表现调整股价
-        performance_factor = (company.performance_score - 50) / 100  # -0.5 to 0.5
+        # 计算稀释影响
+        dilution_effect = (company.stock_price - offering_price) / offering_price * 100
         
-        # 基础波动
-        base_volatility = 0.02 + company.risk_level * 0.005
-        random_change = random.uniform(-base_volatility, base_volatility)
+        return True, f"""✅ 股票增发完成 - {company.name}
+
+📊 增发详情:
+  增发价格: J${offering_price:.2f}/股
+  增发数量: {shares_to_issue:,}股
+  募集资金: J${proceeds:,.0f}
+
+💹 股本变化:
+  原股本: {company.shares_outstanding - shares_to_issue:,}股
+  新股本: {company.shares_outstanding:,}股
+  增加比例: {shares_to_issue/(company.shares_outstanding - shares_to_issue)*100:.1f}%
+
+📈 价格影响:
+  增发前股价: J${old_market_cap/(company.shares_outstanding - shares_to_issue):.2f}
+  增发后股价: J${company.stock_price:.2f}
+  稀释效应: {dilution_effect:+.1f}%
+  新市值: J${company.market_cap:,.0f}
+
+💰 资金状况:
+  募集资金: J${proceeds:,.0f}
+  公司现金: J${company.company_cash:,.0f}
+  总资产: J${company.metrics.assets:,.0f}
+
+📰 市场反应: {news_content}
+"""
+
+    def get_company_detail(self, company_id: str) -> Tuple[bool, str]:
+        """获取公司详细信息 - 全面展示"""
+        company = self.find_company_by_identifier(company_id)
+        if not company:
+            return False, "❌ 未找到指定公司"
         
-        # 表现影响
-        performance_impact = performance_factor * 0.1
+        # 🔧 修复股本数据异常
+        if company.is_public and company.shares_outstanding < 100000:
+            company.shares_outstanding = random.randint(50000000, 100000000)
+            company.market_cap = company.stock_price * company.shares_outstanding
+            self.save_companies()
         
-        # 新闻影响
-        news_impact = 0.0
-        recent_news = [n for n in company.news_events if 
-                      (datetime.now() - datetime.fromisoformat(n.publish_date)).days <= 1]
-        for news in recent_news:
-            if news.impact_type == 'positive':
-                news_impact += news.impact_magnitude
+        # 基础信息
+        detail_info = f"""
+🏢 {company.name} ({company.symbol}) - 详细信息
+
+📋 基本信息:
+  公司ID: {company.company_id}
+  行业分类: {company.industry.value.title()}
+  公司类型: {company.company_type.value.title()}
+  发展阶段: {company.stage.value.title()}
+  成立时间: {company.founded_date}
+  总部地址: {company.headquarters}
+  网站: {company.website}
+  首席执行官: {company.ceo_name}
+  创建者: {company.created_by_user or '系统'}
+  更新时间: {company.last_updated[:19] if company.last_updated else 'N/A'}
+
+💰 财务状况:
+  营业收入: J${company.metrics.revenue:,.0f}
+  净利润: J${company.metrics.profit:,.0f}
+  总资产: J${company.metrics.assets:,.0f}
+  总负债: J${company.metrics.liabilities:,.0f}
+  净资产: J${company.metrics.calculate_equity():,.0f}
+  公司现金: J${company.company_cash:,.0f}
+  累计投资: J${company.total_investment:,.0f}
+
+📊 经营指标:
+  营收增长率: {company.metrics.growth_rate*100:+.1f}%
+  净资产收益率: {company.metrics.calculate_roe()*100:.1f}%
+  总资产收益率: {company.metrics.calculate_roa()*100:.1f}%
+  资产负债率: {company.metrics.debt_ratio*100:.1f}%
+  市场份额: {company.metrics.market_share*100:.2f}%
+"""
+        
+        # 人力资源详情
+        staff_count = len(company.staff_list) if hasattr(company, 'staff_list') and company.staff_list else 0
+        if staff_count > 0:
+            total_salary = sum(staff['salary'] for staff in company.staff_list)
+            avg_salary = total_salary / staff_count if staff_count > 0 else 0
+            
+            # 按职位统计
+            position_stats = {}
+            for staff in company.staff_list:
+                pos = staff['position']
+                if pos not in position_stats:
+                    position_stats[pos] = {'count': 0, 'total_salary': 0}
+                position_stats[pos]['count'] += 1
+                position_stats[pos]['total_salary'] += staff['salary']
+            
+            hr_info = f"""
+👥 人力资源 ({staff_count}/{company.max_staff}):
+  员工总数: {staff_count}人
+  月薪总额: J${total_salary:,.0f}
+  平均薪资: J${avg_salary:,.0f}
+  年薪成本: J${total_salary * 12:,.0f}
+
+📊 职位分布:"""
+            for pos, data in position_stats.items():
+                avg_pos_salary = data['total_salary'] / data['count']
+                hr_info += f"\n  • {pos}: {data['count']}人，平均薪资 J${avg_pos_salary:,.0f}"
+        else:
+            hr_info = f"""
+👥 人力资源 (0/{company.max_staff}):
+  员工总数: 0人
+  💡 提示: 使用 'company hire' 命令招聘员工"""
+        
+        detail_info += hr_info
+        
+        # 股票信息（如果上市）
+        if company.is_public:
+            pe_ratio = company.calculate_pe_ratio()
+            pb_ratio = company.calculate_pb_ratio()
+            
+            pe_display = f"{pe_ratio:.1f}" if pe_ratio is not None else "N/A"
+            pb_display = f"{pb_ratio:.1f}" if pb_ratio is not None else "N/A"
+            
+            stock_info = f"""
+
+💹 股票信息:
+  上市状态: ✅ 已上市
+  当前股价: J${company.stock_price:.2f}
+  总股本: {company.shares_outstanding:,}股
+  流通市值: J${company.market_cap:,.0f}
+  IPO价格: J${company.ipo_price:.2f}
+  IPO日期: {company.ipo_date[:10] if company.ipo_date else 'N/A'}
+  股价涨跌: {((company.stock_price - company.ipo_price) / company.ipo_price * 100):+.1f}%
+  市盈率(PE): {pe_display}倍
+  市净率(PB): {pb_display}倍
+"""
+        else:
+            can_ipo, ipo_msg = company.can_go_public()
+            stock_info = f"""
+
+🔒 股票信息:
+  上市状态: ❌ 未上市
+  IPO条件: {'✅ 满足' if can_ipo else '❌ 不满足'}
+  限制原因: {ipo_msg if not can_ipo else '可申请IPO'}
+  预估价值: J${company.metrics.calculate_equity():,.0f}
+"""
+        
+        detail_info += stock_info
+        
+        # 投资评级
+        rating, grade = company.get_investment_rating()
+        detail_info += f"""
+📊 投资评级:
+  综合评分: {company.performance_score:.1f}/100
+  投资建议: {rating} ({grade})
+  风险等级: {'⭐' * company.risk_level} ({company.risk_level}/5)
+"""
+        
+        # 最近新闻
+        if company.news_events:
+            recent_news = sorted(company.news_events, key=lambda x: x.publish_date, reverse=True)[:3]
+            detail_info += "\n📰 最近新闻:\n"
+            for i, news in enumerate(recent_news, 1):
+                impact_icon = "📈" if news.impact_type == "positive" else "📉" if news.impact_type == "negative" else "📊"
+                detail_info += f"  {i}. {impact_icon} {news.title}\n"
+                detail_info += f"     {news.publish_date[:10]} | {news.category.title()}\n"
+        
+        # 操作建议
+        detail_info += f"""
+💡 可用操作:
+  📊 财务: company invest {company_id} <金额> (注资)
+  👥 人事: company hire {company_id} (招聘) | company expand {company_id} (扩张)"""
+        
+        if company.created_by_user == self.main_app.user_manager.current_user:
+            if company.is_public:
+                detail_info += f"""
+  💹 股票: company offering {company_id} <价格> <股数> (增发)
+  📤 退出: company delist {company_id} (退市) | company sell {company_id} (出售)"""
             else:
-                news_impact -= news.impact_magnitude
-                
-        total_change = random_change + performance_impact + news_impact
-        new_price = company.stock_price * (1 + total_change)
-        new_price = max(0.01, new_price)  # 最低1分钱
+                can_ipo, _ = company.can_go_public()
+                if can_ipo:
+                    detail_info += f"\n  🚀 上市: company ipo {company_id} <价格> <股数>"
+                detail_info += f"\n  📤 退出: company sell {company_id} (出售)"
         
-        company.update_stock_price(new_price)
-        
-        # 同步更新市场数据
-        if hasattr(self.main_app, 'market_data') and company.symbol in self.main_app.market_data.stocks:
-            stock_data = self.main_app.market_data.stocks[company.symbol]
-            old_price = stock_data['price']
-            stock_data['price'] = new_price
-            stock_data['change'] = new_price - old_price
-            stock_data['market_cap'] = company.market_cap
-            stock_data['last_updated'] = datetime.now().isoformat()
-            
-    def get_industry_report(self, industry: str) -> str:
-        """获取行业报告"""
-        try:
-            industry_enum = IndustryCategory(industry.lower())
-        except ValueError:
-            return f"❌ 无效的行业: {industry}"
-            
-        # 筛选行业公司
-        industry_companies = [c for c in self.companies.values() if c.industry == industry_enum]
-        
-        if not industry_companies:
-            return f"📊 {industry_enum.value.title()} 行业暂无公司"
-            
-        # 统计分析
-        total_companies = len(industry_companies)
-        public_companies = [c for c in industry_companies if c.is_public]
-        total_market_cap = sum(c.market_cap for c in public_companies)
-        avg_performance = sum(c.performance_score for c in industry_companies) / total_companies
-        
-        total_revenue = sum(c.metrics.revenue for c in industry_companies)
-        total_employees = sum(c.metrics.employees for c in industry_companies)
-        
-        report = f"""
-📊 {industry_enum.value.title()} 行业分析报告
-
-🏢 行业概况:
-  公司总数: {total_companies}家
-  上市公司: {len(public_companies)}家
-  总市值: J${total_market_cap:,.0f}
-  平均表现: {avg_performance:.1f}/100
-  
-💰 经营数据:
-  行业总营收: J${total_revenue:,.0f}
-  总就业人数: {total_employees:,}人
-  平均营收: J${total_revenue/total_companies:,.0f}
-  
-📈 表现排名:
-"""
-        
-        # 按表现排序
-        sorted_companies = sorted(industry_companies, key=lambda x: x.performance_score, reverse=True)
-        
-        for i, company in enumerate(sorted_companies[:10], 1):
-            status = "📈" if company.is_public else "🏢"
-            report += f"""
-{i:2d}. {status} {company.name} ({company.symbol})
-    表现: {company.performance_score:.1f}/100 | 员工: {company.metrics.employees}人
-    营收: J${company.metrics.revenue:,.0f} | 阶段: {company.stage.value}
-"""
-
-        return report 
+        return True, detail_info

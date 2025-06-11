@@ -842,11 +842,21 @@ class CommandProcessor:
                     
                 elif subcommand == 'analysis':
                     if len(parts) < 2:
-                        self.app.print_to_output("用法: company analysis <公司ID>", '#FFAA00')
+                        self.app.print_to_output("用法: company analysis <公司ID/股票代码>", '#FFAA00')
+                        self.app.print_to_output("💡 支持JC股票技术分析和公司竞争分析", '#AAFFFF')
                         return
-                        
-                    result = self.app.company_manager.show_company_competition_analysis(parts[1])
-                    self.app.print_to_output(result, '#AAFFFF')
+                
+                    identifier = parts[1].upper()
+                    
+                    # 检查是否为JC股票代码
+                    jc_company = self.app.company_manager.get_company_by_symbol(identifier)
+                    if jc_company:
+                        # 显示JC股票专业分析
+                        self.app.show_jc_stock_analysis(identifier)
+                    else:
+                        # 显示公司竞争分析
+                        result = self.app.company_manager.show_company_competition_analysis(identifier)
+                        self.app.print_to_output(result, '#AAFFFF')
                     
                 elif subcommand == 'news':
                     if len(parts) < 2:
@@ -856,6 +866,29 @@ class CommandProcessor:
                     result = self.app.company_manager.show_company_news(parts[1])
                     self.app.print_to_output(result, '#AAFFFF')
                     
+                elif subcommand == 'chart':
+                    if len(parts) < 2:
+                        self.app.print_to_output("用法: company chart <股票代码> [时间范围]", '#FFAA00')
+                        self.app.print_to_output("💡 专门显示JC股票技术图表", '#AAFFFF')
+                        self.app.print_to_output("📊 时间范围: 1d, 5d, 1m, 3m, 6m, 1y", '#AAFFFF')
+                        return
+                    
+                    symbol = parts[1].upper()
+                    time_range = parts[2] if len(parts) >= 3 else '5d'
+                    
+                    # 检查是否为JC股票
+                    jc_company = self.app.company_manager.get_company_by_symbol(symbol)
+                    if jc_company:
+                        # 显示JC股票专业图表
+                        self.app.show_jc_stock_chart(symbol, time_range)
+                    else:
+                        self.app.print_to_output(f"❌ '{symbol}' 不是JC股票代码", '#FF0000')
+                        # 显示可用的JC股票列表
+                        if hasattr(self.app.company_manager, 'jc_stock_updater'):
+                            available_stocks = self.app.company_manager.jc_stock_updater.get_available_jc_stocks()
+                            if available_stocks:
+                                self.app.print_to_output(f"💡 可用JC股票: {', '.join(available_stocks)}", '#AAFFFF')
+                
                 elif subcommand == 'industry':
                     if len(parts) < 2:
                         self.app.print_to_output("用法: company industry <行业名称>", '#FFAA00')
@@ -1274,6 +1307,39 @@ class CommandProcessor:
                 color = '#00FF00' if success else '#FF0000'
                 self.app.print_to_output(message, color)
                 
+            elif action == 'offering':
+                # 增发股票功能
+                if len(parts) < 4:
+                    self.app.print_to_output("📋 股票增发命令使用方法:", '#FFAA00')
+                    self.app.print_to_output("  company offering <公司ID> <增发价格> <增发股数>", '#FFAA00')
+                    self.app.print_to_output("", '#FFAA00')
+                    self.app.print_to_output("📖 示例:", '#AAFFFF')
+                    self.app.print_to_output("  company offering JCTV 30.00 1000000  # 以30元增发100万股", '#AAFFFF')
+                    self.app.print_to_output("", '#AAFFFF')
+                    self.app.print_to_output("💡 注意:", '#FFAA00')
+                    self.app.print_to_output("  • 只有已上市公司才能增发股票", '#FFAA00')
+                    self.app.print_to_output("  • 增发价格不能偏离市价±50%", '#FFAA00')
+                    self.app.print_to_output("  • 单次增发不超过现有股本50%", '#FFAA00')
+                    return
+                    
+                try:
+                    company_identifier = parts[1]
+                    offering_price = float(parts[2])
+                    shares_to_issue = int(parts[3])
+                    
+                    # 使用智能查找
+                    target_company = self.app.company_manager.find_company_by_identifier(company_identifier, user_only=True)
+                    
+                    if not target_company:
+                        self.app.print_to_output(f"❌ 未找到您拥有的公司: {company_identifier}", '#FF0000')
+                        return
+                    
+                    success, message = self.app.company_manager.secondary_offering(target_company.company_id, offering_price, shares_to_issue)
+                    color = '#00FF00' if success else '#FF0000'
+                    self.app.print_to_output(message, color)
+                except ValueError:
+                    self.app.print_to_output("❌ 增发价格和股数必须是数字", '#FF0000')
+                    
             elif action == 'invest':
                 if len(parts) < 3:
                     self.app.print_to_output("用法: company invest <公司ID> <注资金额>", '#FFAA00')
@@ -1416,7 +1482,7 @@ class CommandProcessor:
                     self.app.print_to_output("      company expand amount <公司ID> <员工数量>", '#FFAA00')
                     self.app.print_to_output("💡 budget: 根据预算自动配置职位结构", '#AAFFFF')
                     self.app.print_to_output("💡 amount: 快速扩张指定人数（单次最多50人）", '#AAFFFF')
-                    self.app.print_to_output("📊 公司总员工数上限: 500人", '#AAFFFF')
+                    self.app.print_to_output("📊 公司总员工数上限: 10,000人", '#AAFFFF')
                     return
                 
                 expand_type = parts[1]
@@ -1551,6 +1617,108 @@ class CommandProcessor:
                 
                 success, message = self.app.company_manager.start_joint_venture(company_id, partner_symbol, investment)
                 color = '#00FF00' if success else '#FF0000'
+                self.app.print_to_output(message, color)
+                
+            elif action == 'sell':
+                # 公司出售功能
+                if len(parts) < 2:
+                    self.app.print_to_output("📋 公司出售命令使用方法:", '#FFAA00')
+                    self.app.print_to_output("  company sell <公司ID或股票代码>          # 查看估值报告", '#FFAA00')
+                    self.app.print_to_output("  company sell <公司ID或股票代码> <价格>   # 执行出售", '#FFAA00')
+                    self.app.print_to_output("", '#FFAA00')
+                    self.app.print_to_output("📖 示例:", '#AAFFFF')
+                    self.app.print_to_output("  company sell MYCO          # 查看估值", '#AAFFFF')
+                    self.app.print_to_output("  company sell MYCO 5000000  # 以500万出售", '#AAFFFF')
+                    return
+                    
+                company_id = parts[1]
+                
+                if len(parts) == 2:
+                    # 查看估值
+                    success, message = self.app.company_manager.sell_company(company_id)
+                    color = '#AAFFFF' if success else '#FF0000'
+                    self.app.print_to_output(message, color)
+                    
+                elif len(parts) == 3:
+                    # 执行出售
+                    try:
+                        sale_price = float(parts[2])
+                        success, message = self.app.company_manager.sell_company(company_id, sale_price)
+                        color = '#00FF00' if success else '#FF0000'
+                        self.app.print_to_output(message, color)
+                    except ValueError:
+                        self.app.print_to_output("❌ 出售价格必须是数字", '#FF0000')
+                        
+            elif action == 'close':
+                # 公司关闭功能
+                if len(parts) < 2:
+                    self.app.print_to_output("📋 公司关闭命令使用方法:", '#FFAA00')
+                    self.app.print_to_output("  company close <公司ID或股票代码>        # 预览关闭", '#FFAA00')
+                    self.app.print_to_output("  company close <公司ID或股票代码> force  # 确认关闭", '#FFAA00')
+                    self.app.print_to_output("", '#FFAA00')
+                    self.app.print_to_output("📖 示例:", '#AAFFFF')
+                    self.app.print_to_output("  company close MYCO        # 查看关闭预览", '#AAFFFF')
+                    self.app.print_to_output("  company close MYCO force  # 确认关闭", '#AAFFFF')
+                    self.app.print_to_output("", '#AAFFFF')
+                    self.app.print_to_output("💡 提示: 关闭前建议先考虑出售，可能获得更好收益！", '#FFAA00')
+                    return
+                    
+                company_id = parts[1]
+                
+                if len(parts) == 2:
+                    # 预览关闭
+                    success, message = self.app.company_manager.close_company(company_id)
+                    color = '#FFAA00' if success else '#FF0000'
+                    self.app.print_to_output(message, color)
+                    
+                elif len(parts) >= 3 and parts[2].lower() == 'force':
+                    # 确认关闭
+                    success, message = self.app.company_manager.close_company(company_id, force=True)
+                    color = '#00FF00' if success else '#FF0000'
+                    self.app.print_to_output(message, color)
+                
+            elif action == 'delist':
+                # 退市功能
+                if len(parts) < 2:
+                    self.app.print_to_output("📋 公司退市命令使用方法:", '#FFAA00')
+                    self.app.print_to_output("  company delist <公司ID或股票代码>          # 查看退市预览", '#FFAA00')
+                    self.app.print_to_output("  company delist <公司ID或股票代码> confirm  # 确认退市", '#FFAA00')
+                    self.app.print_to_output("", '#FFAA00')
+                    self.app.print_to_output("📖 示例:", '#AAFFFF')
+                    self.app.print_to_output("  company delist JCTV         # 查看退市预览", '#AAFFFF')
+                    self.app.print_to_output("  company delist JCTV confirm # 确认退市", '#AAFFFF')
+                    self.app.print_to_output("", '#AAFFFF')
+                    self.app.print_to_output("⚠️  注意: 退市需要支付股东补偿和退市费用！", '#FFAA00')
+                    return
+                    
+                company_id = parts[1]
+                
+                if len(parts) == 2:
+                    # 查看退市预览
+                    success, message = self.app.company_manager.delist_company(company_id)
+                    color = '#AAFFFF' if success else '#FF0000'
+                    self.app.print_to_output(message, color)
+                    
+                elif len(parts) >= 3 and parts[2].lower() == 'confirm':
+                    # 确认退市
+                    success, message = self.app.company_manager.confirm_delist_company(company_id)
+                    color = '#00FF00' if success else '#FF0000'
+                    self.app.print_to_output(message, color)
+                
+            elif action == 'detail':
+                # 公司详细信息功能
+                if len(parts) < 2:
+                    self.app.print_to_output("📋 公司详情命令使用方法:", '#FFAA00')
+                    self.app.print_to_output("  company detail <公司ID或股票代码>", '#FFAA00')
+                    self.app.print_to_output("", '#FFAA00')
+                    self.app.print_to_output("📖 示例:", '#AAFFFF')
+                    self.app.print_to_output("  company detail JCTV    # 查看JCTV详细信息", '#AAFFFF')
+                    self.app.print_to_output("  company detail 1       # 查看公司1详情", '#AAFFFF')
+                    return
+                    
+                company_id = parts[1]
+                success, message = self.app.company_manager.get_company_detail(company_id)
+                color = '#AAFFFF' if success else '#FF0000'
                 self.app.print_to_output(message, color)
                 
             elif action == 'analysis':
@@ -1744,7 +1912,8 @@ class CommandProcessor:
   company create <公司名> <行业> [描述]      - ⚡ 快速创建公司
   company my                               - 📋 查看我的公司列表
   company market                           - 🏢 浏览公司市场
-  company info <公司ID/代码>               - 📊 查看公司详细信息
+  company info <公司ID/代码>               - 📊 查看公司基本信息
+  company detail <公司ID/代码>             - 🔍 查看公司详细信息（全面版）
 
 💰 资金管理:
   company account <公司ID>                 - 💼 查看公司账户状况
@@ -1777,9 +1946,13 @@ class CommandProcessor:
 
 📈 资本运作:
   company ipo <公司ID> <价格> <股数>       - 🎯 申请IPO上市
+  company offering <公司ID> <价格> <股数>  - 📈 增发股票（已上市公司）
+  company delist <公司ID> [confirm]        - 📤 撤回IPO退市（需支付补偿）
   company acquire <收购方ID> <目标代码>     - 🔍 评估收购价格和可行性
   company acquire <收购方ID> <目标代码> confirm - 🤝 确认执行收购
   company joint <公司ID> <合作伙伴> <投资额> - 🤝 启动合资项目
+  company sell <公司ID> [价格]             - 💰 出售公司（支持上市和未上市）
+  company close <公司ID> [force]           - 🏢 关闭/解散公司
 
 📊 专业分析 (JC股票专用):
   company analysis <股票代码>             - 📈 JC股票技术分析和基本面分析

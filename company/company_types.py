@@ -141,7 +141,7 @@ class JCCompany:
     
     # 🆕 员工管理系统  
     staff_list: List[Dict] = field(default_factory=list)  # 员工列表
-    max_staff: int = 500  # 最大员工数
+    max_staff: int = 10000  # 最大员工数
     
     # 股票相关
     is_public: bool = False
