@@ -81,8 +81,191 @@
       "risk_level": 2,
       "created_by_user": null,
       "last_updated": "2025-06-10T16:53:10.057028"
+    },
+    {
+      "company_id": "JC_TEC_5819",
+      "name": "JC Gaming",
+      "symbol": "JCGA",
+      "industry": "technology",
+      "company_type": "startup",
+      "stage": "startup",
+      "founded_date": "2025-06-11",
+      "description": "JC Gaming是一家致力于技术创新和数字化解决方案的创新型企业，采用B2C销售的商业模式，致力于成为行业领先者。",
+      "headquarters": "JC经济特区",
+      "website": "www.jcga.jc",
+      "ceo_name": "admin",
+      "metrics": {
+        "revenue": 14296820.065542044,
+        "profit": 2505873.959161991,
+        "assets": 8000000.0,
+        "liabilities": 3000000.0,
+        "employees": 51,
+        "market_share": 0.0014557983413957475,
+        "growth_rate": 0.17502030586429235,
+        "debt_ratio": 0.375
+      },
+      "financials": {
+        "quarterly_reports": [],
+        "annual_reports": [],
+        "cash_flow": {},
+        "balance_sheet": {},
+        "income_statement": {}
+      },
+      "is_public": false,
+      "stock_price": 0.0,
+      "shares_outstanding": 0,
+      "market_cap": 0.0,
+      "ipo_price": null,
+      "ipo_date": null,
+      "news_events": [],
+      "performance_score": 63.371525084132145,
+      "risk_level": 5,
+      "created_by_user": "admin",
+      "last_updated": "2025-06-11T17:10:52.759860"
+    },
+    {
+      "company_id": "JC_TEC_4546",
+      "name": "测试科技公司",
+      "symbol": "测试科技",
+      "industry": "technology",
+      "company_type": "startup",
+      "stage": "startup",
+      "founded_date": "2025-06-11",
+      "description": "测试科技公司是一家致力于技术创新和数字化解决方案的创新型企业，采用B2B服务的商业模式，致力于成为行业领先者。",
+      "headquarters": "JC经济特区",
+      "website": "www.测试科技.jc",
+      "ceo_name": "test_user",
+      "metrics": {
+        "revenue": 4546631.142465638,
+        "profit": 1389281.3619295293,
+        "assets": 1600000.0,
+        "liabilities": 600000.0,
+        "employees": 15,
+        "market_share": 0.004459472818508247,
+        "growth_rate": 0.09509427207239529,
+        "debt_ratio": 0.375
+      },
+      "financials": {
+        "quarterly_reports": [],
+        "annual_reports": [],
+        "cash_flow": {},
+        "balance_sheet": {},
+        "income_statement": {}
+      },
+      "is_public": false,
+      "stock_price": 0.0,
+      "shares_outstanding": 0,
+      "market_cap": 0.0,
+      "ipo_price": null,
+      "ipo_date": null,
+      "news_events": [],
+      "performance_score": 62.78787063841835,
+      "risk_level": 5,
+      "created_by_user": "test_user",
+      "last_updated": "2025-06-11T17:13:30.706006"
+    },
+    {
+      "company_id": "JC_TEC_6535",
+      "name": "测试科技公司",
+      "symbol": "测试科技",
+      "industry": "technology",
+      "company_type": "startup",
+      "stage": "startup",
+      "founded_date": "2025-06-11",
+      "description": "测试科技公司是一家致力于技术创新和数字化解决方案的创新型企业，采用B2B服务的商业模式，致力于成为行业领先者。",
+      "headquarters": "JC经济特区",
+      "website": "www.测试科技.jc",
+      "ceo_name": "test_user",
+      "metrics": {
+        "revenue": 2315328.121017511,
+        "profit": 387263.4157780613,
+        "assets": 1600000.0,
+        "liabilities": 600000.0,
+        "employees": 8,
+        "market_share": 0.001959965043875661,
+        "growth_rate": 0.10255952174160421,
+        "debt_ratio": 0.375
+      },
+      "financials": {
+        "quarterly_reports": [],
+        "annual_reports": [],
+        "cash_flow": {},
+        "balance_sheet": {},
+        "income_statement": {}
+      },
+      "is_public": false,
+      "stock_price": 0.0,
+      "shares_outstanding": 0,
+      "market_cap": 0.0,
+      "ipo_price": null,
+      "ipo_date": null,
+      "news_events": [],
+      "performance_score": 63.02411020087048,
+      "risk_level": 5,
+      "created_by_user": "test_user",
+      "last_updated": "2025-06-11T17:13:39.036361"
+    },
+    {
+      "company_id": "JC_TEL_8476",
+      "name": "JCTV",
+      "symbol": "JCTV",
+      "industry": "telecom",
+      "company_type": "public",
+      "stage": "startup",
+      "founded_date": "2025-06-11",
+      "description": "JCTV是一家通信技术和网络基础设施的创新型企业，采用平台连接的商业模式，致力于成为行业领先者。",
+      "headquarters": "JC经济特区",
+      "website": "www.jctv.jc",
+      "ceo_name": "admin",
+      "metrics": {
+        "revenue": 1063725831.1381167,
+        "profit": 20178970.765458062,
+        "assets": 673828650.2969658,
+        "liabilities": 15000000.0,
+        "employees": 350,
+        "market_share": 0.05950759249526067,
+        "growth_rate": 0.17473755324105988,
+        "debt_ratio": 0.375
+      },
+      "financials": {
+        "quarterly_reports": [],
+        "annual_reports": [],
+        "cash_flow": {},
+        "balance_sheet": {},
+        "income_statement": {}
+      },
+      "is_public": true,
+      "stock_price": 35.0,
+      "shares_outstanding": 1000,
+      "market_cap": 35000.0,
+      "ipo_price": 35.0,
+      "ipo_date": "2025-06-12T00:40:08.081751",
+      "news_events": [
+        {
+          "news_id": "JCTV_20250611_175520",
+          "title": "JCTV面临激烈竞争，市场份额下降",
+          "content": "详细内容: JCTV面临激烈竞争，市场份额下降。这一消息对公司telecom业务产生重要影响。",
+          "impact_type": "negative",
+          "impact_magnitude": 0.11581465659201708,
+          "publish_date": "2025-06-11T17:55:20.449119",
+          "category": "product"
+        }
+      ],
+      "performance_score": 155.6805056598462,
+      "risk_level": 3,
+      "created_by_user": "admin",
+      "last_updated": "2025-06-12T00:39:46.896275"
     }
   ],
-  "user_companies": {},
-  "last_updated": "2025-06-10T16:53:10.057028"
+  "user_companies": {
+    "admin": [
+      "JC_TEC_5819",
+      "JC_TEL_8476"
+    ],
+    "test_user": [
+      "JC_TEC_4546",
+      "JC_TEC_6535"
+    ]
+  },
+  "last_updated": "2025-06-12T00:40:08.085741"
 }

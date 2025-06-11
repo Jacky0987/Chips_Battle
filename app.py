@@ -167,6 +167,15 @@ class StockTradingApp:
         self.history_index = -1
 
         self.gui.clear_command_input()
+        
+        # 首先检查是否有活跃的向导
+        if hasattr(self.command_processor, 'active_wizard') and self.command_processor.active_wizard:
+            # 如果有活跃向导，将输入传递给向导处理
+            wizard_handled = self.command_processor.process_wizard_input(command)
+            if wizard_handled:
+                return
+        
+        # 正常命令处理
         self.command_processor.process_command(command)
 
     # Trading methods
@@ -1873,6 +1882,307 @@ class StockTradingApp:
         auto_save()
         check_orders()
         self.root.mainloop()
+
+    def show_jc_stock_analysis(self, symbol):
+        """显示JC股票专业分析"""
+        try:
+            # 获取JC股票更新器的分析数据
+            if hasattr(self, 'company_manager') and hasattr(self.company_manager, 'jc_stock_updater'):
+                analysis_data = self.company_manager.jc_stock_updater.get_stock_analysis_data(symbol)
+                
+                if analysis_data:
+                    # 生成专业分析报告
+                    report = self._generate_jc_analysis_report(symbol, analysis_data)
+                    self.print_to_output(report, '#00FFFF')
+                else:
+                    self.print_to_output(f"❌ 无法获取JC股票 {symbol} 的分析数据", '#FF0000')
+            else:
+                self.print_to_output("❌ JC股票分析系统未初始化", '#FF0000')
+                
+        except Exception as e:
+            self.print_to_output(f"❌ 分析JC股票时出错: {str(e)}", '#FF0000')
+    
+    def show_jc_stock_chart(self, symbol, time_range='5d'):
+        """显示JC股票图表"""
+        try:
+            # 获取JC股票更新器的分析数据
+            if hasattr(self, 'company_manager') and hasattr(self.company_manager, 'jc_stock_updater'):
+                analysis_data = self.company_manager.jc_stock_updater.get_stock_analysis_data(symbol)
+                
+                if analysis_data and 'price_history' in analysis_data:
+                    # 生成JC股票图表
+                    chart = self._create_jc_stock_chart(symbol, analysis_data, time_range)
+                    self.print_to_output(chart, '#FFAAFF')
+                else:
+                    self.print_to_output(f"❌ 无法获取JC股票 {symbol} 的图表数据", '#FF0000')
+            else:
+                self.print_to_output("❌ JC股票图表系统未初始化", '#FF0000')
+                
+        except Exception as e:
+            self.print_to_output(f"❌ 生成JC股票图表时出错: {str(e)}", '#FF0000')
+    
+    def _generate_jc_analysis_report(self, symbol, analysis_data):
+        """生成JC股票分析报告"""
+        try:
+            company = analysis_data.get('company')
+            fundamentals = analysis_data.get('fundamentals', {})
+            technical = analysis_data.get('technical_indicators', {})
+            sentiment = analysis_data.get('sentiment', {})
+            price_history = analysis_data.get('price_history', [])
+            
+            current_price = price_history[-1] if price_history else 0
+            
+            # 基础信息
+            report = f"""
+🏢 JC股票深度分析 - {symbol}
+
+📊 基本信息:
+  公司名称: {company.name if company else 'N/A'}
+  当前股价: J${current_price:.2f}
+  行业分类: {company.industry.value if company else 'N/A'}
+  上市时间: {company.ipo_date if company and company.ipo_date else 'N/A'}
+  总股本: {company.shares_outstanding:,}股 (如果有的话)
+  市值: J${company.market_cap:,.0f} (如果有的话)
+
+💰 财务分析:"""
+            
+            if fundamentals:
+                report += f"""
+  营业收入: J${fundamentals.get('revenue', 0):,.0f}
+  净利润: J${fundamentals.get('profit', 0):,.0f}
+  总资产: J${fundamentals.get('assets', 0):,.0f}
+  净资产: J${fundamentals.get('equity', 0):,.0f}
+  市盈率: {fundamentals.get('pe_ratio', 'N/A')}倍
+  市净率: {fundamentals.get('pb_ratio', 'N/A')}倍
+  ROE: {fundamentals.get('roe', 0)*100:.1f}%
+  负债率: {fundamentals.get('debt_ratio', 0)*100:.1f}%"""
+            
+            # 技术分析
+            if technical:
+                report += f"""
+
+📈 技术指标:
+  移动平均线:
+    MA5: J${technical.get('ma5', 0):.2f}
+    MA20: J${technical.get('ma20', 0):.2f}
+    MA60: J${technical.get('ma60', 0):.2f}
+  
+  趋势指标:
+    RSI: {technical.get('rsi', 0):.1f}
+    MACD: {technical.get('macd', 0):.3f}
+    布林带上轨: J${technical.get('bollinger_upper', 0):.2f}
+    布林带下轨: J${technical.get('bollinger_lower', 0):.2f}
+  
+  成交量:
+    平均成交量: {technical.get('avg_volume', 0):,.0f}
+    成交量比率: {technical.get('volume_ratio', 1):.2f}"""
+            
+            # 市场情绪
+            if sentiment:
+                sentiment_score = sentiment.get('overall_score', 50)
+                sentiment_text = self._get_sentiment_text(sentiment_score)
+                
+                report += f"""
+
+😊 市场情绪:
+  整体情绪: {sentiment_text} ({sentiment_score:.1f}/100)
+  新闻影响: {sentiment.get('news_impact', 'neutral')}
+  社交媒体: {sentiment.get('social_sentiment', 'neutral')}
+  机构观点: {sentiment.get('institutional_view', 'neutral')}"""
+            
+            # 投资建议
+            performance_score = company.performance_score if company else 50
+            rating, grade = self._get_jc_investment_rating(performance_score, technical, fundamentals)
+            
+            report += f"""
+
+🎯 投资建议:
+  综合评分: {performance_score:.1f}/100
+  投资等级: {rating} ({grade})
+  风险等级: {'⭐' * (company.risk_level if company else 3)} ({company.risk_level if company else 3}/5)
+  
+📋 关键风险:
+  • 个股集中风险较高
+  • JC公司业绩波动性
+  • 市场流动性风险
+  • 行业竞争风险
+
+💡 投资策略:
+  • 建议分散投资，控制单只股票仓位
+  • 关注公司基本面变化
+  • 设置合理止损和止盈点
+  • 定期跟踪公司经营状况
+"""
+            
+            # 最新消息
+            if company and company.news_events:
+                recent_news = sorted(company.news_events, key=lambda x: x.publish_date, reverse=True)[:3]
+                report += "\n📰 最新资讯:\n"
+                for news in recent_news:
+                    impact_icon = "📈" if news.impact_type == "positive" else "📉" if news.impact_type == "negative" else "📊"
+                    report += f"  {impact_icon} {news.title}\n"
+                    report += f"     {news.publish_date[:10]} | 影响程度: {news.impact_magnitude:.1%}\n"
+            
+            return report
+            
+        except Exception as e:
+            return f"❌ 生成分析报告时出错: {str(e)}"
+    
+    def _create_jc_stock_chart(self, symbol, analysis_data, time_range):
+        """创建JC股票图表"""
+        try:
+            price_history = analysis_data.get('price_history', [])
+            technical = analysis_data.get('technical_indicators', {})
+            
+            if not price_history:
+                return f"❌ {symbol} 没有足够的价格数据生成图表"
+            
+            # 根据时间范围截取数据
+            range_map = {'1d': 1, '5d': 5, '1m': 30, '3m': 90, '1y': 365}
+            days = range_map.get(time_range, 5)
+            chart_data = price_history[-days:] if len(price_history) >= days else price_history
+            
+            if not chart_data:
+                return f"❌ {symbol} 没有足够的数据生成{time_range}图表"
+            
+            # 生成ASCII价格图表
+            chart = self._create_jc_ascii_chart(chart_data, symbol, time_range)
+            
+            # 添加技术指标信息
+            current_price = chart_data[-1]
+            prev_price = chart_data[-2] if len(chart_data) > 1 else current_price
+            change = current_price - prev_price
+            change_pct = (change / prev_price * 100) if prev_price > 0 else 0
+            
+            change_color = "🔴" if change < 0 else "🟢" if change > 0 else "⚪"
+            
+            header = f"""
+📊 JC股票图表 - {symbol} ({time_range})
+
+💰 价格信息:
+  当前价格: J${current_price:.2f}
+  涨跌金额: {change:+.2f}
+  涨跌幅度: {change_pct:+.2f}% {change_color}
+  最高价: J${max(chart_data):.2f}
+  最低价: J${min(chart_data):.2f}
+"""
+            
+            if technical:
+                header += f"""
+📈 技术指标:
+  RSI: {technical.get('rsi', 0):.1f} {'超买' if technical.get('rsi', 50) > 70 else '超卖' if technical.get('rsi', 50) < 30 else '正常'}
+  MACD: {technical.get('macd', 0):.3f}
+  MA20: J${technical.get('ma20', 0):.2f}
+"""
+            
+            return header + chart
+            
+        except Exception as e:
+            return f"❌ 生成图表时出错: {str(e)}"
+    
+    def _create_jc_ascii_chart(self, data, symbol, time_range, height=12, width=60):
+        """创建JC股票ASCII图表"""
+        if not data or len(data) < 2:
+            return "❌ 数据不足，无法生成图表"
+        
+        # 计算价格范围
+        min_price = min(data)
+        max_price = max(data)
+        price_range = max_price - min_price
+        
+        if price_range == 0:
+            return f"📊 {symbol} 价格保持稳定在 J${data[0]:.2f}"
+        
+        # 创建图表网格
+        chart_lines = []
+        
+        # 绘制价格线
+        for row in range(height):
+            line = []
+            threshold = max_price - (row / (height - 1)) * price_range
+            
+            # 显示价格刻度
+            price_label = f"{threshold:.2f}"
+            line.append(f"{price_label:>6}")
+            line.append("│")
+            
+            # 绘制数据点
+            for i, price in enumerate(data[-width:]):
+                if abs(price - threshold) <= price_range / height / 2:
+                    if i == len(data[-width:]) - 1:
+                        line.append("●")  # 最新价格点
+                    else:
+                        line.append("█")  # 历史价格点
+                else:
+                    line.append(" ")
+            
+            chart_lines.append("".join(line))
+        
+        # 添加底部时间轴
+        time_axis = "       └" + "─" * min(width, len(data)) + ">"
+        chart_lines.append(time_axis)
+        
+        # 添加图例
+        legend = f"       {len(data)}个数据点 | 最新: J${data[-1]:.2f}"
+        chart_lines.append(legend)
+        
+        return "\n" + "\n".join(chart_lines) + "\n"
+    
+    def _get_sentiment_text(self, score):
+        """根据情绪分数获取文本描述"""
+        if score >= 80:
+            return "极度乐观"
+        elif score >= 65:
+            return "乐观"
+        elif score >= 50:
+            return "中性偏多"
+        elif score >= 35:
+            return "中性偏空"
+        elif score >= 20:
+            return "悲观"
+        else:
+            return "极度悲观"
+    
+    def _get_jc_investment_rating(self, performance_score, technical, fundamentals):
+        """获取JC股票投资评级"""
+        # 综合考虑公司表现、技术指标和基本面
+        base_score = performance_score
+        
+        # 技术面调整
+        if technical:
+            rsi = technical.get('rsi', 50)
+            if rsi > 80:  # 超买
+                base_score -= 5
+            elif rsi < 20:  # 超卖，可能是机会
+                base_score += 3
+        
+        # 基本面调整
+        if fundamentals:
+            roe = fundamentals.get('roe', 0)
+            if roe > 0.15:  # ROE > 15%
+                base_score += 5
+            elif roe < 0:  # 负ROE
+                base_score -= 10
+                
+            debt_ratio = fundamentals.get('debt_ratio', 0)
+            if debt_ratio > 0.7:  # 负债率过高
+                base_score -= 5
+        
+        # 评级划分
+        if base_score >= 85:
+            return "强烈推荐", "A+"
+        elif base_score >= 75:
+            return "推荐买入", "A"
+        elif base_score >= 65:
+            return "谨慎乐观", "B+"
+        elif base_score >= 55:
+            return "中性持有", "B"
+        elif base_score >= 45:
+            return "观望等待", "B-"
+        elif base_score >= 35:
+            return "谨慎看空", "C"
+        else:
+            return "建议回避", "D"
 
 
 if __name__ == "__main__":

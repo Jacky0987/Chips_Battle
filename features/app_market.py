@@ -5,8 +5,9 @@ AppMarket系统 - 应用商店核心功能
 
 import json
 import random
+import importlib.util
+import os
 from datetime import datetime
-
 
 class AppMarket:
     """应用商店管理系统"""
@@ -18,91 +19,102 @@ class AppMarket:
         self.load_user_apps()
     
     def _initialize_apps(self):
-        """初始化可用应用"""
+        """初始化可用应用 - 从配置文件自动加载"""
+        apps = {}
+        
+        # 首先尝试从配置文件加载
+        config_path = "data/app_config.json"
+        if os.path.exists(config_path):
+            try:
+                with open(config_path, 'r', encoding='utf-8') as f:
+                    config = json.load(f)
+                
+                for app_config in config.get('apps', []):
+                    try:
+                        # 动态加载应用
+                        module_name = app_config['module_name']
+                        class_name = app_config['class_name']
+                        app_id = app_config['app_id']
+                        
+                        spec = importlib.util.spec_from_file_location(
+                            f"{app_id}_app", 
+                            os.path.join('apps', f"{module_name}.py")
+                        )
+                        module = importlib.util.module_from_spec(spec)
+                        spec.loader.exec_module(module)
+                        
+                        # 创建应用实例
+                        app_class = getattr(module, class_name)
+                        app_instance = app_class()
+                        
+                        # 更新应用信息（从配置覆盖）
+                        app_instance.name = app_config.get('name', app_instance.name)
+                        app_instance.description = app_config.get('description', app_instance.description)
+                        app_instance.price = app_config.get('price', app_instance.price)
+                        app_instance.category = app_config.get('category', app_instance.category)
+                        app_instance.version = app_config.get('version', app_instance.version)
+                        app_instance.emoji = app_config.get('emoji', app_instance.emoji)
+                        app_instance.is_premium = app_config.get('is_premium', False)
+                        app_instance.tags = app_config.get('tags', [])
+                        
+                        apps[app_id] = app_instance
+                        print(f"✅ 成功加载应用: {app_instance.name}")
+                        
+                    except Exception as e:
+                        print(f"❌ 无法加载应用 {app_config.get('app_id', 'unknown')}: {e}")
+                        continue
+                
+                print(f"📱 共加载 {len(apps)} 个应用")
+                return apps
+                
+            except Exception as e:
+                print(f"❌ 读取应用配置文件失败: {e}")
+        
+        # 回退到硬编码方式
+        print("⚠️ 配置文件不存在，使用硬编码方式加载应用")
+        return self._initialize_apps_fallback()
+    
+    def _initialize_apps_fallback(self):
+        """回退的应用初始化方法（硬编码）"""
         apps = {}
         
         # 动态加载apps文件夹中的应用
         try:
-            import importlib.util
-            import os
             
-            # 动态导入.app.py文件
+            # 应用映射表
+            app_mappings = [
+                ('slot_machine', 'slot_machine.app.py', 'SlotMachineApp'),
+                ('blackjack', 'blackjack.app.py', 'BlackjackApp'),
+                ('texas_holdem', 'texas_holdem.app.py', 'TexasHoldemApp'),
+                ('dice_game', 'dice.app.py', 'DiceGameApp'),
+                ('ai_analysis', 'ai_analysis.app.py', 'AIAnalysisApp'),
+                ('advanced_chart', 'advanced_chart.app.py', 'AdvancedChartApp'),
+                ('poker_game', 'poker_game.app.py', 'PokerGameApp'),
+                ('news_analyzer', 'news_analyzer.app.py', 'NewsAnalyzerApp'),
+                ('horse_racing', 'horse_racing.app.py', 'HorseRacingApp'),
+                ('roulette', 'roulette.app.py', 'RouletteApp'),
+                ('sic_bo', 'sic_bo.app.py', 'SicBoApp'),
+            ]
+            
             apps_dir = 'apps'
             if os.path.exists(apps_dir):
-                # 导入老虎机应用
-                try:
-                    spec = importlib.util.spec_from_file_location("slot_machine_app", os.path.join(apps_dir, "slot_machine.app.py"))
-                    slot_module = importlib.util.module_from_spec(spec)
-                    spec.loader.exec_module(slot_module)
-                    apps['slot_machine'] = slot_module.SlotMachineApp()
-                except Exception as e:
-                    print(f"无法加载老虎机应用: {e}")
-                
-                # 导入21点应用
-                try:
-                    spec = importlib.util.spec_from_file_location("blackjack_app", os.path.join(apps_dir, "blackjack.app.py"))
-                    blackjack_module = importlib.util.module_from_spec(spec)
-                    spec.loader.exec_module(blackjack_module)
-                    apps['blackjack'] = blackjack_module.BlackjackApp()
-                except Exception as e:
-                    print(f"无法加载21点应用: {e}")
-                
-                # 导入德州扑克应用
-                try:
-                    spec = importlib.util.spec_from_file_location("texas_holdem_app", os.path.join(apps_dir, "texas_holdem.app.py"))
-                    texas_module = importlib.util.module_from_spec(spec)
-                    spec.loader.exec_module(texas_module)
-                    apps['texas_holdem'] = texas_module.TexasHoldemApp()
-                except Exception as e:
-                    print(f"无法加载德州扑克应用: {e}")
-            
-                # 导入骰子游戏应用
-                try:
-                    spec = importlib.util.spec_from_file_location("dice_app", os.path.join(apps_dir, "dice.app.py"))
-                    dice_module = importlib.util.module_from_spec(spec)
-                    spec.loader.exec_module(dice_module)
-                    apps['dice_game'] = dice_module.DiceGameApp()
-                except Exception as e:
-                    print(f"无法加载骰子游戏应用: {e}")
-                
-                # 导入AI分析应用
-                try:
-                    spec = importlib.util.spec_from_file_location("ai_analysis_app", os.path.join(apps_dir, "ai_analysis.app.py"))
-                    ai_module = importlib.util.module_from_spec(spec)
-                    spec.loader.exec_module(ai_module)
-                    apps['ai_analysis'] = ai_module.AIAnalysisApp()
-                except Exception as e:
-                    print(f"无法加载AI分析应用: {e}")
-                
-                # 导入高级图表应用
-                try:
-                    spec = importlib.util.spec_from_file_location("advanced_chart_app", os.path.join(apps_dir, "advanced_chart.app.py"))
-                    chart_module = importlib.util.module_from_spec(spec)
-                    spec.loader.exec_module(chart_module)
-                    apps['advanced_chart'] = chart_module.AdvancedChartApp()
-                except Exception as e:
-                    print(f"无法加载高级图表应用: {e}")
-            
-                # 导入扑克游戏应用
-                try:
-                    spec = importlib.util.spec_from_file_location("poker_game_app", os.path.join(apps_dir, "poker_game.app.py"))
-                    poker_module = importlib.util.module_from_spec(spec)
-                    spec.loader.exec_module(poker_module)
-                    apps['poker_game'] = poker_module.PokerGameApp()
-                except Exception as e:
-                    print(f"无法加载扑克游戏应用: {e}")
-                
-                # 导入新闻分析应用
-                try:
-                    spec = importlib.util.spec_from_file_location("news_analyzer_app", os.path.join(apps_dir, "news_analyzer.app.py"))
-                    news_module = importlib.util.module_from_spec(spec)
-                    spec.loader.exec_module(news_module)
-                    apps['news_analyzer'] = news_module.NewsAnalyzerApp()
-                except Exception as e:
-                    print(f"无法加载新闻分析应用: {e}")
+                for app_id, filename, class_name in app_mappings:
+                    try:
+                        spec = importlib.util.spec_from_file_location(
+                            f"{app_id}_app", 
+                            os.path.join(apps_dir, filename)
+                        )
+                        module = importlib.util.module_from_spec(spec)
+                        spec.loader.exec_module(module)
+                        
+                        app_class = getattr(module, class_name)
+                        apps[app_id] = app_class()
+                        print(f"✅ 成功加载应用: {app_id}")
+                    except Exception as e:
+                        print(f"❌ 无法加载应用 {app_id}: {e}")
             
         except Exception as e:
-            print(f"警告：无法加载apps目录中的应用: {e}")
+            print(f"❌ 无法加载apps目录中的应用: {e}")
         
         return apps
     

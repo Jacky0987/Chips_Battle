@@ -32,46 +32,48 @@ class HomeManager:
         self.main_app.save_game_data()
     
     def show_home_menu(self):
-        """显示家庭投资理财主菜单"""
-        total_etf_value = sum(
-            self.etf_funds[etf_id].get_value() * quantity 
-            for etf_id, quantity in self.user_assets.get('etf', {}).items()
-        )
-        total_car_value = sum(
-            self.luxury_cars[car_id].get_value() * quantity 
-            for car_id, quantity in self.user_assets.get('cars', {}).items()
-        )
-        total_portfolio_value = total_etf_value + total_car_value
-        
-        return f"""
-══════════════════════════════════════════════════════════════════════════════════════════
-                            🏠 家庭投资理财中心 🏠                                         
-                        探索多元化投资机会，打造财富人生                                   
-══════════════════════════════════════════════════════════════════════════════════════════
+        """显示家庭投资菜单"""
+        menu_text = f"""
+═══════════════════════════════════════════════════════════════════════════════════════
+                                    🏠 家庭投资理财中心
+═══════════════════════════════════════════════════════════════════════════════════════
 
-💰 投资概况:
-  现金余额: ${self.main_app.cash:,.2f}
-  ETF投资总值: ${total_etf_value:,.2f}
-  豪车收藏总值: ${total_car_value:,.2f}
-  投资组合总值: ${total_portfolio_value:,.2f}
+💰 我的资产概览:
+  现金余额: J${self.main_app.cash:,.2f}
+  投资资产总值: J${self._calculate_total_asset_value():,.2f}
+  资产增值: J${self._calculate_total_profit_loss():+,.2f}
 
-🏡 家居功能:
-  🏠 home interior          - 查看我的家居和藏品展示
-  📊 home portfolio         - 投资组合管理
-  📈 home etf              - ETF基金投资市场
-  🚗 home cars             - 豪华车收藏市场
-  🌍 home market           - 综合投资市场概览
+🏡 投资板块:
+  [1] 🏠 房地产投资         - 购买住宅、商业地产获得租金收益
+  [2] 🎨 艺术品收藏         - 投资名画、古董等收藏品
+  [3] 🚗 豪华车投资         - 收藏限量版豪车和经典车型
+  [4] 📈 ETF基金投资        - 购买各类指数基金分散风险
+  [5] 💎 珠宝首饰投资       - 投资钻石、黄金等贵金属
+  [6] 🍷 高端消费品         - 红酒、雪茄、手表等奢侈品
 
-💡 快速操作:
-  home buy etf <基金ID> <份额>     - 购买ETF基金
-  home buy car <车辆ID> <数量>     - 购买豪华车收藏
-  home sell etf <基金ID> <份额>    - 出售ETF基金
-  home sell car <车辆ID> <数量>    - 出售豪华车
-  home info etf <基金ID>          - 查看ETF详细信息
-  home info car <车辆ID>          - 查看豪车详细信息
+🛒 生活服务:
+  [7] 🎯 私人定制服务       - 享受高端定制化服务
+  [8] 🌟 会员俱乐部         - 加入各类精英会员俱乐部
+  [9] 🎓 教育培训投资       - 投资个人技能和知识提升
+  [10] 🏥 健康医疗服务      - 高端医疗和健康管理
+  [11] 🎪 娱乐休闲消费      - 旅游、娱乐等生活享受
 
-🏆 投资理念: 分散投资，长期持有，追求稳健收益与生活品质的完美结合！
+📊 资产管理:
+  [12] 📋 查看投资组合      - 详细查看所有投资资产
+  [13] 💹 资产收益报告      - 分析投资收益和风险
+  [14] 🔄 资产重新配置      - 调整投资组合比例
+
+使用方法:
+  home real_estate          - 查看房地产投资
+  home art                  - 查看艺术品市场
+  home luxury               - 查看奢侈品消费
+  home services             - 查看生活服务
+  home portfolio            - 查看投资组合
+  
+💡 温馨提示: 多元化投资可以降低风险，提高长期收益！
+═══════════════════════════════════════════════════════════════════════════════════════
 """
+        return menu_text
 
     def show_home_interior(self):
         """显示家居内景和藏品展示"""
@@ -529,4 +531,472 @@ class HomeManager:
   home market                  # 查看市场行情
 """
         
-        return portfolio_text 
+        return portfolio_text
+
+    def show_real_estate_market(self):
+        """显示房地产投资市场"""
+        properties = self._get_real_estate_properties()
+        
+        result = f"""
+🏠 房地产投资市场
+
+💰 投资概览:
+  最低投资金额: J$5,000,000 (500万)
+  预期年化收益: 8-15%
+  投资风险等级: ⭐⭐⭐ (中等)
+
+🏘️ 可投资物业:
+{'物业名称':<20} {'类型':<8} {'价格(万)':<12} {'预期收益率':<12} {'地段':<15}
+──────────────────────────────────────────────────────────────────────────
+"""
+        
+        for prop in properties:
+            result += f"{prop['name']:<18} {prop['type']:<6} {prop['price']/10000:<10.0f} {prop['yield']*100:<10.1f}% {prop['location']:<13}\n"
+        
+        result += f"""
+
+📈 投资建议:
+  • 住宅物业: 稳定租金收入，适合长期投资
+  • 商业地产: 收益率较高，但需要更多资金
+  • 工业地产: 长期租约，收入稳定
+  • 海外地产: 分散地域风险，货币对冲
+
+💡 使用方法:
+  home buy real_estate <物业ID> <数量>  - 购买房地产
+  home sell real_estate <物业ID> <数量> - 出售房地产
+"""
+        return result
+
+    def show_art_collection_market(self):
+        """显示艺术品收藏市场"""
+        artworks = self._get_art_collection_items()
+        
+        result = f"""
+🎨 艺术品收藏市场
+
+🖼️ 收藏概览:
+  入门门槛: J$500,000 (50万)
+  预期增值: 12-25% (年化)
+  投资风险: ⭐⭐⭐⭐ (较高)
+
+🎭 精品推荐:
+{'作品名称':<25} {'艺术家':<15} {'类型':<8} {'价格(万)':<10} {'稀有度':<8}
+──────────────────────────────────────────────────────────────────────────
+"""
+        
+        for art in artworks:
+            rarity_stars = "⭐" * art['rarity_level']
+            result += f"{art['name']:<23} {art['artist']:<13} {art['type']:<6} {art['price']/10000:<8.0f} {rarity_stars:<6}\n"
+        
+        result += f"""
+
+🎯 收藏策略:
+  • 新兴艺术家: 价格相对较低，升值潜力大
+  • 知名大师: 价格较高但相对稳定
+  • 古董文物: 历史价值，稀缺性强
+  • 现代艺术: 市场活跃，流动性好
+
+💡 收藏贴士:
+  - 关注艺术家的展览和拍卖记录
+  - 考虑作品的保存和保险成本
+  - 分散投资不同类型和年代的作品
+
+🔧 使用方法:
+  home buy art <作品ID> <数量>     - 购买艺术品
+  home sell art <作品ID> <数量>    - 出售艺术品
+"""
+        return result
+
+    def show_luxury_consumption(self):
+        """显示奢侈品消费"""
+        luxuries = self._get_luxury_items()
+        
+        result = f"""
+🍷 高端奢侈品消费
+
+💎 消费体验:
+  品质保证: 顶级奢侈品牌
+  升值潜力: 部分限量款具有收藏价值
+  身份象征: 彰显个人品味和地位
+
+🛍️ 精选商品:
+{'商品名称':<25} {'品牌':<15} {'类型':<10} {'价格(万)':<10} {'稀有度':<8}
+──────────────────────────────────────────────────────────────────────────
+"""
+        
+        for luxury in luxuries:
+            rarity_display = {1: "普通", 2: "稀有", 3: "传奇", 4: "神话", 5: "至尊"}
+            result += f"{luxury['name']:<23} {luxury['brand']:<13} {luxury['category']:<8} {luxury['price']/10000:<8.1f} {rarity_display.get(luxury['rarity'], '未知'):<6}\n"
+        
+        result += f"""
+
+🎯 消费建议:
+  • 手表珠宝: 保值性强，可以传承
+  • 限量版酒类: 随时间增值，适合收藏
+  • 高端电子产品: 享受最新科技
+  • 定制服装: 彰显个人品味
+
+⚠️ 消费提醒:
+  - 奢侈品主要用于享受，升值为辅
+  - 注意保养和保存条件
+  - 理性消费，量力而行
+
+🔧 使用方法:
+  home buy luxury <商品ID> <数量>   - 购买奢侈品
+  home use luxury <商品ID>          - 使用/体验奢侈品
+"""
+        return result
+
+    def show_lifestyle_services(self):
+        """显示生活服务"""
+        services = self._get_lifestyle_services()
+        
+        result = f"""
+🌟 高端生活服务
+
+🎯 服务理念:
+  专业定制: 量身定制的个性化服务
+  品质保证: 顶级服务提供商
+  全程管家: 一站式生活解决方案
+
+🔥 热门服务:
+{'服务名称':<25} {'类型':<12} {'价格':<15} {'时长':<10} {'评级':<8}
+──────────────────────────────────────────────────────────────────────────
+"""
+        
+        for service in services:
+            stars = "⭐" * service['rating']
+            result += f"{service['name']:<23} {service['category']:<10} J${service['price']:,}<13 {service['duration']:<8} {stars:<6}\n"
+        
+        result += f"""
+
+🎨 服务分类:
+  • 私人定制: 专属设计师、私人管家
+  • 教育培训: 语言学习、技能提升、MBA课程
+  • 健康医疗: 高端体检、基因检测、心理咨询
+  • 娱乐休闲: 私人游艇、高尔夫会籍、度假村
+
+💰 投资回报:
+  - 教育培训可提升个人能力和收入潜力
+  - 健康服务是对未来的重要投资
+  - 网络建设有助于商业机会发现
+
+🔧 使用方法:
+  home buy service <服务ID>         - 购买生活服务
+  home club                         - 查看会员俱乐部
+"""
+        return result
+
+    def show_club_memberships(self):
+        """显示会员俱乐部"""
+        clubs = self._get_club_memberships()
+        
+        result = f"""
+🏆 精英会员俱乐部
+
+🌟 会员特权:
+  专属网络: 结识各行业精英人士
+  优质资源: 获取稀缺投资机会
+  尊贵体验: 享受顶级设施和服务
+
+🎯 俱乐部推荐:
+{'俱乐部名称':<25} {'类型':<12} {'年费(万)':<12} {'门槛':<15} {'特色':<15}
+──────────────────────────────────────────────────────────────────────────
+"""
+        
+        for club in clubs:
+            result += f"{club['name']:<23} {club['type']:<10} {club['annual_fee']/10000:<10.1f} {club['requirement']:<13} {club['feature']:<13}\n"
+        
+        result += f"""
+
+🎨 俱乐部类型:
+  • 商务俱乐部: 商业networking，投资机会
+  • 高尔夫俱乐部: 运动社交，商务洽谈
+  • 艺术俱乐部: 文化交流，艺术品投资
+  • 美食俱乐部: 顶级餐饮，生活品质
+
+💡 会员收益:
+  - 扩展高质量人脉圈
+  - 获得独家投资机会
+  - 提升个人社会地位
+  - 享受专属优质服务
+
+🔧 使用方法:
+  home join club <俱乐部ID>         - 申请加入俱乐部
+  home club events                  - 查看俱乐部活动
+"""
+        return result
+
+    def _get_real_estate_properties(self):
+        """获取房地产投资选项"""
+        return [
+            {"id": "luxury_apt_01", "name": "城央豪华公寓", "type": "住宅", "price": 8000000, "yield": 0.08, "location": "市中心"},
+            {"id": "office_tower_01", "name": "甲级写字楼", "type": "商办", "price": 15000000, "yield": 0.12, "location": "商务区"},
+            {"id": "shopping_mall_01", "name": "大型购物中心", "type": "商业", "price": 50000000, "yield": 0.15, "location": "新区"},
+            {"id": "villa_01", "name": "海景别墅", "type": "别墅", "price": 20000000, "yield": 0.06, "location": "海滨"},
+            {"id": "warehouse_01", "name": "现代化仓储", "type": "工业", "price": 12000000, "yield": 0.10, "location": "物流园"},
+            {"id": "overseas_apt_01", "name": "纽约公寓", "type": "海外", "price": 25000000, "yield": 0.09, "location": "曼哈顿"},
+        ]
+
+    def _get_art_collection_items(self):
+        """获取艺术品收藏选项"""
+        return [
+            {"id": "painting_01", "name": "印象派油画", "artist": "莫奈", "type": "油画", "price": 5000000, "rarity_level": 4},
+            {"id": "sculpture_01", "name": "现代雕塑", "artist": "罗丹", "type": "雕塑", "price": 3000000, "rarity_level": 3},
+            {"id": "antique_01", "name": "明代青花瓷", "artist": "景德镇", "type": "古董", "price": 8000000, "rarity_level": 5},
+            {"id": "calligraphy_01", "name": "书法作品", "artist": "王羲之", "type": "书法", "price": 12000000, "rarity_level": 5},
+            {"id": "jade_01", "name": "和田玉摆件", "artist": "工艺大师", "type": "玉器", "price": 2000000, "rarity_level": 3},
+            {"id": "modern_art_01", "name": "当代艺术", "artist": "毕加索", "type": "现代", "price": 15000000, "rarity_level": 4},
+        ]
+
+    def _get_luxury_items(self):
+        """获取奢侈品选项"""
+        return [
+            {"id": "watch_01", "name": "百达翡丽手表", "brand": "Patek Philippe", "category": "手表", "price": 2000000, "rarity": 4},
+            {"id": "wine_01", "name": "82年拉菲", "brand": "Lafite", "category": "红酒", "price": 500000, "rarity": 3},
+            {"id": "jewelry_01", "name": "卡地亚钻戒", "brand": "Cartier", "category": "珠宝", "price": 1500000, "rarity": 3},
+            {"id": "bag_01", "name": "爱马仕铂金包", "brand": "Hermès", "category": "包包", "price": 800000, "rarity": 4},
+            {"id": "cigar_01", "name": "古巴雪茄", "brand": "Cohiba", "category": "雪茄", "price": 100000, "rarity": 2},
+            {"id": "tech_01", "name": "限量版手机", "brand": "Vertu", "category": "电子", "price": 300000, "rarity": 2},
+        ]
+
+    def _get_lifestyle_services(self):
+        """获取生活服务选项"""
+        return [
+            {"id": "butler_01", "name": "私人管家服务", "category": "定制服务", "price": 500000, "duration": "1年", "rating": 5},
+            {"id": "mba_01", "name": "顶级MBA课程", "category": "教育培训", "price": 2000000, "duration": "2年", "rating": 5},
+            {"id": "health_01", "name": "全套基因检测", "category": "健康医疗", "price": 300000, "duration": "1次", "rating": 4},
+            {"id": "yacht_01", "name": "私人游艇租赁", "category": "娱乐休闲", "price": 1000000, "duration": "1年", "rating": 5},
+            {"id": "chef_01", "name": "米其林主厨", "category": "定制服务", "price": 200000, "duration": "6个月", "rating": 5},
+            {"id": "trainer_01", "name": "私人健身教练", "category": "健康医疗", "price": 150000, "duration": "1年", "rating": 4},
+        ]
+
+    def _get_club_memberships(self):
+        """获取会员俱乐部选项"""
+        return [
+            {"id": "business_club_01", "name": "企业家俱乐部", "type": "商务", "annual_fee": 1000000, "requirement": "资产1000万+", "feature": "投资机会"},
+            {"id": "golf_club_01", "name": "皇家高尔夫", "type": "运动", "annual_fee": 500000, "requirement": "会员推荐", "feature": "18洞球场"},
+            {"id": "art_club_01", "name": "艺术收藏协会", "type": "文化", "annual_fee": 300000, "requirement": "收藏经验", "feature": "拍卖预览"},
+            {"id": "wine_club_01", "name": "品酒师协会", "type": "美食", "annual_fee": 200000, "requirement": "品酒认证", "feature": "私人酒窖"},
+            {"id": "tech_club_01", "name": "科技创新联盟", "type": "科技", "annual_fee": 800000, "requirement": "科技背景", "feature": "创业孵化"},
+        ]
+
+    def buy_real_estate(self, property_id, quantity):
+        """购买房地产"""
+        properties = self._get_real_estate_properties()
+        property_data = next((p for p in properties if p["id"] == property_id), None)
+        
+        if not property_data:
+            return False, "❌ 房产不存在"
+            
+        total_cost = property_data["price"] * quantity
+        
+        if self.main_app.cash < total_cost:
+            return False, f"❌ 资金不足，需要 J${total_cost:,.0f}"
+            
+        # 扣除资金
+        self.main_app.cash -= total_cost
+        
+        # 添加到资产
+        if "real_estate" not in self.user_assets:
+            self.user_assets["real_estate"] = {}
+            
+        if property_id not in self.user_assets["real_estate"]:
+            self.user_assets["real_estate"][property_id] = {
+                "name": property_data["name"],
+                "quantity": 0,
+                "total_cost": 0,
+                "purchase_dates": [],
+                "annual_yield": property_data["yield"]
+            }
+            
+        self.user_assets["real_estate"][property_id]["quantity"] += quantity
+        self.user_assets["real_estate"][property_id]["total_cost"] += total_cost
+        self.user_assets["real_estate"][property_id]["purchase_dates"].append(datetime.now().isoformat())
+        
+        self.save_user_assets()
+        
+        return True, f"✅ 成功购买 {property_data['name']} x{quantity}，投入 J${total_cost:,.0f}，预期年收益率 {property_data['yield']*100:.1f}%"
+
+    def buy_luxury_item(self, item_id, quantity):
+        """购买奢侈品"""
+        luxuries = self._get_luxury_items()
+        item_data = next((item for item in luxuries if item["id"] == item_id), None)
+        
+        if not item_data:
+            return False, "❌ 商品不存在"
+            
+        total_cost = item_data["price"] * quantity
+        
+        if self.main_app.cash < total_cost:
+            return False, f"❌ 资金不足，需要 J${total_cost:,.0f}"
+            
+        # 扣除资金
+        self.main_app.cash -= total_cost
+        
+        # 添加到资产
+        if "luxury_items" not in self.user_assets:
+            self.user_assets["luxury_items"] = {}
+            
+        if item_id not in self.user_assets["luxury_items"]:
+            self.user_assets["luxury_items"][item_id] = {
+                "name": item_data["name"],
+                "brand": item_data["brand"],
+                "quantity": 0,
+                "total_cost": 0,
+                "rarity": item_data["rarity"]
+            }
+            
+        self.user_assets["luxury_items"][item_id]["quantity"] += quantity
+        self.user_assets["luxury_items"][item_id]["total_cost"] += total_cost
+        
+        self.save_user_assets()
+        
+        # 增加体验值
+        self.main_app.experience += item_data["rarity"] * 10
+        
+        return True, f"✅ 成功购买 {item_data['name']} x{quantity}，体验奢华生活！获得经验值 {item_data['rarity'] * 10}"
+
+    def buy_service(self, service_id):
+        """购买生活服务"""
+        services = self._get_lifestyle_services()
+        service_data = next((s for s in services if s["id"] == service_id), None)
+        
+        if not service_data:
+            return False, "❌ 服务不存在"
+            
+        cost = service_data["price"]
+        
+        if self.main_app.cash < cost:
+            return False, f"❌ 资金不足，需要 J${cost:,.0f}"
+            
+        # 扣除资金
+        self.main_app.cash -= cost
+        
+        # 添加到服务记录
+        if "services" not in self.user_assets:
+            self.user_assets["services"] = {}
+            
+        if service_id not in self.user_assets["services"]:
+            self.user_assets["services"][service_id] = {
+                "name": service_data["name"],
+                "category": service_data["category"],
+                "times_used": 0,
+                "total_spent": 0,
+                "last_used": None
+            }
+            
+        self.user_assets["services"][service_id]["times_used"] += 1
+        self.user_assets["services"][service_id]["total_spent"] += cost
+        self.user_assets["services"][service_id]["last_used"] = datetime.now().isoformat()
+        
+        self.save_user_assets()
+        
+        # 根据服务类型给予不同奖励
+        experience_gain = service_data["rating"] * 20
+        self.main_app.experience += experience_gain
+        
+        # 教育类服务可能增加额外能力
+        if service_data["category"] == "教育培训":
+            self.main_app.level += 1  # 直接提升等级
+            
+        return True, f"✅ 成功购买 {service_data['name']}服务！获得经验值 {experience_gain}"
+
+    def join_club(self, club_id):
+        """加入会员俱乐部"""
+        clubs = self._get_club_memberships()
+        club_data = next((c for c in clubs if c["id"] == club_id), None)
+        
+        if not club_data:
+            return False, "❌ 俱乐部不存在"
+            
+        annual_fee = club_data["annual_fee"]
+        
+        if self.main_app.cash < annual_fee:
+            return False, f"❌ 资金不足，年费需要 J${annual_fee:,.0f}"
+            
+        # 检查是否已经是会员
+        if "club_memberships" not in self.user_assets:
+            self.user_assets["club_memberships"] = {}
+            
+        if club_id in self.user_assets["club_memberships"]:
+            return False, "❌ 您已经是该俱乐部的会员"
+            
+        # 扣除年费
+        self.main_app.cash -= annual_fee
+        
+        # 添加会员资格
+        self.user_assets["club_memberships"][club_id] = {
+            "name": club_data["name"],
+            "type": club_data["type"],
+            "join_date": datetime.now().isoformat(),
+            "annual_fee": annual_fee,
+            "next_renewal": (datetime.now() + timedelta(days=365)).isoformat(),
+            "benefits_used": 0
+        }
+        
+        self.save_user_assets()
+        
+        # 会员资格带来声望和经验
+        self.main_app.experience += 100
+        
+        return True, f"✅ 成功加入 {club_data['name']}！开启精英社交圈！"
+
+    def _calculate_total_asset_value(self):
+        """计算总资产价值"""
+        total_value = 0
+        
+        # ETF基金价值
+        if "etf_funds" in self.user_assets:
+            for fund_id, fund_data in self.user_assets["etf_funds"].items():
+                # 简化计算，假设ETF有一定的价格波动
+                original_value = fund_data["total_cost"]
+                current_value = original_value * random.uniform(0.95, 1.15)  # ±15%波动
+                total_value += current_value
+                
+        # 豪车价值
+        if "luxury_cars" in self.user_assets:
+            for car_id, car_data in self.user_assets["luxury_cars"].items():
+                # 豪车可能升值或贬值
+                original_value = car_data["total_cost"]
+                current_value = original_value * random.uniform(0.8, 1.3)  # ±30%波动
+                total_value += current_value
+                
+        # 房地产价值
+        if "real_estate" in self.user_assets:
+            for prop_id, prop_data in self.user_assets["real_estate"].items():
+                original_value = prop_data["total_cost"]
+                # 房地产相对稳定但有升值潜力
+                current_value = original_value * random.uniform(1.0, 1.2)  # 0-20%升值
+                total_value += current_value
+                
+        # 艺术品价值 
+        if "art_collection" in self.user_assets:
+            for art_id, art_data in self.user_assets["art_collection"].items():
+                original_value = art_data["total_cost"]
+                # 艺术品波动较大
+                current_value = original_value * random.uniform(0.7, 1.5)  # ±50%波动
+                total_value += current_value
+                
+        # 奢侈品价值（通常贬值）
+        if "luxury_items" in self.user_assets:
+            for item_id, item_data in self.user_assets["luxury_items"].items():
+                original_value = item_data["total_cost"]
+                # 奢侈品主要消费，价值下降
+                current_value = original_value * random.uniform(0.3, 0.8)  # 贬值20-70%
+                total_value += current_value
+                
+        return total_value
+
+    def _calculate_total_profit_loss(self):
+        """计算总盈亏"""
+        total_cost = 0
+        current_value = self._calculate_total_asset_value()
+        
+        # 计算所有投资的总成本
+        for asset_type in ["etf_funds", "luxury_cars", "real_estate", "art_collection", "luxury_items"]:
+            if asset_type in self.user_assets:
+                for asset_id, asset_data in self.user_assets[asset_type].items():
+                    total_cost += asset_data.get("total_cost", 0)
+                    
+        return current_value - total_cost 

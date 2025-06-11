@@ -32,6 +32,12 @@ class CommandProcessor:
             "reset_user", "modify_stock_price", "view_all_users",
             "create_event", "ban_user", "admin_help", "exit", "exit_admin"
         ]
+        # 简化command_map，只保留基本映射
+        # 大部分命令处理逻辑仍在process_command方法的if-elif语句中
+        
+        # 添加向导状态管理
+        self.active_wizard = None
+        self.wizard_type = None
 
     def process_command(self, command):
         """处理用户输入的命令"""
@@ -137,9 +143,18 @@ class CommandProcessor:
         elif cmd == 'analysis':
             if len(parts) >= 2:
                 symbol = parts[1].upper()
+                # 普通股票分析
                 self.app.show_technical_analysis(symbol)
             else:
                 self.app.print_to_output("用法: analysis <股票代码>", '#FF0000')
+        elif cmd == 'chart':
+            if len(parts) >= 2:
+                symbol = parts[1].upper()
+                time_range = parts[2] if len(parts) >= 3 else '5d'
+                # 普通股票图表
+                self.app.show_chart(symbol, time_range)
+            else:
+                self.app.print_to_output("用法: chart <股票代码> [时间范围]", '#FF0000')
         elif cmd == 'alerts':
             self.app.show_alerts_menu()
         elif cmd == 'sector':
@@ -173,13 +188,6 @@ class CommandProcessor:
                 self.app.print_to_output("用法: set <设置编号> <值>", '#FF0000')
         elif cmd == 'performance':
             self.app.show_performance()
-        elif cmd == 'chart':
-            if len(parts) >= 2:
-                symbol = parts[1].upper()
-                time_range = parts[2] if len(parts) >= 3 else 'day'
-                self.app.show_chart(symbol, time_range)
-            else:
-                self.app.print_to_output("用法: chart <股票代码> [时间范围]", '#FF0000')
         elif cmd == 'compare':
             if len(parts) >= 3:
                 symbol1 = parts[1].upper()
@@ -234,6 +242,10 @@ class CommandProcessor:
         elif cmd == 'spot':
             result = self.app.commodity_trading.handle_spot_command(parts[1:])
             self.app.print_to_output(result)
+            
+        # 公司系统命令
+        elif cmd == 'company':
+            self._process_company_command(' '.join(parts[1:]))
         elif cmd == 'commodity' or cmd == 'commodities':
             result = self.app.commodity_trading.handle_commodity_command(parts[1:])
             self.app.print_to_output(result)
@@ -419,58 +431,7 @@ class CommandProcessor:
 
         # 家庭投资系统命令
         elif cmd == 'home':
-            if len(parts) >= 2:
-                action = parts[1].lower()
-                if action == 'interior':
-                    result = self.app.home_manager.show_home_interior()
-                    self.app.print_to_output(result)
-                elif action == 'etf':
-                    result = self.app.home_manager.show_etf_market()
-                    self.app.print_to_output(result)
-                elif action == 'cars':
-                    result = self.app.home_manager.show_cars_market()
-                    self.app.print_to_output(result)
-                elif action == 'portfolio':
-                    result = self.app.home_manager.show_portfolio()
-                    self.app.print_to_output(result)
-                elif action == 'market':
-                    # 显示综合市场信息
-                    etf_result = self.app.home_manager.show_etf_market()
-                    car_result = self.app.home_manager.show_cars_market()
-                    self.app.print_to_output(etf_result + "\n" + car_result)
-                elif action == 'buy' and len(parts) >= 5:
-                    asset_type = parts[2]
-                    asset_id = parts[3]
-                    quantity = parts[4]
-                    result = self.app.home_manager.buy_asset(asset_type, asset_id, quantity)
-                    self.app.print_to_output(result)
-                elif action == 'sell' and len(parts) >= 5:
-                    asset_type = parts[2]
-                    asset_id = parts[3]
-                    quantity = parts[4]
-                    result = self.app.home_manager.sell_asset(asset_type, asset_id, quantity)
-                    self.app.print_to_output(result)
-                elif action == 'info' and len(parts) >= 4:
-                    asset_type = parts[2]
-                    asset_id = parts[3]
-                    if asset_type == 'etf' and asset_id in self.app.home_manager.etf_funds:
-                        etf = self.app.home_manager.etf_funds[asset_id]
-                        etf.update_price()
-                        result = etf.get_detailed_info()
-                        self.app.print_to_output(result)
-                    elif asset_type == 'car' and asset_id in self.app.home_manager.luxury_cars:
-                        car = self.app.home_manager.luxury_cars[asset_id]
-                        car.update_price()
-                        result = car.get_detailed_info()
-                        self.app.print_to_output(result)
-                    else:
-                        self.app.print_to_output(f"❌ 资产 {asset_type} {asset_id} 不存在", '#FF0000')
-                else:
-                    self.app.print_to_output("❌ 无效的home命令格式", '#FF0000')
-                    self.app.print_to_output("用法: home <etf|cars|portfolio|market|buy|sell|info> [参数...]", '#FFAA00')
-            else:
-                result = self.app.home_manager.show_home_menu()
-                self.app.print_to_output(result)
+            self._process_home_command(' '.join(parts[1:]))
 
         # 指数系统命令
         elif cmd == 'index' or cmd == 'indices':
@@ -586,46 +547,324 @@ class CommandProcessor:
                     
                 subcommand = parts[1].lower()
                 
-                if subcommand == 'create' and len(parts) >= 4:
-                    company_name = parts[2]
-                    industry = parts[3]
-                    description = ' '.join(parts[4:]) if len(parts) > 4 else ""
-                    user_id = self.app.user_manager.current_user
-                    success, result = self.app.company_manager.create_company(user_id, company_name, industry, description)
-                    self.app.print_to_output(result)
-                elif subcommand == 'list':
-                    user_id = self.app.user_manager.current_user
-                    result = self.app.company_manager.show_user_companies(user_id)
-                    self.app.print_to_output(result)
-                elif subcommand == 'info' and len(parts) >= 3:
-                    identifier = parts[2]
-                    result = self.app.company_manager.show_company_info(identifier)
-                    self.app.print_to_output(result)
-                elif subcommand == 'ipo' and len(parts) >= 5:
-                    try:
-                        company_id = parts[2]
-                        ipo_price = float(parts[3])
-                        shares_to_issue = int(parts[4])
-                        success, result = self.app.company_manager.apply_ipo(company_id, ipo_price, shares_to_issue)
-                        self.app.print_to_output(result)
-                    except ValueError:
-                        self.app.print_to_output("❌ 无效的IPO参数", '#FF0000')
-                elif subcommand == 'news' and len(parts) >= 3:
-                    company_id = parts[2]
-                    result = self.app.company_manager.show_company_news(company_id)
-                    self.app.print_to_output(result)
-                elif subcommand == 'develop' and len(parts) >= 4:
-                    company_id = parts[2]
-                    development_type = parts[3]
-                    success, result = self.app.company_manager.develop_company(company_id, development_type)
-                    self.app.print_to_output(result)
-                elif subcommand == 'industry' and len(parts) >= 3:
-                    industry = parts[2]
-                    result = self.app.company_manager.get_industry_report(industry)
-                    self.app.print_to_output(result)
-                else:
+                if subcommand == 'create':
+                    # 支持简单命令创建和向导创建
+                    if len(parts) >= 4:
+                        # 传统方式：company create <公司名> <行业> [描述]
+                        company_name = parts[2]
+                        industry = parts[3]
+                        description = ' '.join(parts[4:]) if len(parts) > 4 else ""
+                        
+                        success, message = self.app.company_manager.create_company(
+                            self.app.user_manager.current_user, company_name, industry, description
+                        )
+                        color = '#00FF00' if success else '#FF0000'
+                        self.app.print_to_output(message, color)
+                    else:
+                        # 新方式：启动创建向导
+                        self._launch_company_creation_wizard()
+                        
+                elif subcommand == 'wizard':
+                    # 直接启动创建向导
+                    self._launch_company_creation_wizard()
+                    
+                elif subcommand == 'gui':
+                    # 启动公司管理GUI
+                    self._launch_company_gui()
+                    
+                elif subcommand == 'market':
+                    # 显示公司市场
                     result = self.app.company_manager.show_company_market()
-                    self.app.print_to_output(result)
+                    self.app.print_to_output(result, '#AAFFFF')
+                    
+                elif subcommand == 'my':
+                    # 显示我的公司
+                    result = self.app.company_manager.show_user_companies(self.app.user_manager.current_user)
+                    self.app.print_to_output(result, '#AAFFFF')
+                    
+                elif subcommand == 'info':
+                    if len(parts) < 2:
+                        self.app.print_to_output("用法: company info <公司ID/股票代码>", '#FFAA00')
+                        return
+                    result = self.app.company_manager.show_company_info(parts[1])
+                    self.app.print_to_output(result, '#AAFFFF')
+                    
+                elif subcommand == 'ipo':
+                    if len(parts) < 4:
+                        self.app.print_to_output("用法: company ipo <公司ID> <IPO价格> <发行股数>", '#FFAA00')
+                        return
+                        
+                    company_identifier = parts[1]
+                    ipo_price = float(parts[2])
+                    shares = int(parts[3])
+                    
+                    # 使用智能查找
+                    target_company = self.app.company_manager.find_company_by_identifier(company_identifier, user_only=True)
+                    
+                    if not target_company:
+                        self.app.print_to_output(f"❌ 未找到您拥有的公司: {company_identifier}", '#FF0000')
+                        return
+                    
+                    success, message = self.app.company_manager.apply_ipo(target_company.company_id, ipo_price, shares)
+                    color = '#00FF00' if success else '#FF0000'
+                    self.app.print_to_output(message, color)
+                    
+                elif subcommand == 'invest':
+                    if len(parts) < 3:
+                        self.app.print_to_output("用法: company invest <公司ID> <注资金额>", '#FFAA00')
+                        self.app.print_to_output("💡 注资将从个人账户转入公司账户", '#AAFFFF')
+                        return
+                        
+                    company_identifier = parts[1]
+                    try:
+                        amount = float(parts[2])
+                    except ValueError:
+                        self.app.print_to_output("❌ 请输入有效的注资金额", '#FF0000')
+                        return
+                    
+                    # 使用智能查找
+                    target_company = self.app.company_manager.find_company_by_identifier(company_identifier, user_only=True)
+                    
+                    if not target_company:
+                        self.app.print_to_output(f"❌ 未找到您拥有的公司: {company_identifier}", '#FF0000')
+                        return
+                    
+                    # 检查个人账户余额
+                    if amount > self.app.cash:
+                        self.app.print_to_output(f"❌ 个人账户余额不足，当前余额: J${self.app.cash:,.0f}", '#FF0000')
+                        return
+                    
+                    # 从个人账户扣除资金并向公司注资
+                    self.app.cash -= amount
+                    success, message = target_company.invest_capital(amount)
+                    
+                    if success:
+                        # 保存公司数据
+                        self.app.company_manager.save_companies()
+                        self.app.print_to_output(message, '#00FF00')
+                        self.app.print_to_output(f"💼 个人账户余额: J${self.app.cash:,.0f}", '#AAFFFF')
+                    else:
+                        # 回退个人账户资金
+                        self.app.cash += amount
+                        self.app.print_to_output(message, '#FF0000')
+                        
+                elif subcommand == 'account':
+                    if len(parts) < 2:
+                        self.app.print_to_output("用法: company account <公司ID>", '#FFAA00')
+                        return
+                        
+                    company_identifier = parts[1]
+                    target_company = self.app.company_manager.find_company_by_identifier(company_identifier, user_only=True)
+                    
+                    if not target_company:
+                        self.app.print_to_output(f"❌ 未找到您拥有的公司: {company_identifier}", '#FF0000')
+                        return
+                    
+                    account_info = target_company.get_company_account_info()
+                    self.app.print_to_output(account_info, '#AAFFFF')
+                    
+                elif subcommand == 'hire':
+                    if len(parts) < 3:
+                        self.app.print_to_output("用法: company hire <公司ID> <职位> [候选人ID]", '#FFAA00')
+                        self.app.print_to_output("示例: company hire JCTV 工程师", '#FFAA00')
+                        self.app.print_to_output("      company hire JCTV 工程师 2  # 选择第2个候选人", '#FFAA00')
+                        return
+                        
+                    company_identifier = parts[1]
+                    position = parts[2]
+                    
+                    target_company = self.app.company_manager.find_company_by_identifier(company_identifier, user_only=True)
+                    
+                    if not target_company:
+                        self.app.print_to_output(f"❌ 未找到您拥有的公司: {company_identifier}", '#FF0000')
+                        return
+                    
+                    # 如果指定了候选人ID，直接招聘
+                    if len(parts) >= 4:
+                        try:
+                            candidate_id = int(parts[3])
+                            # 获取候选人列表
+                            candidates = target_company.get_hire_candidates(position)
+                            
+                            if 1 <= candidate_id <= len(candidates):
+                                selected_candidate = candidates[candidate_id - 1]
+                                success, message = target_company.hire_staff_from_candidates(selected_candidate)
+                                color = '#00FF00' if success else '#FF0000'
+                                self.app.print_to_output(message, color)
+                                
+                                if success:
+                                    self.app.company_manager.save_companies()
+                            else:
+                                self.app.print_to_output(f"❌ 候选人ID无效，请选择1-{len(candidates)}之间的数字", '#FF0000')
+                                
+                        except ValueError:
+                            self.app.print_to_output("❌ 请输入有效的候选人ID", '#FF0000')
+                        return
+                    
+                    # 显示候选人列表
+                    candidates = target_company.get_hire_candidates(position)
+                    
+                    candidates_text = f"""
+📋 {position} 候选人列表 - {target_company.name}
+
+"""
+                    
+                    for i, candidate in enumerate(candidates, 1):
+                        risk_display = f" ⚠️ {', '.join(candidate['risks'])}" if candidate['risks'] else ""
+                        skills_display = f" 💼 {', '.join(candidate['special_skills'])}" if candidate['special_skills'] else ""
+                        
+                        candidates_text += f"""[{i}] {candidate['name']} 
+    💰 期望薪资: J${candidate['salary']:,.0f}/月
+    📊 综合评分: {candidate['total_score']:.1f}
+    🎯 工作表现: {candidate['performance']:.1f}/100
+    📚 工作经验: {candidate['experience']}年
+    👥 领导能力: {candidate['leadership']:.1f}/100  
+    💡 创新能力: {candidate['innovation']:.1f}/100{skills_display}{risk_display}
+    
+"""
+                    
+                    candidates_text += f"""
+💡 使用方法: company hire {company_identifier} {position} <候选人编号>
+示例: company hire {company_identifier} {position} 1
+"""
+                    
+                    self.app.print_to_output(candidates_text, '#AAFFFF')
+                    
+                elif subcommand == 'staff':
+                    if len(parts) < 2:
+                        self.app.print_to_output("用法: company staff <公司ID>", '#FFAA00')
+                        return
+                        
+                    company_identifier = parts[1]
+                    target_company = self.app.company_manager.find_company_by_identifier(company_identifier, user_only=True)
+                    
+                    if not target_company:
+                        self.app.print_to_output(f"❌ 未找到您拥有的公司: {company_identifier}", '#FF0000')
+                        return
+                    
+                    staff_info = self._show_staff_list(target_company)
+                    self.app.print_to_output(staff_info, '#AAFFFF')
+                    
+                elif subcommand == 'fire':
+                    if len(parts) < 3:
+                        self.app.print_to_output("用法: company fire <公司ID> <员工ID>", '#FFAA00')
+                        return
+                        
+                    company_identifier = parts[1]
+                    target_company = self.app.company_manager.find_company_by_identifier(company_identifier, user_only=True)
+                    
+                    if not target_company:
+                        self.app.print_to_output(f"❌ 未找到您拥有的公司: {company_identifier}", '#FF0000')
+                        return
+                    
+                    try:
+                        employee_id = int(parts[2])
+                        success, message = target_company.fire_employee(employee_id)
+                        color = '#00FF00' if success else '#FF0000'
+                        self.app.print_to_output(message, color)
+                        if success:
+                            self.app.company_manager.save_companies()
+                    except ValueError:
+                        self.app.print_to_output("❌ 员工ID必须是数字", '#FF0000')
+                    
+                elif subcommand == 'develop':
+                    if len(parts) < 3:
+                        self.app.print_to_output("用法: company develop <公司ID> <发展类型>", '#FFAA00')
+                        self.app.print_to_output("发展类型: research, marketing, expansion, efficiency, technology, talent, brand, innovation", '#FFAA00')
+                        return
+                        
+                    company_identifier = parts[1]
+                    development_type = parts[2]
+                    
+                    # 使用智能查找，只在用户公司中查找
+                    target_company = self.app.company_manager.find_company_by_identifier(company_identifier, user_only=True)
+                    
+                    if not target_company:
+                        # 提供详细的错误信息和建议
+                        user_companies = self.app.company_manager.get_user_companies(self.app.user_manager.current_user)
+                        if user_companies:
+                            suggestions = []
+                            for uc in user_companies:
+                                suggestions.append(f"  • {uc.name}: 【{uc.company_id}】/【{uc.symbol}】")
+                            suggestions_text = "\n".join(suggestions)
+                            
+                            error_msg = f"""❌ 未找到您拥有的公司: {company_identifier}
+
+💡 您拥有的公司:
+{suggestions_text}
+
+🔍 示例用法:
+  company develop {user_companies[0].company_id} marketing
+  company develop {user_companies[0].symbol} research"""
+                            self.app.print_to_output(error_msg, '#FF0000')
+                        else:
+                            self.app.print_to_output("❌ 您还没有创建任何公司", '#FF0000')
+                            self.app.print_to_output("💡 请先使用 'company wizard' 创建公司", '#FFAA00')
+                        return
+                    
+                    success, message = self.app.company_manager.develop_company(target_company.company_id, development_type)
+                    color = '#00FF00' if success else '#FF0000'
+                    self.app.print_to_output(message, color)
+                    
+                elif subcommand == 'acquire':
+                    if len(parts) < 4:
+                        self.app.print_to_output("用法: company acquire <收购方ID> <目标股票代码> <收购价格>", '#FFAA00')
+                        return
+                        
+                    acquirer_id = parts[1]
+                    target_symbol = parts[2]
+                    offer_price = float(parts[3])
+                    
+                    success, message = self.app.company_manager.acquire_company(acquirer_id, target_symbol, offer_price)
+                    color = '#00FF00' if success else '#FF0000'
+                    self.app.print_to_output(message, color)
+                    
+                elif subcommand == 'joint':
+                    if len(parts) < 4:
+                        self.app.print_to_output("用法: company joint <公司ID> <合作伙伴代码> <投资金额>", '#FFAA00')
+                        return
+                        
+                    company_id = parts[1]
+                    partner_symbol = parts[2]
+                    investment = float(parts[3])
+                    
+                    success, message = self.app.company_manager.start_joint_venture(company_id, partner_symbol, investment)
+                    color = '#00FF00' if success else '#FF0000'
+                    self.app.print_to_output(message, color)
+                    
+                elif subcommand == 'analysis':
+                    if len(parts) < 2:
+                        self.app.print_to_output("用法: company analysis <公司ID>", '#FFAA00')
+                        return
+                        
+                    result = self.app.company_manager.show_company_competition_analysis(parts[1])
+                    self.app.print_to_output(result, '#AAFFFF')
+                    
+                elif subcommand == 'news':
+                    if len(parts) < 2:
+                        self.app.print_to_output("用法: company news <公司ID>", '#FFAA00')
+                        return
+                        
+                    result = self.app.company_manager.show_company_news(parts[1])
+                    self.app.print_to_output(result, '#AAFFFF')
+                    
+                elif subcommand == 'industry':
+                    if len(parts) < 2:
+                        self.app.print_to_output("用法: company industry <行业名称>", '#FFAA00')
+                        return
+                        
+                    result = self.app.company_manager.get_industry_report(parts[1])
+                    self.app.print_to_output(result, '#AAFFFF')
+                    
+                elif subcommand == 'help':
+                    help_text = self._get_company_help()
+                    self.app.print_to_output(help_text, '#AAFFFF')
+                    
+                else:
+                    self.app.print_to_output(f"❌ 未知的公司命令: {subcommand}", '#FF0000')
+                    help_text = self._get_company_help()
+                    self.app.print_to_output(help_text, '#AAFFFF')
+                    
             else:
                 self.app.print_to_output("❌ 公司系统尚未初始化", '#FF0000')
 
@@ -930,8 +1169,6 @@ class CommandProcessor:
         else:
             self.app.print_to_output(f"未知系统管理命令: {subcmd}", '#FF0000')
 
-
-
     def auto_complete(self, current_text):
         """命令自动补全功能"""
         if not current_text:
@@ -955,3 +1192,782 @@ class CommandProcessor:
                 if not prefix:
                     return ""
         return prefix 
+
+    def _process_company_command(self, command):
+        """处理公司系统命令"""
+        parts = command.split()
+        if not parts:
+            result = self.app.company_manager.show_company_market()
+            self.app.print_to_output(result, '#AAFFFF')
+            return
+            
+        action = parts[0]
+        
+        try:
+            if action == 'create':
+                # 支持简单命令创建和向导创建
+                if len(parts) >= 4:
+                    # 传统方式：company create <公司名> <行业> [描述]
+                    company_name = parts[1]
+                    industry = parts[2]
+                    description = ' '.join(parts[3:]) if len(parts) > 3 else ""
+                    
+                    success, message = self.app.company_manager.create_company(
+                        self.app.user_manager.current_user, company_name, industry, description
+                    )
+                    color = '#00FF00' if success else '#FF0000'
+                    self.app.print_to_output(message, color)
+                else:
+                    # 新方式：启动创建向导
+                    self._launch_company_creation_wizard()
+                    
+            elif action == 'wizard':
+                # 直接启动创建向导
+                self._launch_company_creation_wizard()
+                
+            elif action == 'gui':
+                # 启动公司管理GUI
+                self._launch_company_gui()
+                
+            elif action == 'market':
+                # 显示公司市场
+                result = self.app.company_manager.show_company_market()
+                self.app.print_to_output(result, '#AAFFFF')
+                
+            elif action == 'my':
+                # 显示我的公司
+                result = self.app.company_manager.show_user_companies(self.app.user_manager.current_user)
+                self.app.print_to_output(result, '#AAFFFF')
+                
+            elif action == 'info':
+                if len(parts) < 2:
+                    self.app.print_to_output("用法: company info <公司ID/股票代码>", '#FFAA00')
+                    return
+                result = self.app.company_manager.show_company_info(parts[1])
+                self.app.print_to_output(result, '#AAFFFF')
+                
+            elif action == 'ipo':
+                if len(parts) < 4:
+                    self.app.print_to_output("用法: company ipo <公司ID> <IPO价格> <发行股数>", '#FFAA00')
+                    return
+                    
+                company_identifier = parts[1]
+                ipo_price = float(parts[2])
+                shares = int(parts[3])
+                
+                # 使用智能查找
+                target_company = self.app.company_manager.find_company_by_identifier(company_identifier, user_only=True)
+                
+                if not target_company:
+                    self.app.print_to_output(f"❌ 未找到您拥有的公司: {company_identifier}", '#FF0000')
+                    return
+                
+                success, message = self.app.company_manager.apply_ipo(target_company.company_id, ipo_price, shares)
+                color = '#00FF00' if success else '#FF0000'
+                self.app.print_to_output(message, color)
+                
+            elif action == 'invest':
+                if len(parts) < 3:
+                    self.app.print_to_output("用法: company invest <公司ID> <注资金额>", '#FFAA00')
+                    self.app.print_to_output("💡 注资将从个人账户转入公司账户", '#AAFFFF')
+                    return
+                    
+                company_identifier = parts[1]
+                try:
+                    amount = float(parts[2])
+                except ValueError:
+                    self.app.print_to_output("❌ 请输入有效的注资金额", '#FF0000')
+                    return
+                
+                # 使用智能查找
+                target_company = self.app.company_manager.find_company_by_identifier(company_identifier, user_only=True)
+                
+                if not target_company:
+                    self.app.print_to_output(f"❌ 未找到您拥有的公司: {company_identifier}", '#FF0000')
+                    return
+                
+                # 检查个人账户余额
+                if amount > self.app.cash:
+                    self.app.print_to_output(f"❌ 个人账户余额不足，当前余额: J${self.app.cash:,.0f}", '#FF0000')
+                    return
+                
+                # 从个人账户扣除资金并向公司注资
+                self.app.cash -= amount
+                success, message = target_company.invest_capital(amount)
+                
+                if success:
+                    # 保存公司数据
+                    self.app.company_manager.save_companies()
+                    self.app.print_to_output(message, '#00FF00')
+                    self.app.print_to_output(f"💼 个人账户余额: J${self.app.cash:,.0f}", '#AAFFFF')
+                else:
+                    # 回退个人账户资金
+                    self.app.cash += amount
+                    self.app.print_to_output(message, '#FF0000')
+                    
+            elif action == 'account':
+                if len(parts) < 2:
+                    self.app.print_to_output("用法: company account <公司ID>", '#FFAA00')
+                    return
+                    
+                company_identifier = parts[1]
+                target_company = self.app.company_manager.find_company_by_identifier(company_identifier, user_only=True)
+                
+                if not target_company:
+                    self.app.print_to_output(f"❌ 未找到您拥有的公司: {company_identifier}", '#FF0000')
+                    return
+                
+                account_info = target_company.get_company_account_info()
+                self.app.print_to_output(account_info, '#AAFFFF')
+                
+            elif action == 'hire':
+                if len(parts) < 3:
+                    self.app.print_to_output("用法: company hire <公司ID> <职位> [候选人ID]", '#FFAA00')
+                    self.app.print_to_output("示例: company hire JCTV 工程师", '#FFAA00')
+                    self.app.print_to_output("      company hire JCTV 工程师 2  # 选择第2个候选人", '#FFAA00')
+                    return
+                    
+                company_identifier = parts[1]
+                position = parts[2]
+                
+                target_company = self.app.company_manager.find_company_by_identifier(company_identifier, user_only=True)
+                
+                if not target_company:
+                    self.app.print_to_output(f"❌ 未找到您拥有的公司: {company_identifier}", '#FF0000')
+                    return
+                
+                # 如果指定了候选人ID，直接招聘
+                if len(parts) >= 4:
+                    try:
+                        candidate_id = int(parts[3])
+                        # 获取候选人列表
+                        candidates = target_company.get_hire_candidates(position)
+                        
+                        if 1 <= candidate_id <= len(candidates):
+                            selected_candidate = candidates[candidate_id - 1]
+                            success, message = target_company.hire_staff_from_candidates(selected_candidate)
+                            color = '#00FF00' if success else '#FF0000'
+                            self.app.print_to_output(message, color)
+                            
+                            if success:
+                                self.app.company_manager.save_companies()
+                        else:
+                            self.app.print_to_output(f"❌ 候选人ID无效，请选择1-{len(candidates)}之间的数字", '#FF0000')
+                            
+                    except ValueError:
+                        self.app.print_to_output("❌ 请输入有效的候选人ID", '#FF0000')
+                    return
+                
+                # 显示候选人列表
+                candidates = target_company.get_hire_candidates(position)
+                
+                candidates_text = f"""
+📋 {position} 候选人列表 - {target_company.name}
+
+"""
+                
+                for i, candidate in enumerate(candidates, 1):
+                    risk_display = f" ⚠️ {', '.join(candidate['risks'])}" if candidate['risks'] else ""
+                    skills_display = f" 💼 {', '.join(candidate['special_skills'])}" if candidate['special_skills'] else ""
+                    
+                    candidates_text += f"""[{i}] {candidate['name']} 
+    💰 期望薪资: J${candidate['salary']:,.0f}/月
+    📊 综合评分: {candidate['total_score']:.1f}
+    🎯 工作表现: {candidate['performance']:.1f}/100
+    📚 工作经验: {candidate['experience']}年
+    👥 领导能力: {candidate['leadership']:.1f}/100  
+    💡 创新能力: {candidate['innovation']:.1f}/100{skills_display}{risk_display}
+    
+"""
+                
+                candidates_text += f"""
+💡 使用方法: company hire {company_identifier} {position} <候选人编号>
+示例: company hire {company_identifier} {position} 1
+"""
+                
+                self.app.print_to_output(candidates_text, '#AAFFFF')
+                
+            elif action == 'staff':
+                if len(parts) < 2:
+                    self.app.print_to_output("用法: company staff <公司ID>", '#FFAA00')
+                    return
+                    
+                company_identifier = parts[1]
+                target_company = self.app.company_manager.find_company_by_identifier(company_identifier, user_only=True)
+                
+                if not target_company:
+                    self.app.print_to_output(f"❌ 未找到您拥有的公司: {company_identifier}", '#FF0000')
+                    return
+                
+                staff_info = self._show_staff_list(target_company)
+                self.app.print_to_output(staff_info, '#AAFFFF')
+                
+            elif action == 'expand':
+                if len(parts) < 3:
+                    self.app.print_to_output("用法: company expand budget <公司ID> <扩张预算>", '#FFAA00')
+                    self.app.print_to_output("      company expand amount <公司ID> <员工数量>", '#FFAA00')
+                    self.app.print_to_output("💡 budget: 根据预算自动配置职位结构", '#AAFFFF')
+                    self.app.print_to_output("💡 amount: 快速扩张指定人数（单次最多50人）", '#AAFFFF')
+                    self.app.print_to_output("📊 公司总员工数上限: 500人", '#AAFFFF')
+                    return
+                
+                expand_type = parts[1]
+                company_identifier = parts[2]
+                
+                if expand_type == 'budget':
+                    # 按预算扩张
+                    if len(parts) < 4:
+                        self.app.print_to_output("用法: company expand budget <公司ID> <扩张预算>", '#FFAA00')
+                        return
+                    
+                    try:
+                        expansion_budget = float(parts[3])
+                    except ValueError:
+                        self.app.print_to_output("❌ 请输入有效的扩张预算", '#FF0000')
+                        return
+                    
+                    target_company = self.app.company_manager.find_company_by_identifier(company_identifier, user_only=True)
+                    
+                    if not target_company:
+                        self.app.print_to_output(f"❌ 未找到您拥有的公司: {company_identifier}", '#FF0000')
+                        return
+                    
+                    success, message = target_company.batch_expand_staff(expansion_budget)
+                    color = '#00FF00' if success else '#FF0000'
+                    self.app.print_to_output(message, color)
+                    
+                    if success:
+                        self.app.company_manager.save_companies()
+                        
+                elif expand_type == 'amount':
+                    # 按人数扩张
+                    if len(parts) < 4:
+                        self.app.print_to_output("用法: company expand amount <公司ID> <员工数量>", '#FFAA00')
+                        return
+                    
+                    try:
+                        staff_amount = int(parts[3])
+                    except ValueError:
+                        self.app.print_to_output("❌ 请输入有效的员工数量", '#FF0000')
+                        return
+                    
+                    if staff_amount <= 0 or staff_amount > 50:
+                        self.app.print_to_output("❌ 单次扩张数量必须在1-50人之间", '#FF0000')
+                        return
+                    
+                    target_company = self.app.company_manager.find_company_by_identifier(company_identifier, user_only=True)
+                    
+                    if not target_company:
+                        self.app.print_to_output(f"❌ 未找到您拥有的公司: {company_identifier}", '#FF0000')
+                        return
+                    
+                    success, message = target_company.batch_expand_by_amount(staff_amount)
+                    color = '#00FF00' if success else '#FF0000'
+                    self.app.print_to_output(message, color)
+                    
+                    if success:
+                        self.app.company_manager.save_companies()
+                        
+                else:
+                    self.app.print_to_output(f"❌ 未知的扩张类型: {expand_type}", '#FF0000')
+                    self.app.print_to_output("支持的类型: budget (按预算), amount (按人数)", '#FFAA00')
+                
+            elif action == 'develop':
+                if len(parts) < 3:
+                    self.app.print_to_output("用法: company develop <公司ID> <发展类型>", '#FFAA00')
+                    self.app.print_to_output("发展类型: research, marketing, expansion, efficiency, technology, talent, brand, innovation", '#FFAA00')
+                    return
+                    
+                company_identifier = parts[1]
+                development_type = parts[2]
+                
+                # 使用智能查找，只在用户公司中查找
+                target_company = self.app.company_manager.find_company_by_identifier(company_identifier, user_only=True)
+                
+                if not target_company:
+                    # 提供详细的错误信息和建议
+                    user_companies = self.app.company_manager.get_user_companies(self.app.user_manager.current_user)
+                    if user_companies:
+                        suggestions = []
+                        for uc in user_companies:
+                            suggestions.append(f"  • {uc.name}: 【{uc.company_id}】/【{uc.symbol}】")
+                        suggestions_text = "\n".join(suggestions)
+                        
+                        error_msg = f"""❌ 未找到您拥有的公司: {company_identifier}
+
+💡 您拥有的公司:
+{suggestions_text}
+
+🔍 示例用法:
+  company develop {user_companies[0].company_id} marketing
+  company develop {user_companies[0].symbol} research"""
+                        self.app.print_to_output(error_msg, '#FF0000')
+                    else:
+                        self.app.print_to_output("❌ 您还没有创建任何公司", '#FF0000')
+                        self.app.print_to_output("💡 请先使用 'company wizard' 创建公司", '#FFAA00')
+                    return
+                
+                success, message = self.app.company_manager.develop_company(target_company.company_id, development_type)
+                color = '#00FF00' if success else '#FF0000'
+                self.app.print_to_output(message, color)
+                
+            elif action == 'acquire':
+                if len(parts) < 4:
+                    self.app.print_to_output("用法: company acquire <收购方ID> <目标股票代码> <收购价格>", '#FFAA00')
+                    return
+                    
+                acquirer_id = parts[1]
+                target_symbol = parts[2]
+                offer_price = float(parts[3])
+                
+                success, message = self.app.company_manager.acquire_company(acquirer_id, target_symbol, offer_price)
+                color = '#00FF00' if success else '#FF0000'
+                self.app.print_to_output(message, color)
+                
+            elif action == 'joint':
+                if len(parts) < 4:
+                    self.app.print_to_output("用法: company joint <公司ID> <合作伙伴代码> <投资金额>", '#FFAA00')
+                    return
+                    
+                company_id = parts[1]
+                partner_symbol = parts[2]
+                investment = float(parts[3])
+                
+                success, message = self.app.company_manager.start_joint_venture(company_id, partner_symbol, investment)
+                color = '#00FF00' if success else '#FF0000'
+                self.app.print_to_output(message, color)
+                
+            elif action == 'analysis':
+                if len(parts) < 2:
+                    self.app.print_to_output("用法: company analysis <公司ID/股票代码>", '#FFAA00')
+                    self.app.print_to_output("💡 支持JC股票技术分析和公司竞争分析", '#AAFFFF')
+                    return
+                
+                identifier = parts[1].upper()
+                
+                # 检查是否为JC股票代码
+                jc_company = self.app.company_manager.get_company_by_symbol(identifier)
+                if jc_company:
+                    # 显示JC股票专业分析
+                    self.app.show_jc_stock_analysis(identifier)
+                else:
+                    # 显示公司竞争分析
+                    result = self.app.company_manager.show_company_competition_analysis(identifier)
+                    self.app.print_to_output(result, '#AAFFFF')
+                
+            elif action == 'news':
+                if len(parts) < 2:
+                    self.app.print_to_output("用法: company news <公司ID>", '#FFAA00')
+                    return
+                    
+                result = self.app.company_manager.show_company_news(parts[1])
+                self.app.print_to_output(result, '#AAFFFF')
+                
+            elif action == 'chart':
+                if len(parts) < 2:
+                    self.app.print_to_output("用法: company chart <股票代码> [时间范围]", '#FFAA00')
+                    self.app.print_to_output("💡 专门显示JC股票技术图表", '#AAFFFF')
+                    self.app.print_to_output("📊 时间范围: 1d, 5d, 1m, 3m, 6m, 1y", '#AAFFFF')
+                    return
+                
+                symbol = parts[1].upper()
+                time_range = parts[2] if len(parts) >= 3 else '5d'
+                
+                # 检查是否为JC股票
+                jc_company = self.app.company_manager.get_company_by_symbol(symbol)
+                if jc_company:
+                    # 显示JC股票专业图表
+                    self.app.show_jc_stock_chart(symbol, time_range)
+                else:
+                    self.app.print_to_output(f"❌ '{symbol}' 不是JC股票代码", '#FF0000')
+                    # 显示可用的JC股票列表
+                    if hasattr(self.app.company_manager, 'jc_stock_updater'):
+                        available_stocks = self.app.company_manager.jc_stock_updater.get_available_jc_stocks()
+                        if available_stocks:
+                            self.app.print_to_output(f"💡 可用JC股票: {', '.join(available_stocks)}", '#AAFFFF')
+                
+            elif action == 'industry':
+                if len(parts) < 2:
+                    self.app.print_to_output("用法: company industry <行业名称>", '#FFAA00')
+                    return
+                    
+                result = self.app.company_manager.get_industry_report(parts[1])
+                self.app.print_to_output(result, '#AAFFFF')
+                
+            elif action == 'help':
+                help_text = self._get_company_help()
+                self.app.print_to_output(help_text, '#AAFFFF')
+                
+            else:
+                self.app.print_to_output(f"❌ 未知的公司命令: {action}", '#FF0000')
+                help_text = self._get_company_help()
+                self.app.print_to_output(help_text, '#AAFFFF')
+                
+        except Exception as e:
+            self.app.print_to_output(f"❌ 公司命令执行出错: {str(e)}", '#FF0000')
+            import traceback
+            traceback.print_exc()
+
+    def _launch_company_creation_wizard(self):
+        """启动公司创建向导"""
+        try:
+            from company.company_creation import CompanyCreationWizard
+            
+            # 创建公司创建向导
+            self.active_wizard = CompanyCreationWizard(self.app)
+            self.wizard_type = "company_creation"
+            
+            # 启动向导并显示欢迎界面
+            welcome_message = self.active_wizard.start_creation()
+            self.app.print_to_output(welcome_message, '#00FFFF')
+            
+            # 提示用户如何开始
+            self.app.print_to_output("\n💡 请输入 'start' 开始创建流程，或输入 'help' 查看帮助", '#FFAA00')
+            
+        except ImportError as e:
+            self.app.print_to_output(f"无法启动公司创建向导: {str(e)}", '#FF0000')
+        except Exception as e:
+            self.app.print_to_output(f"启动公司创建向导失败: {str(e)}", '#FF0000')
+            
+    def _launch_company_gui(self):
+        """启动公司管理GUI"""
+        try:
+            from company.company_gui import CompanyGUI
+            
+            # 检查是否有公司可以管理
+            user_companies = self.app.company_manager.get_user_companies(self.app.user_manager.current_user)
+            
+            if not user_companies:
+                self.app.print_to_output("您还没有创建任何公司", '#FFAA00')
+                self.app.print_to_output("请先使用 'company wizard' 创建公司", '#FFAA00')
+                return
+            
+            # 创建公司GUI
+            company_gui = CompanyGUI(self.app)
+            company_gui.open_company_center()
+            
+            self.app.print_to_output("🚀 公司管理界面已启动", '#00FF00')
+            
+        except ImportError as e:
+            self.app.print_to_output(f"无法启动公司管理GUI: {str(e)}", '#FF0000')
+        except Exception as e:
+                            self.app.print_to_output(f"启动公司管理GUI失败: {str(e)}", '#FF0000')
+    
+    def _show_staff_list(self, company) -> str:
+        """显示员工列表"""
+        if not company.staff_list:
+            return f"""
+👥 {company.name} - 员工管理
+
+📋 当前状态:
+  员工总数: 0人
+  员工上限: {company.max_staff}人
+  月薪支出: J$0
+  
+💡 招聘提示:
+  使用 'company hire {company.company_id} <姓名> <职位> <月薪>' 招聘员工
+  使用 'company expand amount {company.company_id} <人数>' 批量招聘（单次最多50人）
+  招聘需要提前支付3个月薪资作为保证金
+"""
+        
+        staff_info = f"""
+👥 {company.name} - 员工管理
+
+📊 员工概况:
+  员工总数: {len(company.staff_list)}/{company.max_staff}人
+  月薪总支出: J${sum(staff['salary'] for staff in company.staff_list):,.0f}
+  平均表现: {sum(staff['performance'] for staff in company.staff_list) / len(company.staff_list):.1f}/100
+  平均经验: {sum(staff['experience'] for staff in company.staff_list) / len(company.staff_list):.1f}年
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                                   📋 员工详细信息                                   
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+"""
+        
+        # 表头
+        staff_info += f"{'ID':<4} {'姓名':<12} {'职位':<15} {'月薪':<12} {'表现':<8} {'经验':<8} {'入职日期':<12}\n"
+        staff_info += "─" * 80 + "\n"
+        
+        # 员工列表
+        for staff in company.staff_list:
+            hire_date = staff['hire_date'][:10]  # 只取日期部分
+            staff_info += f"{staff['id']:<4} {staff['name']:<12} {staff['position']:<15} J${staff['salary']:>9,.0f} {staff['performance']:>6.1f}/100 {staff['experience']:>6}年 {hire_date:<12}\n"
+        
+        staff_info += f"""
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💰 财务分析:
+  月薪支出: J${sum(staff['salary'] for staff in company.staff_list):,.0f}
+  人均薪资: J${sum(staff['salary'] for staff in company.staff_list) / len(company.staff_list):,.0f}
+  年薪支出: J${sum(staff['salary'] for staff in company.staff_list) * 12:,.0f}
+
+🎯 团队效率:
+  高表现员工(>90): {len([s for s in company.staff_list if s['performance'] > 90])}人
+  标准表现员工(70-90): {len([s for s in company.staff_list if 70 <= s['performance'] <= 90])}人
+  待改进员工(<70): {len([s for s in company.staff_list if s['performance'] < 70])}人
+
+💡 管理建议:
+  • 定期评估员工表现，及时调整薪资和职位
+  • 高表现员工是公司的核心资产，应重点保留
+  • 考虑为表现优秀的员工提供晋升机会
+  • 员工数量接近上限时，考虑扩大办公场所
+"""
+        
+        return staff_info
+    
+    def _get_company_help(self) -> str:
+        """获取公司系统帮助信息"""
+        return """
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════════
+                                          💼 公司管理系统 - 完整指南                                             
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+🏗️  公司创建与基础管理:
+  company wizard                           - 🧙‍♂️ 启动公司创建向导 (推荐新手使用)
+  company create <公司名> <行业> [描述]      - ⚡ 快速创建公司
+  company my                               - 📋 查看我的公司列表
+  company market                           - 🏢 浏览公司市场
+  company info <公司ID/代码>               - 📊 查看公司详细信息
+
+💰 资金管理:
+  company account <公司ID>                 - 💼 查看公司账户状况
+  company invest <公司ID> <金额>           - 💰 个人向公司注资 (从个人账户转入)
+
+👥 员工管理:
+  company hire <公司ID> <职位>             - 📋 查看关键职位候选人列表
+  company hire <公司ID> <职位> <候选人ID>  - ✅ 招聘指定候选人
+  company expand budget <公司ID> <预算>    - 💰 按预算批量招聘扩张
+  company expand amount <公司ID> <人数>    - 🚀 按人数快速扩张 (最多50人)
+  company staff <公司ID>                  - 👥 查看员工详情和统计
+  company fire <公司ID> <员工ID>           - 🔥 解雇员工 (支付遣散费)
+
+💼 运营发展 (使用公司账户资金):
+  company develop <公司ID> <发展类型>      - 🚀 投资公司发展
+
+📊 发展类型说明:
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ 类型         │ 成本基准        │ 主要效果                    │ 风险等级 │ 推荐阶段        │
+├─────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ research     │ 营收4%/50万最低  │ 💡 提升利润10-20%，增长率+3%  │ 低      │ 初创期-成长期    │
+│ marketing    │ 营收6%/80万最低  │ 📈 营收提升8-15%，市场份额+  │ 低      │ 所有阶段        │
+│ expansion    │ 营收10%/120万最低│ 🏢 员工+15-25%，新增业务点   │ 中      │ 成长期-成熟期    │
+│ efficiency   │ 员工*2万/30万最低│ ⚡ 效率+6-12%，成本削减3-8%  │ 低      │ 成熟期优先      │
+│ technology   │ 营收5%/100万最低 │ 🔧 技术升级，营收+8-15%     │ 中      │ 科技公司优先     │
+│ talent       │ 员工*5万/50万最低│ 🎓 人才培养，新增员工10-20% │ 低      │ 快速发展期      │
+│ brand        │ 营收3%/80万最低  │ 🏆 品牌价值，市场份额+      │ 低      │ 消费行业优先     │
+│ innovation   │ 营收8%/150万最低 │ 💫 创新研发，高收益高风险   │ 高      │ 技术密集行业     │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+📈 资本运作:
+  company ipo <公司ID> <价格> <股数>       - 🎯 申请IPO上市
+  company acquire <收购方ID> <目标代码> <价格> - 🤝 收购其他公司
+  company joint <公司ID> <合作伙伴> <投资额> - 🤝 启动合资项目
+
+📊 专业分析 (JC股票专用):
+  company analysis <股票代码>             - 📈 JC股票技术分析和基本面分析
+  company chart <股票代码> [时间范围]      - 📊 JC股票专业技术图表
+
+📰 信息查询:
+  company analysis <公司ID>                - 🔍 公司竞争分析 (传统企业分析)
+  company news <公司ID>                    - 📰 查看公司新闻
+  company analysis <公司ID>               - 📊 竞争分析报告
+  company industry <行业名>               - 🏭 行业分析报告
+
+🆕 独立账户系统特色:
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ • 💼 公司账户与个人账户完全分离                                                                               │
+│ • 💰 develop 操作使用公司资金，现实商业模拟                                                                  │
+│ • 👥 员工招聘需要预付3个月薪资保证金                                                                          │
+│ • 📊 智能候选人系统：不同能力、薪资期望、特殊技能                                                             │
+│ • 🏢 expansion发展包含员工扩张功能                                                                           │
+│ • 🚀 批量扩张：一键配置多层级人才结构                                                                        │
+│ • ⚡ 资金不足时提供具体注资建议                                                                              │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+🎯 两种招聘模式说明:
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ 🔸 精准招聘 (company hire):                                                                                   │
+│   • 适用于关键职位招聘                                                                                        │
+│   • 详细候选人信息，能力评估                                                                                  │
+│   • 手动选择最适合的人才                                                                                      │
+│   • 适合小规模、高价值岗位                                                                                    │
+│                                                                                                               │
+│ 🔸 批量扩张 (company expand):                                                                                 │
+│   • budget模式: 根据预算自动配置职位结构，智能成本控制                                                         │
+│   • amount模式: 快速扩张指定人数（1-50人），适合规模化发展                                                     │
+│   • 自动配置职位层级，根据公司规模调整                                                                        │
+│   • 快速建立团队，高效率招聘                                                                                  │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+🎮 使用流程建议:
+  1️⃣ 使用 company wizard 创建公司
+  2️⃣ 使用 company invest 向公司注资
+  3️⃣ 使用 company expand 批量招聘建立团队
+  4️⃣ 使用 company hire 精准招聘关键人才
+  5️⃣ 使用 company develop 投资业务发展
+  6️⃣ 监控 company account 财务状况
+  7️⃣ 条件成熟时申请 company ipo 上市
+
+💡 高级技巧:
+  • 不同发展类型有行业加成，选择适合自己行业的发展方向
+  • expansion 发展可以同时扩张员工数量
+  • 优秀员工(表现>85)会为公司带来额外效率提升
+  • 批量扩张会根据公司规模自动配置合理的职位结构
+  • 小公司(20人以下)重基础岗位，大公司(100人以上)含管理层
+  • 定期查看 news 和 analysis 了解市场动态
+  • 合理控制薪资支出，避免现金流问题
+
+🔧 技术支持:
+  company help                             - 📖 显示此帮助信息
+  company gui                              - 🖥️ 启动图形界面 (实验功能)
+
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════════
+"""
+
+    def process_wizard_input(self, user_input: str):
+        """处理向导输入"""
+        if not self.active_wizard:
+            return False
+            
+        try:
+            if self.wizard_type == "company_creation":
+                # 处理特殊的开始命令
+                if user_input.lower() == 'start' and self.active_wizard.current_step == "welcome":
+                    # 手动前进到第一个真正的步骤
+                    self.active_wizard.current_step = "basic_info"
+                    continue_wizard, response = True, self.active_wizard._get_current_step_display()
+                else:
+                    continue_wizard, response = self.active_wizard.process_input(user_input)
+                
+                self.app.print_to_output(response, '#00FFFF')
+                
+                if not continue_wizard:
+                    # 向导完成或取消
+                    self.active_wizard = None
+                    self.wizard_type = None
+                    
+                return True
+                
+        except Exception as e:
+            self.app.print_to_output(f"向导处理错误: {str(e)}", '#FF0000')
+            self.active_wizard = None
+            self.wizard_type = None
+            
+        return False
+
+    def _process_home_command(self, command):
+        """处理家庭投资系统命令"""
+        parts = command.split()
+        if not parts:
+            result = self.app.home_manager.show_home_menu()
+            self.app.print_to_output(result, '#AAFFFF')
+            return
+            
+        action = parts[0]
+        
+        try:
+            if action == 'real_estate' or action == 'property':
+                result = self.app.home_manager.show_real_estate_market()
+                self.app.print_to_output(result, '#AAFFFF')
+                
+            elif action == 'art':
+                result = self.app.home_manager.show_art_collection_market()
+                self.app.print_to_output(result, '#AAFFFF')
+                
+            elif action == 'luxury':
+                result = self.app.home_manager.show_luxury_consumption()
+                self.app.print_to_output(result, '#AAFFFF')
+                
+            elif action == 'services':
+                result = self.app.home_manager.show_lifestyle_services()
+                self.app.print_to_output(result, '#AAFFFF')
+                
+            elif action == 'club':
+                if len(parts) > 1 and parts[1] == 'events':
+                    self.app.print_to_output("俱乐部活动功能开发中...", '#FFAA00')
+                else:
+                    result = self.app.home_manager.show_club_memberships()
+                    self.app.print_to_output(result, '#AAFFFF')
+                    
+            elif action == 'buy':
+                if len(parts) < 3:
+                    self.app.print_to_output("用法: home buy <类型> <ID> [数量]", '#FFAA00')
+                    self.app.print_to_output("类型: real_estate, art, luxury, etf, car, service", '#FFAA00')
+                    return
+                    
+                item_type = parts[1]
+                item_id = parts[2]
+                quantity = int(parts[3]) if len(parts) > 3 else 1
+                
+                if item_type == 'real_estate' or item_type == 'property':
+                    success, message = self.app.home_manager.buy_real_estate(item_id, quantity)
+                elif item_type == 'luxury':
+                    success, message = self.app.home_manager.buy_luxury_item(item_id, quantity)
+                elif item_type == 'service':
+                    success, message = self.app.home_manager.buy_service(item_id)
+                elif item_type == 'etf':
+                    success, message = self.app.home_manager.buy_asset('etf', item_id, quantity)
+                elif item_type == 'car':
+                    success, message = self.app.home_manager.buy_asset('cars', item_id, quantity)
+                else:
+                    self.app.print_to_output(f"未知的投资类型: {item_type}", '#FF0000')
+                    return
+                    
+                color = '#00FF00' if success else '#FF0000'
+                self.app.print_to_output(message, color)
+                
+            elif action == 'sell':
+                if len(parts) < 4:
+                    self.app.print_to_output("用法: home sell <类型> <ID> <数量>", '#FFAA00')
+                    return
+                    
+                item_type = parts[1]
+                item_id = parts[2]
+                quantity = int(parts[3])
+                
+                if item_type == 'etf':
+                    success, message = self.app.home_manager.sell_asset('etf', item_id, quantity)
+                elif item_type == 'car':
+                    success, message = self.app.home_manager.sell_asset('cars', item_id, quantity)
+                else:
+                    self.app.print_to_output("该类型资产暂不支持出售", '#FFAA00')
+                    return
+                    
+                color = '#00FF00' if success else '#FF0000'
+                self.app.print_to_output(message, color)
+                
+            elif action == 'join':
+                if len(parts) < 3 or parts[1] != 'club':
+                    self.app.print_to_output("用法: home join club <俱乐部ID>", '#FFAA00')
+                    return
+                    
+                club_id = parts[2]
+                success, message = self.app.home_manager.join_club(club_id)
+                color = '#00FF00' if success else '#FF0000'
+                self.app.print_to_output(message, color)
+                
+            elif action == 'portfolio':
+                result = self.app.home_manager.show_portfolio()
+                self.app.print_to_output(result, '#AAFFFF')
+                
+            elif action == 'interior':
+                result = self.app.home_manager.show_home_interior()
+                self.app.print_to_output(result, '#AAFFFF')
+                
+            elif action == 'etf':
+                result = self.app.home_manager.show_etf_market()
+                self.app.print_to_output(result, '#AAFFFF')
+                
+            elif action == 'cars':
+                result = self.app.home_manager.show_cars_market()
+                self.app.print_to_output(result, '#AAFFFF')
+                
+            else:
+                self.app.print_to_output(f"未知的家庭投资命令: {action}", '#FF0000')
+                self.app.print_to_output("可用命令: real_estate, art, luxury, services, club, buy, sell, join, portfolio, interior, etf, cars", '#FFAA00')
+                
+        except ValueError as e:
+            self.app.print_to_output(f"参数错误: {str(e)}", '#FF0000')
+        except Exception as e:
+            self.app.print_to_output(f"命令执行失败: {str(e)}", '#FF0000') 
