@@ -1656,3 +1656,15 @@ class CompanyManager:
                 detail_info += f"\n  📤 退出: company sell {company_id} (出售)"
         
         return True, detail_info
+
+    def _get_industry_marketing_bonus(self, industry: str) -> float:
+        """获取行业营销加成"""
+        bonuses = {
+            'technology': 0.05,
+            'retail': 0.08,
+            'finance': 0.03,
+            'healthcare': 0.04,
+            'consumer_goods': 0.07,
+            'telecom': 0.06
+        }
+        return bonuses.get(industry, 0.04)

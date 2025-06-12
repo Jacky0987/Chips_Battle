@@ -1082,5 +1082,40 @@
       "BABA"
     ],
     "timestamp": "2025-06-11T18:22:16.321296+00:00"
+  },
+  {
+    "id": "event_063",
+    "title": "能源价格剧烈波动，Energy资产受影响",
+    "description": "国际能源市场价格波动加剧，影响Energy相关资产表现。",
+    "impact": {
+      "sectors": [
+        "Commodity"
+      ],
+      "effect": "negative",
+      "magnitude": 0.015,
+      "duration": "short_term"
+    },
+    "related_stocks": [],
+    "timestamp": "2025-06-12T05:32:20.443273+00:00"
+  },
+  {
+    "id": "event_064",
+    "title": "全球经济复苏加速，Entertainment板块表现强劲",
+    "description": "经济数据显示全球复苏势头增强，Entertainment行业股票普遍上涨。",
+    "impact": {
+      "sectors": [
+        "Industrial",
+        "Consumer",
+        "Financial"
+      ],
+      "effect": "positive",
+      "magnitude": 0.028,
+      "duration": "medium_term"
+    },
+    "related_stocks": [
+      "CAT",
+      "WMT"
+    ],
+    "timestamp": "2025-06-12T05:33:22.190075+00:00"
   }
 ]
