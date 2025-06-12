@@ -1117,5 +1117,40 @@
       "WMT"
     ],
     "timestamp": "2025-06-12T05:33:22.190075+00:00"
+  },
+  {
+    "id": "event_065",
+    "title": "芯片供应短缺，Entertainment行业承压",
+    "description": "全球芯片供应链瓶颈加剧，导致Entertainment公司生产成本上升。",
+    "impact": {
+      "sectors": [
+        "Technology"
+      ],
+      "effect": "negative",
+      "magnitude": 0.02,
+      "duration": "short_term"
+    },
+    "related_stocks": [
+      "NVDA"
+    ],
+    "timestamp": "2025-06-12T11:04:06.196675+00:00"
+  },
+  {
+    "id": "event_066",
+    "title": "物流瓶颈加剧，Healthcare板块受压",
+    "description": "全球港口拥堵和运费上涨导致Healthcare公司成本增加。",
+    "impact": {
+      "sectors": [
+        "Industrial"
+      ],
+      "effect": "negative",
+      "magnitude": 0.015,
+      "duration": "short_term"
+    },
+    "related_stocks": [
+      "CAT",
+      "FDX"
+    ],
+    "timestamp": "2025-06-12T11:07:14.069012+00:00"
   }
 ]

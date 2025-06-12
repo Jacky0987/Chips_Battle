@@ -8,7 +8,7 @@ import json
 import random
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional, Tuple
-from .company_types import JCCompany, CompanyType, IndustryCategory, CompanyStage, BusinessMetrics, create_sample_companies
+from .company_types import JCCompany, CompanyType, IndustryCategory, CompanyStage, BusinessMetrics, CompanyFinancials, create_sample_companies
 from .company_storage import CompanyStorageManager
 
 
