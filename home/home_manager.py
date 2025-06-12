@@ -1,9 +1,12 @@
 """
-家庭资产投资管理系统
+家庭资产投资管理系统 - 扩展版
 """
 
 from .etf_funds import create_etf_funds
 from .luxury_cars import create_luxury_cars
+from .base_asset import create_collectible_items, DigitalMemento
+import random
+from datetime import datetime
 
 
 class HomeManager:
@@ -13,7 +16,12 @@ class HomeManager:
         self.main_app = main_app
         self.etf_funds = create_etf_funds()
         self.luxury_cars = create_luxury_cars()
+        self.collectibles = create_collectible_items()
+        self.digital_mementos = {}  # 数字纪念品
         self.user_assets = {}  # 用户拥有的资产
+        self.user_achievements = {}  # 用户成就统计
+        self.gaming_stats = {}  # 游戏统计
+        self.investment_milestones = {}  # 投资里程碑
         self.load_user_assets()
     
     def load_user_assets(self):
@@ -23,12 +31,23 @@ class HomeManager:
             self.user_assets = user_data['home_assets']
         else:
             self.user_assets = {}
+            
+        # 加载其他数据
+        if user_data:
+            self.user_achievements = user_data.get('achievement_stats', {})
+            self.gaming_stats = user_data.get('gaming_stats', {})
+            self.investment_milestones = user_data.get('investment_milestones', {})
+            self.digital_mementos = user_data.get('digital_mementos', {})
     
     def save_user_assets(self):
         """保存用户资产数据"""
         if not self.main_app.user_data:
             self.main_app.user_data = {}
         self.main_app.user_data['home_assets'] = self.user_assets
+        self.main_app.user_data['achievement_stats'] = self.user_achievements
+        self.main_app.user_data['gaming_stats'] = self.gaming_stats
+        self.main_app.user_data['investment_milestones'] = self.investment_milestones
+        self.main_app.user_data['digital_mementos'] = self.digital_mementos
         self.main_app.save_game_data()
     
     def show_home_menu(self):
@@ -1000,3 +1019,463 @@ class HomeManager:
                     total_cost += asset_data.get("total_cost", 0)
                     
         return current_value - total_cost 
+
+    # ============= 新增功能 - 与游戏内容集成 =============
+
+    def show_achievement_gallery(self):
+        """显示成就展示厅"""
+        user_achievements = self.main_app.user_data.get('achievements', [])
+        achievement_stats = self.user_achievements
+        
+        gallery_text = f"""
+══════════════════════════════════════════════════════════════════════════════════════════
+                               🏆 成就展示厅 - 荣誉殿堂 🏆                               
+══════════════════════════════════════════════════════════════════════════════════════════
+
+📊 成就概览:
+  总成就数: {len(user_achievements)}
+  青铜成就: {achievement_stats.get('bronze', 0)}个
+  白银成就: {achievement_stats.get('silver', 0)}个
+  黄金成就: {achievement_stats.get('gold', 0)}个
+  传奇成就: {achievement_stats.get('legendary', 0)}个
+  
+🎖️ 数字纪念品收藏:
+"""
+        
+        if self.digital_mementos:
+            for memento_id, memento in self.digital_mementos.items():
+                gallery_text += f"  🎖️ {memento.name}\n"
+                gallery_text += f"     价值: ${memento.current_price:,.0f} | 创建: {memento.creation_date[:10]}\n"
+        else:
+            gallery_text += "  暂无数字纪念品收藏\n"
+        
+        gallery_text += f"""
+🎮 游戏统计中心:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  21点胜场: {self.gaming_stats.get('blackjack_wins', 0)}
+  扑克连胜: {self.gaming_stats.get('poker_streak', 0)}
+  轮盘盈利: ${self.gaming_stats.get('roulette_profit', 0):,.0f}
+  赛马预测: {self.gaming_stats.get('horse_predictions', 0)}次正确
+  老虎机大奖: {self.gaming_stats.get('slot_jackpots', 0)}次
+  骰子连中: {self.gaming_stats.get('dice_streak', 0)}次
+  德州扑克胜利: {self.gaming_stats.get('texas_holdem_wins', 0)}场
+
+📈 投资里程碑:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  首次交易: {self.investment_milestones.get('first_trade_date', '未记录')}
+  首次盈利: {self.investment_milestones.get('first_profit_date', '未记录')}
+  首家公司: {self.investment_milestones.get('first_company_date', '未记录')}
+  首次IPO: {self.investment_milestones.get('first_ipo_date', '未记录')}
+  最大单日盈利: ${self.investment_milestones.get('max_daily_profit', 0):,.0f}
+  最长连胜记录: {self.investment_milestones.get('max_winning_streak', 0)}笔
+
+💡 管理功能:
+  home achievement <成就名> - 查看特定成就详情
+  home memento create      - 创建纪念品
+  home stats update        - 更新统计数据
+"""
+        
+        return gallery_text
+
+    def show_collectibles_market(self):
+        """显示收藏品市场"""
+        market_text = f"""
+══════════════════════════════════════════════════════════════════════════════════════════
+                                  🎨 收藏品交易市场 🎨                                  
+══════════════════════════════════════════════════════════════════════════════════════════
+
+💰 您的现金余额: ${self.main_app.cash:,.2f}
+
+🎨 艺术品收藏:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"""
+        
+        # 按类别分组显示收藏品
+        categories = {}
+        for item_id, item in self.collectibles.items():
+            item.update_price()
+            category = item.collectible_type
+            if category not in categories:
+                categories[category] = []
+            categories[category].append((item_id, item))
+        
+        for category, items in categories.items():
+            category_names = {
+                'art': '🎨 艺术品',
+                'jewelry': '💎 珠宝首饰',
+                'digital': '🖼️ 数字藏品',
+                'antique': '🏺 古董收藏',
+                'memorabilia': '🏆 纪念收藏',
+                'watch': '⌚ 名表收藏',
+                'wine': '🍷 红酒收藏',
+                'book': '📚 珍本图书'
+            }
+            
+            market_text += f"\n{category_names.get(category, category.title())}:\n"
+            
+            for item_id, item in sorted(items, key=lambda x: x[1].current_price, reverse=True):
+                rarity_info = item.get_rarity_info()
+                owned = self.user_assets.get('collectibles', {}).get(item_id, 0)
+                
+                market_text += f"""
+  {rarity_info['color']} {item.name}
+     💰 价格: ${item.current_price:,.0f} | 创作者: {item.artist_creator}
+     📅 年份: {item.year_created} | 持有: {owned}件
+     📝 {item.description[:50]}...
+     💎 稀有度: {rarity_info['name']} | 🎯 ID: {item_id}
+"""
+        
+        market_text += f"""
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🛒 购买方式:
+  home buy collectible <ID> <数量>     - 购买收藏品
+  home sell collectible <ID> <数量>    - 出售收藏品
+  home collectible info <ID>           - 查看详细信息
+
+🏆 收藏奖励:
+  收藏不同类别的物品可以解锁特殊成就
+  稀有收藏品具有更高的增值潜力
+  部分收藏品可以通过成就获得
+"""
+        
+        return market_text
+
+    def create_achievement_memento(self, achievement_id, achievement_data):
+        """创建成就纪念品"""
+        memento_id = f"memento_{achievement_id}_{len(self.digital_mementos)}"
+        memento_name = f"{achievement_data['name']}纪念章"
+        description = f"纪念获得'{achievement_data['name']}'成就的数字纪念品"
+        
+        memento = DigitalMemento(
+            memento_id,
+            memento_name,
+            description,
+            achievement_data,
+            achievement_data.get('tier', 'bronze')
+        )
+        
+        self.digital_mementos[memento_id] = memento
+        self.save_user_assets()
+        
+        return f"🎖️ 已创建数字纪念品: {memento_name}，价值 ${memento.current_price:,.0f}"
+
+    def update_gaming_stats(self, game_type, stat_type, value):
+        """更新游戏统计"""
+        if game_type not in self.gaming_stats:
+            self.gaming_stats[game_type] = {}
+        
+        if stat_type in ['wins', 'streak', 'predictions', 'jackpots']:
+            self.gaming_stats[game_type][stat_type] = max(self.gaming_stats[game_type].get(stat_type, 0), value)
+        elif stat_type in ['profit', 'total_wins']:
+            self.gaming_stats[game_type][stat_type] = self.gaming_stats[game_type].get(stat_type, 0) + value
+        
+        # 合并统计
+        if game_type == 'blackjack':
+            self.gaming_stats['blackjack_wins'] = self.gaming_stats[game_type].get('wins', 0)
+        elif game_type == 'poker':
+            self.gaming_stats['poker_streak'] = self.gaming_stats[game_type].get('streak', 0)
+        elif game_type == 'roulette':
+            self.gaming_stats['roulette_profit'] = self.gaming_stats[game_type].get('profit', 0)
+        elif game_type == 'horse_racing':
+            self.gaming_stats['horse_predictions'] = self.gaming_stats[game_type].get('predictions', 0)
+        elif game_type == 'slot_machine':
+            self.gaming_stats['slot_jackpots'] = self.gaming_stats[game_type].get('jackpots', 0)
+        elif game_type == 'dice':
+            self.gaming_stats['dice_streak'] = self.gaming_stats[game_type].get('streak', 0)
+        elif game_type == 'texas_holdem':
+            self.gaming_stats['texas_holdem_wins'] = self.gaming_stats[game_type].get('wins', 0)
+        
+        self.save_user_assets()
+
+    def record_investment_milestone(self, milestone_type, value=None):
+        """记录投资里程碑"""
+        current_date = datetime.now().strftime("%Y-%m-%d")
+        
+        if milestone_type == 'first_trade' and 'first_trade_date' not in self.investment_milestones:
+            self.investment_milestones['first_trade_date'] = current_date
+        elif milestone_type == 'first_profit' and 'first_profit_date' not in self.investment_milestones:
+            self.investment_milestones['first_profit_date'] = current_date
+        elif milestone_type == 'first_company' and 'first_company_date' not in self.investment_milestones:
+            self.investment_milestones['first_company_date'] = current_date
+        elif milestone_type == 'first_ipo' and 'first_ipo_date' not in self.investment_milestones:
+            self.investment_milestones['first_ipo_date'] = current_date
+        elif milestone_type == 'max_daily_profit' and value:
+            self.investment_milestones['max_daily_profit'] = max(
+                self.investment_milestones.get('max_daily_profit', 0), value
+            )
+        elif milestone_type == 'max_winning_streak' and value:
+            self.investment_milestones['max_winning_streak'] = max(
+                self.investment_milestones.get('max_winning_streak', 0), value
+            )
+        
+        self.save_user_assets()
+
+    def show_lifestyle_center(self):
+        """显示生活方式中心"""
+        total_assets = self._calculate_total_asset_value()
+        lifestyle_level = self._get_lifestyle_level(total_assets)
+        
+        center_text = f"""
+══════════════════════════════════════════════════════════════════════════════════════════
+                               🌟 生活方式中心 - {lifestyle_level['name']} 🌟                               
+══════════════════════════════════════════════════════════════════════════════════════════
+
+💎 当前生活等级: {lifestyle_level['name']} {lifestyle_level['emoji']}
+💰 资产总值: ${total_assets:,.0f}
+🎯 下一等级: {lifestyle_level['next_level']}
+
+🏠 生活服务:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"""
+        
+        # 根据资产等级提供不同服务
+        services = self._get_available_services(total_assets)
+        
+        for service in services:
+            center_text += f"""
+  {service['emoji']} {service['name']}
+     💰 费用: ${service['cost']:,.0f} | ⭐ 等级要求: {service['level']}
+     📝 {service['description']}
+     🎁 奖励: {service['reward']}
+"""
+        
+        center_text += f"""
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎮 生活体验:
+  home service <服务名>     - 享受生活服务
+  home upgrade             - 升级生活等级
+  home lifestyle          - 查看生活方式详情
+
+{lifestyle_level['description']}
+"""
+        
+        return center_text
+
+    def _get_lifestyle_level(self, total_assets):
+        """获取生活方式等级"""
+        if total_assets >= 100000000:
+            return {
+                'name': '亿万富豪',
+                'emoji': '👑',
+                'next_level': '已达最高等级',
+                'description': '🌟 您已达到财富巅峰，享受至尊级别的生活体验！'
+            }
+        elif total_assets >= 10000000:
+            return {
+                'name': '千万富翁',
+                'emoji': '💎',
+                'next_level': '亿万富豪 (需要$100,000,000)',
+                'description': '💎 奢华生活，专属服务，财富自由的典范！'
+            }
+        elif total_assets >= 1000000:
+            return {
+                'name': '百万富翁',
+                'emoji': '🏆',
+                'next_level': '千万富翁 (需要$10,000,000)',
+                'description': '🏆 成功人士，高品质生活，投资理财专家！'
+            }
+        elif total_assets >= 100000:
+            return {
+                'name': '小康生活',
+                'emoji': '🏠',
+                'next_level': '百万富翁 (需要$1,000,000)',
+                'description': '🏠 生活稳定，开始享受投资带来的收益。'
+            }
+        else:
+            return {
+                'name': '普通生活',
+                'emoji': '🌱',
+                'next_level': '小康生活 (需要$100,000)',
+                'description': '🌱 投资起步阶段，努力积累财富中。'
+            }
+
+    def _get_available_services(self, total_assets):
+        """获取可用服务"""
+        all_services = [
+            {
+                'name': '私人理财顾问',
+                'emoji': '👔',
+                'cost': 10000,
+                'level': '小康生活',
+                'min_assets': 100000,
+                'description': '专业理财师提供投资建议和资产配置方案',
+                'reward': '+5% 投资收益加成 (24小时)'
+            },
+            {
+                'name': '高端健身会所',
+                'emoji': '💪',
+                'cost': 5000,
+                'level': '小康生活',
+                'min_assets': 100000,
+                'description': '私教指导，高端器材，健康生活体验',
+                'reward': '+10 经验值，身体健康加成'
+            },
+            {
+                'name': '米其林餐厅体验',
+                'emoji': '🍽️',
+                'cost': 2000,
+                'level': '百万富翁',
+                'min_assets': 1000000,
+                'description': '顶级美食体验，与成功人士社交',
+                'reward': '+20 经验值，社交网络扩展'
+            },
+            {
+                'name': '私人飞机旅行',
+                'emoji': '✈️',
+                'cost': 50000,
+                'level': '千万富翁',
+                'min_assets': 10000000,
+                'description': '私人飞机环球旅行，极致奢华体验',
+                'reward': '+100 经验值，全球投资机会'
+            },
+            {
+                'name': '艺术品投资咨询',
+                'emoji': '🎨',
+                'cost': 25000,
+                'level': '千万富翁',
+                'min_assets': 10000000,
+                'description': '专业艺术品投资顾问，发现珍稀收藏',
+                'reward': '解锁稀有收藏品购买权限'
+            },
+            {
+                'name': '慈善晚宴主办',
+                'emoji': '🎭',
+                'cost': 100000,
+                'level': '亿万富豪',
+                'min_assets': 100000000,
+                'description': '主办慈善晚宴，提升社会影响力',
+                'reward': '特殊成就 + 社会声望提升'
+            }
+        ]
+        
+        return [service for service in all_services if total_assets >= service['min_assets']]
+
+    def buy_collectible(self, collectible_id, quantity=1):
+        """购买收藏品"""
+        if collectible_id not in self.collectibles:
+            return False, "❌ 收藏品不存在"
+        
+        item = self.collectibles[collectible_id]
+        total_cost = item.current_price * quantity
+        
+        if self.main_app.cash < total_cost:
+            return False, f"❌ 资金不足，需要 ${total_cost:,.0f}"
+        
+        # 扣除资金
+        self.main_app.cash -= total_cost
+        
+        # 记录购买信息
+        if item.quantity == 0:
+            item.purchase_price = item.current_price
+            item.purchase_date = datetime.now().isoformat()
+        
+        item.quantity += quantity
+        
+        # 添加到用户资产
+        if 'collectibles' not in self.user_assets:
+            self.user_assets['collectibles'] = {}
+        
+        self.user_assets['collectibles'][collectible_id] = self.user_assets['collectibles'].get(collectible_id, 0) + quantity
+        
+        self.save_user_assets()
+        
+        # 根据稀有度给予经验
+        rarity_exp = {'common': 10, 'rare': 25, 'epic': 50, 'legendary': 100}
+        exp_gain = rarity_exp.get(item.rarity, 10) * quantity
+        self.main_app.experience += exp_gain
+        
+        return True, f"✅ 成功购买 {item.name} x{quantity}！获得 {exp_gain} 经验值"
+
+    def sell_collectible(self, collectible_id, quantity=1):
+        """出售收藏品"""
+        if collectible_id not in self.collectibles:
+            return False, "❌ 收藏品不存在"
+        
+        owned = self.user_assets.get('collectibles', {}).get(collectible_id, 0)
+        if owned < quantity:
+            return False, f"❌ 持有数量不足，仅有 {owned} 件"
+        
+        item = self.collectibles[collectible_id]
+        total_value = item.current_price * quantity
+        
+        # 获得资金
+        self.main_app.cash += total_value
+        
+        # 更新持有数量
+        self.user_assets['collectibles'][collectible_id] -= quantity
+        if self.user_assets['collectibles'][collectible_id] == 0:
+            del self.user_assets['collectibles'][collectible_id]
+        
+        item.quantity -= quantity
+        
+        self.save_user_assets()
+        
+        profit_loss = (item.current_price - item.purchase_price) * quantity
+        return True, f"✅ 成功出售 {item.name} x{quantity}，获得 ${total_value:,.0f}，盈亏 ${profit_loss:+,.0f}"
+
+    def get_collectible_info(self, collectible_id):
+        """获取收藏品详细信息"""
+        if collectible_id not in self.collectibles:
+            return "❌ 收藏品不存在"
+        
+        item = self.collectibles[collectible_id]
+        item.update_price()
+        
+        return item.get_detailed_info()
+
+    def get_enhanced_portfolio_summary(self):
+        """获取增强版投资组合总结"""
+        total_etf_value = 0
+        total_car_value = 0
+        total_collectible_value = 0
+        total_cost = 0
+        
+        # ETF 价值
+        for etf_id, quantity in self.user_assets.get('etf', {}).items():
+            if etf_id in self.etf_funds and quantity > 0:
+                etf = self.etf_funds[etf_id]
+                etf.update_price()
+                value = etf.current_price * quantity
+                cost = etf.purchase_price * quantity
+                total_etf_value += value
+                total_cost += cost
+        
+        # 豪车价值
+        for car_id, quantity in self.user_assets.get('cars', {}).items():
+            if car_id in self.luxury_cars and quantity > 0:
+                car = self.luxury_cars[car_id]
+                car.update_price()
+                value = car.current_price * quantity
+                cost = car.purchase_price * quantity
+                total_car_value += value
+                total_cost += cost
+        
+        # 收藏品价值
+        for collectible_id, quantity in self.user_assets.get('collectibles', {}).items():
+            if collectible_id in self.collectibles and quantity > 0:
+                item = self.collectibles[collectible_id]
+                item.update_price()
+                value = item.current_price * quantity
+                cost = item.purchase_price * quantity
+                total_collectible_value += value
+                total_cost += cost
+        
+        total_value = total_etf_value + total_car_value + total_collectible_value
+        total_profit_loss = total_value - total_cost
+        
+        # 更新用户资产价值
+        if not self.main_app.user_data:
+            self.main_app.user_data = {}
+        self.main_app.user_data['home_assets_value'] = total_value
+        
+        return {
+            'total_value': total_value,
+            'total_cost': total_cost,
+            'profit_loss': total_profit_loss,
+            'etf_value': total_etf_value,
+            'car_value': total_car_value,
+            'collectible_value': total_collectible_value,
+            'profit_percentage': (total_profit_loss / total_cost * 100) if total_cost > 0 else 0
+        } 

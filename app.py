@@ -832,8 +832,8 @@ class StockTradingApp:
 ═══════════════════════════════════════════════════════════════════
 
 📊 整体统计:
-  完成度: {stats['completion_rate']:.1f}% ({stats['unlocked_achievements']}/{stats['total_achievements']})
-  总奖励: ${stats['total_rewards']:,}
+  完成度: {stats['completion_rate']:.1f}% ({stats['completed']}/{stats['total']})
+  总奖励: ${stats['total_reward']:,}
   总经验: {stats['total_experience']:,}
 
 🏅 等级分布:
