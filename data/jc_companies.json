@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "last_updated": "2025-08-04T11:30:34.771412",
+  "last_updated": "2025-08-04T15:55:03.188951",
   "companies": [
     {
       "company_id": "JC_TECH_001",
@@ -81,9 +81,9 @@
       "staff_list": [],
       "max_staff": 10000,
       "is_public": true,
-      "stock_price": 56.0,
+      "stock_price": 59.37,
       "shares_outstanding": 100000000,
-      "market_cap": 5600000000.0,
+      "market_cap": 5937000000.0,
       "ipo_price": 25.0,
       "ipo_date": "2022-06-15",
       "news_events": [],
@@ -146,11 +146,11 @@
   "statistics": {
     "total_companies": 3,
     "public_companies": 1,
-    "total_market_cap": 5600000000.0,
+    "total_market_cap": 5937000000.0,
     "industry_distribution": {
       "technology": 2,
       "manufacturing": 1
     },
-    "generated_at": "2025-08-04T11:30:34.771437"
+    "generated_at": "2025-08-04T15:55:03.189050"
   }
 }

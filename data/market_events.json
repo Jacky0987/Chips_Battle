@@ -1188,5 +1188,20 @@
       "TSLA"
     ],
     "timestamp": "2025-08-04T03:28:58.268842+00:00"
+  },
+  {
+    "id": "event_069",
+    "title": "社交媒体监管加强，Finance板块波动",
+    "description": "监管机构对Finance平台展开调查，市场情绪谨慎。",
+    "impact": {
+      "sectors": [
+        "Social Media"
+      ],
+      "effect": "negative",
+      "magnitude": 0.025,
+      "duration": "medium_term"
+    },
+    "related_stocks": [],
+    "timestamp": "2025-08-04T07:52:42.146071+00:00"
   }
 ]
