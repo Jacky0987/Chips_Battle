@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "last_updated": "2025-06-12T19:07:29.830821",
+  "last_updated": "2025-08-04T11:30:04.763852",
   "companies": [
     {
       "company_id": "JC_TECH_001",
@@ -81,9 +81,9 @@
       "staff_list": [],
       "max_staff": 10000,
       "is_public": true,
-      "stock_price": 53.33,
+      "stock_price": 55.72,
       "shares_outstanding": 100000000,
-      "market_cap": 5333000000.0,
+      "market_cap": 5572000000.0,
       "ipo_price": 25.0,
       "ipo_date": "2022-06-15",
       "news_events": [],
@@ -91,17 +91,66 @@
       "risk_level": 2,
       "created_by_user": null,
       "last_updated": "2025-06-12T18:43:49.488632"
+    },
+    {
+      "company_id": "JC_TEC_3308",
+      "name": "JCTech",
+      "symbol": "JCTE",
+      "industry": "technology",
+      "company_type": "startup",
+      "stage": "startup",
+      "founded_date": "2025-08-04",
+      "description": "JCTech是一家致力于技术创新和数字化解决方案的创新型企业，采用B2B服务的商业模式，致力于成为行业领先者。",
+      "headquarters": "JC经济特区",
+      "website": "www.jcte.jc",
+      "ceo_name": "abc",
+      "metrics": {
+        "revenue": 18350160.35307284,
+        "profit": 6608735.128612051,
+        "assets": 40000000.0,
+        "liabilities": 15000000.0,
+        "employees": 54,
+        "market_share": 0.00818307582660682,
+        "growth_rate": 0.14917597882435513,
+        "debt_ratio": 0.375
+      },
+      "financials": {
+        "quarterly_reports": [],
+        "annual_reports": [],
+        "cash_flow": {},
+        "balance_sheet": {},
+        "income_statement": {}
+      },
+      "company_cash": 0.0,
+      "total_investment": 0.0,
+      "staff_list": [],
+      "max_staff": 10000,
+      "is_public": false,
+      "stock_price": 0.0,
+      "shares_outstanding": 0,
+      "market_cap": 0.0,
+      "ipo_price": null,
+      "ipo_date": null,
+      "news_events": [],
+      "performance_score": 47.2700626777111,
+      "risk_level": 5,
+      "created_by_user": "abc",
+      "last_updated": "2025-08-04T11:29:54.685238"
     }
   ],
-  "user_companies": {},
+  "user_companies": {
+    "abc": [
+      "JC_TEC_3308"
+    ]
+  },
   "statistics": {
-    "total_companies": 2,
+    "total_companies": 3,
     "public_companies": 1,
-    "total_market_cap": 5333000000.0,
+    "total_market_cap": 5572000000.0,
     "industry_distribution": {
-      "technology": 1,
+      "technology": 2,
       "manufacturing": 1
     },
-    "generated_at": "2025-06-12T19:07:29.830821"
+    "generated_at": "2025-08-04T11:30:04.763945"
   }
 }

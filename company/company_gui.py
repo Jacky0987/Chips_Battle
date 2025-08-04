@@ -21,6 +21,8 @@ class CompanyGUI:
         self.current_company = None
         self.animation_timer = None
         self.scene_elements = []
+        self.update_timer = None  # 自动更新定时器
+        self.current_scene = "office"  # 当前场景类型
         
     def open_company_center(self, company_id: Optional[str] = None):
         """打开公司管理中心"""
@@ -43,6 +45,7 @@ class CompanyGUI:
         
         self._create_gui_layout()
         self._start_animations()
+        self._start_auto_updates()  # 启动自动更新
         
     def _create_gui_layout(self):
         """创建GUI布局"""
@@ -300,6 +303,9 @@ class CompanyGUI:
         info_text.insert(tk.END, info_content)
         info_text.config(state=tk.DISABLED)
         
+        # 保存引用以便后续更新
+        self.company_info_text = info_text
+        
     def _create_action_buttons(self, parent):
         """创建操作按钮"""
         actions = [
@@ -333,6 +339,7 @@ class CompanyGUI:
         
     def _switch_scene(self, scene_type):
         """切换场景"""
+        self.current_scene = scene_type
         self.scene_display.config(state=tk.NORMAL)
         self.scene_display.delete(1.0, tk.END)
         
@@ -422,12 +429,40 @@ class CompanyGUI:
 """
         
         if company:
-            activities = [
-                f"👥 {company.metrics.employees}名员工正在努力工作",
-                f"💰 今日营收目标: J${company.metrics.revenue/365:,.0f}",
-                f"📈 公司发展阶段: {company.stage.value.title()}",
-                f"🎯 市场份额: {company.metrics.market_share*100:.3f}%"
-            ]
+            # 根据公司状态生成活动
+            activities = []
+            
+            # 根据发展阶段生成活动
+            if company.stage == CompanyStage.STARTUP:
+                activities.append(f"👥 {company.metrics.employees}名员工正在努力工作")
+                activities.append(f"💰 筹集资金: J${company.metrics.revenue*0.2:,.0f}")
+                activities.append(f"📈 寻找客户: {int(company.metrics.market_share*10000)}个潜在客户")
+            elif company.stage == CompanyStage.DEVELOPMENT:
+                activities.append(f"👥 {company.metrics.employees}名员工正在努力工作")
+                activities.append(f"💰 扩大生产: 日产值J${company.metrics.revenue/365:,.0f}")
+                activities.append(f"📈 市场拓展: 占据{company.metrics.market_share*100:.3f}%市场份额")
+            elif company.stage == CompanyStage.EXPANSION:
+                activities.append(f"👥 {company.metrics.employees}名员工正在努力工作")
+                activities.append(f"💰 业务扩张: 新开{int(company.metrics.growth_rate*10)}个分支机构")
+                activities.append(f"📈 国际化: 进入{int(company.metrics.market_share*100)}个新市场")
+            elif company.stage == CompanyStage.MATURE:
+                activities.append(f"👥 {company.metrics.employees}名员工正在努力工作")
+                activities.append(f"💰 稳定盈利: 净利润J${company.metrics.profit:,.0f}")
+                activities.append(f"📈 维持地位: 保持{company.metrics.market_share*100:.3f}%市场份额")
+            else:  # CompanyStage.DECLINE
+                activities.append(f"👥 {company.metrics.employees}名员工正在努力工作")
+                activities.append(f"💰 业务重组: 优化成本J${company.metrics.revenue*0.1:,.0f}")
+                activities.append(f"📈 战略调整: 寻找新增长点")
+            
+            # 根据表现评分添加特殊活动
+            if company.performance_score > 80:
+                activities.append("⭐ 公司表现优异，员工士气高涨")
+            elif company.performance_score > 60:
+                activities.append("📈 公司运营良好，稳步发展")
+            elif company.performance_score > 40:
+                activities.append("⚠️ 公司面临挑战，需要改进")
+            else:
+                activities.append("❌ 公司经营困难，急需调整策略")
             
             for activity in activities:
                 scene += f"   {activity}\n"
@@ -462,6 +497,39 @@ class CompanyGUI:
             productivity = company.performance_score / 100
             capacity_utilization = min(100, company.metrics.employees / 5)
             
+            # 根据行业调整生产线
+            if "tech" in company.industry.value.lower():
+                line_a = "📱│💻 │🖥️ │🖨️ │⚡ │📦"
+                line_b = "🤖│⚡ │🔧 │⚙️ │📦 │🚛"
+            elif "manufacturing" in company.industry.value.lower():
+                line_a = "🚗│🔧 │⚙️ │🔩 │⚡ │📦"
+                line_b = "🤖│⚡ │🔧 │⚙️ │📦 │🚛"
+            elif "food" in company.industry.value.lower():
+                line_a = "🍞│🥬 │🍳 │🥫 │⚡ │📦"
+                line_b = "🤖│⚡ │🔧 │⚙️ │📦 │🚛"
+            else:
+                line_a = "🏗️│🔧 │⚙️ │🔩 │⚡ │📦"
+                line_b = "🤖│⚡ │🔧 │⚙️ │📦 │🚛"
+            
+            # 重新生成场景以包含行业特定元素
+            scene = f"""
+           🏭 {company.name if company else 'JC企业'} 生产基地
+
+    🌫️       🌫️       🌫️    ← 工厂烟囱
+     |         |         |
+   ╔═══╤═══╤═══╤═══╤═══╤═══╗
+   ║ {line_a} ║ ← 生产线A
+   ╠═══╪═══╪═══╪═══╪═══╪═══╣
+   ║ {line_b} ║ ← 生产线B  
+   ╠═══╪═══╪═══╪═══╪═══╪═══╣
+   ║ 👷│👷 │👷 │👷 │👷 │📋 ║ ← 质检区
+   ╚═══╧═══╧═══╧═══╧═══╧═══╝
+
+🚛 ← 物流运输        🏪 → 仓储区域
+
+📊 生产状态:
+"""
+            
             production_stats = [
                 f"⚡ 产能利用率: {capacity_utilization:.1f}%",
                 f"🎯 生产效率: {productivity*100:.1f}%",
@@ -469,6 +537,16 @@ class CompanyGUI:
                 f"📦 日产值: J${company.metrics.revenue/365:,.0f}",
                 f"🔧 设备状态: {'良好' if productivity > 0.7 else '需维护'}"
             ]
+            
+            # 根据表现评分添加特殊状态
+            if company.performance_score > 80:
+                production_stats.append("🌟 生产线运行高效，产品质量优秀")
+            elif company.performance_score > 60:
+                production_stats.append("✅ 生产线运行正常，产品合格率高")
+            elif company.performance_score > 40:
+                production_stats.append("⚠️ 生产线存在瓶颈，需要优化")
+            else:
+                production_stats.append("❌ 生产线效率低下，急需改进")
             
             for stat in production_stats:
                 scene += f"   {stat}\n"
@@ -510,6 +588,29 @@ class CompanyGUI:
                 f"⭐ 绩效评估: {company.performance_score:.1f}/100分"
             ]
             
+            # 根据发展阶段添加特定议题
+            if company.stage == CompanyStage.STARTUP:
+                topics.append("💡 讨论融资计划和产品开发")
+                topics.append("👥 招聘关键人才和团队建设")
+            elif company.stage == CompanyStage.DEVELOPMENT:
+                topics.append("📈 制定市场扩张策略")
+                topics.append("🏗️ 计划新工厂建设和设备采购")
+            elif company.stage == CompanyStage.EXPANSION:
+                topics.append("🌐 研究国际市场进入策略")
+                topics.append("🤝 考虑并购和战略合作机会")
+            elif company.stage == CompanyStage.MATURE:
+                topics.append("💎 优化运营效率和成本控制")
+                topics.append("🔄 探索业务转型和创新方向")
+            else:  # CompanyStage.DECLINE
+                topics.append("🛠️ 制定业务重组和扭亏计划")
+                topics.append("🚪 评估资产出售和收缩策略")
+            
+            # 根据表现评分添加风险提示
+            if company.performance_score < 30:
+                topics.append("🔴 高风险警告: 公司面临严重经营困难")
+            elif company.performance_score < 50:
+                topics.append("🟠 中等风险: 公司经营面临挑战")
+            
             for topic in topics:
                 scene += f"   💼 {topic}\n"
                 
@@ -547,6 +648,27 @@ class CompanyGUI:
             tech_level = company.performance_score / 20  # 转换为1-5级
             uptime = 95 + (tech_level * 1)  # 95-100%
             
+            # 根据行业调整数据中心类型
+            if "tech" in company.industry.value.lower():
+                server_a = "🖥️ 💾 📱 💾 🖥️"
+                server_b = "🖥️ 💾 🤖 💾 🖥️"
+                scene = f"""
+      💻 {company.name if company else 'JC企业'} 数据中心
+
+    ╔═══════════════════════════════════════╗
+    ║  {server_a}  ║ 服务器A
+    ║  💡 ⚡ 💡 ⚡ 💡 ⚡ 💡 ⚡ 💡  ║
+    ╠═══════════════════════════════════════╣
+    ║  {server_b}  ║ 服务器B
+    ║  💡 ⚡ 💡 ⚡ 💡 ⚡ 💡 ⚡ 💡  ║
+    ╚═══════════════════════════════════════╝
+           🌐 ← 网络连接 → 🌐
+
+    👨‍💻 运维工程师    📊 数据分析师    🔒 安全专家
+
+📊 系统状态:
+"""
+            
             data_stats = [
                 f"⚡ 系统运行时间: {uptime:.1f}%",
                 f"💾 数据处理能力: {tech_level:.1f}/5.0级",
@@ -554,6 +676,16 @@ class CompanyGUI:
                 f"📈 数据吞吐量: {company.metrics.revenue/1000000:.1f}MB/s",
                 f"🌐 网络状态: {'稳定' if tech_level > 2 else '需优化'}"
             ]
+            
+            # 根据表现评分添加系统状态
+            if company.performance_score > 80:
+                data_stats.append("🌟 系统性能优秀，无故障运行")
+            elif company.performance_score > 60:
+                data_stats.append("✅ 系统运行稳定，响应迅速")
+            elif company.performance_score > 40:
+                data_stats.append("⚠️ 系统存在性能瓶颈，需要优化")
+            else:
+                data_stats.append("❌ 系统故障频发，急需升级")
             
             for stat in data_stats:
                 scene += f"   {stat}\n"
@@ -586,6 +718,42 @@ class CompanyGUI:
         if company:
             innovation_level = company.performance_score / 25  # 转换为1-4级
             
+            # 根据行业调整研发项目
+            if "tech" in company.industry.value.lower():
+                projects = ["📱 智能手机", "💻 笔记本电脑", "⌚ 智能手表"]
+                patents = ["🔋 快充技术", "📱 折叠屏", "🧠 AI芯片"]
+                innovations = ["📱 新产品发布", "💻 性能提升", "⌚ 健康监测"]
+            elif "manufacturing" in company.industry.value.lower():
+                projects = ["🚗 新能源车", "🔧 智能制造", "🏭 自动化设备"]
+                patents = ["🔋 电池技术", "🔧 机器人", "🏭 生产线"]
+                innovations = ["🚗 续航提升", "🔧 效率优化", "🏭 成本降低"]
+            elif "food" in company.industry.value.lower():
+                projects = ["🥬 健康食品", "🍞 营养面包", "🥫 方便食品"]
+                patents = ["🥬 保鲜技术", "🍞 发酵工艺", "🥫 包装技术"]
+                innovations = ["🥬 营养强化", "🍞 口感改善", "🥫 保质期延长"]
+            else:
+                projects = ["🔬 基础研究", "🧪 应用研究", "⚙️ 工艺改进"]
+                patents = ["🔬 理论突破", "🧪 实验方法", "⚙️ 生产工艺"]
+                innovations = ["🔬 新发现", "🧪 新材料", "⚙️ 新工艺"]
+            
+            # 重新生成场景以包含行业特定元素
+            scene = f"""
+      🔬 {company.name if company else 'JC企业'} 创新实验室
+
+    ╔═══════════════════════════════════════╗
+    ║ 🧪  ⚗️  🔬  📋  💡  🧬  ⚙️  🔍 ║ 实验台A
+    ║                                       ║
+    ║ 👨‍🔬  👩‍🔬  📊  💻  🔧  ⚡  📈  🎯 ║ 实验台B
+    ╚═══════════════════════════════════════╝
+
+    📋 研发项目:     🏆 专利墙:     💡 创新成果:
+      🔬 {projects[0]}        📜 {patents[0]}        ⚙️ {innovations[0]}
+      🧪 {projects[1]}        📜 {patents[1]}        💻 {innovations[1]}  
+      ⚗️ {projects[2]}        📜 {patents[2]}        🔍 {innovations[2]}
+
+🔬 研发状态:
+"""
+            
             research_stats = [
                 f"💡 创新能力: {innovation_level:.1f}/4.0级",
                 f"🔬 研发投入: {company.metrics.revenue*0.1:,.0f}J$ (预估)",
@@ -593,6 +761,16 @@ class CompanyGUI:
                 f"📋 活跃项目: {int(innovation_level*2)}个",
                 f"🏆 技术水平: {'领先' if innovation_level > 3 else '先进' if innovation_level > 2 else '标准'}"
             ]
+            
+            # 根据表现评分添加研发状态
+            if company.performance_score > 80:
+                research_stats.append("🌟 研发进展顺利，多项突破在即")
+            elif company.performance_score > 60:
+                research_stats.append("✅ 研发按计划进行，成果显著")
+            elif company.performance_score > 40:
+                research_stats.append("⚠️ 研发遇到瓶颈，需要调整方向")
+            else:
+                research_stats.append("❌ 研发停滞不前，急需资源投入")
             
             for stat in research_stats:
                 scene += f"   {stat}\n"
@@ -624,13 +802,89 @@ class CompanyGUI:
         if not self.window or not self.window.winfo_exists():
             return
         
-        # 简单的闪烁效果
+        # 实现更复杂的动画效果
         if hasattr(self, 'scene_display') and self.scene_elements:
-            # 这里可以添加更复杂的动画逻辑
-            pass
+            # 获取当前场景内容
+            content = self.scene_display.get(1.0, tk.END)
+            
+            # 随机选择一个动画元素进行闪烁
+            if self.scene_elements:
+                element = random.choice(self.scene_elements)
+                # 在内容中找到该元素并添加动画效果
+                lines = content.split('\n')
+                for i, line in enumerate(lines):
+                    if element in line and random.random() < 0.3:  # 30%概率闪烁
+                        # 简单的闪烁效果（通过颜色变化实现）
+                        # 这里可以扩展为更复杂的动画
+                        pass
         
         # 继续下一帧动画
-        self.animation_timer = self.window.after(2000, self._animate_scene)
+        self.animation_timer = self.window.after(1000, self._animate_scene)
+    
+    def _start_auto_updates(self):
+        """启动自动更新"""
+        if self.update_timer:
+            self.window.after_cancel(self.update_timer)
+        
+        self._auto_update()
+        
+    def _auto_update(self):
+        """自动更新界面"""
+        if not self.window or not self.window.winfo_exists():
+            return
+        
+        # 更新公司信息
+        if self.current_company and hasattr(self, 'company_info_text'):
+            self._update_company_info()
+        
+        # 重新生成当前场景
+        if self.current_scene:
+            self._switch_scene(self.current_scene)
+        
+        # 每5秒更新一次
+        self.update_timer = self.window.after(5000, self._auto_update)
+    
+    def _update_company_info(self):
+        """更新公司信息显示"""
+        if not self.current_company or not hasattr(self, 'company_info_text'):
+            return
+        
+        company = self.current_company
+        info_content = f"""
+🏢 {company.name} ({company.symbol})
+{'='*40}
+
+📈 发展阶段: {company.stage.value.title()}
+🏭 行业领域: {company.industry.value.title()}
+📅 成立时间: {company.founded_date}
+⭐ 表现评分: {company.performance_score:.1f}/100
+🎯 风险等级: {company.risk_level}/5
+
+💰 财务状况:
+  营业收入: J${company.metrics.revenue:,.0f}
+  净利润: J${company.metrics.profit:,.0f}
+  总资产: J${company.metrics.assets:,.0f}
+  负债: J${company.metrics.liabilities:,.0f}
+  净资产: J${company.metrics.calculate_equity():,.0f}
+
+👥 人力资源:
+  员工总数: {company.metrics.employees}人
+  人均产值: J${company.metrics.revenue/company.metrics.employees:,.0f}
+
+📊 市场表现:
+  市场份额: {company.metrics.market_share*100:.3f}%
+  增长率: {company.metrics.growth_rate*100:.1f}%
+  债务率: {company.metrics.debt_ratio*100:.1f}%
+
+{'📈 已上市' if company.is_public else '🏢 未上市'}
+{f'股价: J${company.stock_price:.2f}' if company.is_public else ''}
+{f'市值: J${company.market_cap:,.0f}' if company.is_public else ''}
+"""
+        
+        self.company_info_text.config(state=tk.NORMAL)
+        self.company_info_text.delete(1.0, tk.END)
+        self.company_info_text.insert(tk.END, info_content)
+        self.company_info_text.config(state=tk.DISABLED)
     
     def _start_company_creation(self):
         """启动公司创建向导"""
@@ -685,6 +939,8 @@ class CompanyGUI:
         """关闭GUI"""
         if self.animation_timer:
             self.window.after_cancel(self.animation_timer)
+        if self.update_timer:
+            self.window.after_cancel(self.update_timer)
         if self.window:
             self.window.destroy()
-            self.window = None 
+            self.window = None

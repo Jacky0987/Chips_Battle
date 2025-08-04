@@ -1152,5 +1152,41 @@
       "FDX"
     ],
     "timestamp": "2025-06-12T11:07:14.069012+00:00"
+  },
+  {
+    "id": "event_067",
+    "title": "芯片供应短缺，Automotive行业承压",
+    "description": "全球芯片供应链瓶颈加剧，导致Automotive公司生产成本上升。",
+    "impact": {
+      "sectors": [
+        "Technology"
+      ],
+      "effect": "negative",
+      "magnitude": 0.02,
+      "duration": "short_term"
+    },
+    "related_stocks": [
+      "NVDA"
+    ],
+    "timestamp": "2025-08-04T03:25:07.922151+00:00"
+  },
+  {
+    "id": "event_068",
+    "title": "新能源政策利好，Healthcare板块上涨",
+    "description": "政府发布支持Healthcare发展的政策，相关公司股价受到提振。",
+    "impact": {
+      "sectors": [
+        "Energy"
+      ],
+      "effect": "positive",
+      "magnitude": 0.025,
+      "duration": "long_term"
+    },
+    "related_stocks": [
+      "NEE",
+      "ENPH",
+      "TSLA"
+    ],
+    "timestamp": "2025-08-04T03:28:58.268842+00:00"
   }
 ]
