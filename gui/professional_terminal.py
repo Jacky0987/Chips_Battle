@@ -604,8 +604,11 @@ class ProfessionalTerminal:
 
     def execute_command(self, command):
         """⚡ 执行命令"""
-        if hasattr(self.app, 'command_processor'):
+        if hasattr(self.app, 'command_processor') and self.app.command_processor is not None:
             self.app.command_processor.process_command(command)
+        else:
+            # Handle the case where command_processor is not yet initialized
+            self.print_to_output("❌ 系统尚未完全初始化，请先登录", '#FF0000')
     
     def handle_command_input(self, event):
         """🎯 处理命令输入"""
@@ -701,4 +704,4 @@ class ProfessionalTerminal:
             event_text = f"[{timestamp}] {event.get('title', 'Market Event')}\n"
             self.events_text.insert(tk.END, event_text)
             self.events_text.see(tk.END)
-            self.events_text.config(state=tk.DISABLED) 
+            self.events_text.config(state=tk.DISABLED)
