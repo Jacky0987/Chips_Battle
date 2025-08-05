@@ -1,0 +1,12 @@
+[
+  {
+    "code": "tech",
+    "name": "Technology",
+    "description": "High innovation sector"
+  },
+  {
+    "code": "finance",
+    "name": "Finance",
+    "description": "Financial services"
+  }
+] 

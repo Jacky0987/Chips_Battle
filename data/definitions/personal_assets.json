@@ -1,0 +1,16 @@
+[
+  {
+    "id": "luxury_car",
+    "name": "豪华轿车",
+    "category": "vehicle",
+    "price": 100000,
+    "volatility": 0.05
+  },
+  {
+    "id": "mansion",
+    "name": "豪宅",
+    "category": "real_estate",
+    "price": 5000000,
+    "volatility": 0.03
+  }
+] 

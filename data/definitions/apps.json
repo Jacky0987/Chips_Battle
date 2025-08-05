@@ -1,0 +1,34 @@
+{
+  "apps": [
+    {
+      "app_id": "advanced_calculator",
+      "name": "高级计算器",
+      "description": "用于复杂金融计算",
+      "price": 5000,
+      "category": "utility",
+      "version": "1.0",
+      "module_name": "advanced_calculator",
+      "class_name": "AdvancedCalculatorApp"
+    },
+    {
+      "app_id": "news_terminal_pro",
+      "name": "专业新闻终端",
+      "description": "提供更强大的新闻搜索和过滤功能",
+      "price": 10000,
+      "category": "analysis",
+      "version": "1.0",
+      "module_name": "news_terminal_pro",
+      "class_name": "NewsTerminalProApp"
+    },
+    {
+      "app_id": "market_analyzer_v1",
+      "name": "市场分析器 V1",
+      "description": "提供基础的市场情绪分析",
+      "price": 15000,
+      "category": "analysis",
+      "version": "1.0",
+      "module_name": "market_analyzer",
+      "class_name": "MarketAnalyzerApp"
+    }
+  ]
+} 

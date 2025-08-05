@@ -1,0 +1,16 @@
+[
+  {
+    "symbol": "GOLD",
+    "name": "Gold",
+    "price": 1800.0,
+    "unit": "ounce",
+    "volatility": 0.02
+  },
+  {
+    "symbol": "OIL",
+    "name": "Crude Oil",
+    "price": 70.0,
+    "unit": "barrel",
+    "volatility": 0.05
+  }
+] 

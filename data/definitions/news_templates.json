@@ -1,0 +1,12 @@
+[
+  {
+    "template": "{company_name} 宣布重大科技突破！",
+    "placeholders": ["company_name"],
+    "impact_tags": ["tech", "positive"]
+  },
+  {
+    "template": "{region_name} 地区发生地缘冲突，影响全球供应链。",
+    "placeholders": ["region_name"],
+    "impact_tags": ["geopolitical", "negative"]
+  }
+] 
