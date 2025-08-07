@@ -2,7 +2,7 @@ from typing import Dict, List, Optional, Tuple, Any
 from decimal import Decimal
 from datetime import datetime, timedelta
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, or_, select, func
 
 from models.auth.user import User
 from models.bank.bank_card import BankCard
@@ -48,21 +48,23 @@ class BankService:
         try:
             async with self.uow:
                 # 检查用户是否存在
-                user = self.uow.query(User).filter_by(user_id=user_id).first()
+                result = await self.uow.session.execute(select(User).filter_by(user_id=user_id))
+                user = result.scalars().first()
                 if not user:
                     return False, "用户不存在", None
                 
                 # 检查银行代码是否有效
                 valid_banks = BankCard.get_available_banks()
-                if bank_code.upper() not in valid_banks:
+                if bank_code.upper() not in [b['code'] for b in valid_banks]:
                     return False, f"无效的银行代码: {bank_code}", None
                 
                 # 检查用户是否已有该银行的卡片
-                existing_card = self.uow.query(BankCard).filter_by(
+                result = await self.uow.session.execute(select(BankCard).filter_by(
                     user_id=user_id,
                     bank_code=bank_code.upper(),
                     is_active=True
-                ).first()
+                ))
+                existing_card = result.scalars().first()
                 
                 if existing_card:
                     return False, f"您已拥有{bank_code.upper()}银行的银行卡", None
@@ -83,7 +85,7 @@ class BankService:
             await self.uow.rollback()
             return False, f"申请银行卡失败: {str(e)}", None
     
-    def get_user_bank_cards(self, user_id: str, active_only: bool = True) -> List[BankCard]:
+    async def get_user_bank_cards(self, user_id: str, active_only: bool = True) -> List[BankCard]:
         """获取用户的银行卡列表
         
         Args:
@@ -94,12 +96,14 @@ class BankService:
             银行卡列表
         """
         try:
-            query = self.uow.query(BankCard).filter_by(user_id=user_id)
-            
-            if active_only:
-                query = query.filter_by(is_active=True)
-            
-            return query.order_by(BankCard.created_at.desc()).all()
+            async with self.uow:
+                stmt = select(BankCard).filter_by(user_id=user_id)
+                
+                if active_only:
+                    stmt = stmt.filter_by(is_active=True)
+                
+                result = await self.uow.session.execute(stmt.order_by(BankCard.created_at.desc()))
+                return result.scalars().all()
             
         except Exception:
             return []
@@ -123,26 +127,29 @@ class BankService:
         try:
             async with self.uow:
                 # 验证银行卡
-                bank_card = self.uow.query(BankCard).filter_by(
+                result = await self.uow.session.execute(select(BankCard).filter_by(
                     card_id=bank_card_id,
                     user_id=user_id,
                     is_active=True
-                ).first()
+                ))
+                bank_card = result.scalars().first()
                 
                 if not bank_card:
                     return False, "银行卡不存在或未激活", None
                 
                 # 验证货币
-                currency = self.uow.query(Currency).filter_by(code=currency_code).first()
+                result = await self.uow.session.execute(select(Currency).filter_by(code=currency_code))
+                currency = result.scalars().first()
                 if not currency:
                     return False, f"不支持的货币: {currency_code}", None
                 
                 # 检查是否已有相同货币的账户
-                existing_account = self.uow.query(BankAccount).filter_by(
+                result = await self.uow.session.execute(select(BankAccount).filter_by(
                     user_id=user_id,
                     bank_card_id=bank_card_id,
                     currency_id=currency.currency_id
-                ).first()
+                ))
+                existing_account = result.scalars().first()
                 
                 if existing_account:
                     return False, f"已存在{currency_code}账户", None
@@ -161,12 +168,13 @@ class BankService:
                 self.uow.add(bank_account)
                 
                 # 如果是用户第一个账户，设为默认账户
-                user_accounts = self.uow.query(BankAccount).filter_by(
+                result = await self.uow.session.execute(select(func.count(BankAccount.account_id)).filter_by(
                     user_id=user_id, is_enabled=True
-                ).count()
+                ))
+                user_accounts = result.scalar_one()
                 
                 if user_accounts == 0:
-                    bank_account.set_as_default(self.uow)
+                    await bank_account.set_as_default(self.uow)
                 
                 await self.uow.commit()
                 
@@ -176,7 +184,7 @@ class BankService:
             await self.uow.rollback()
             return False, f"创建账户失败: {str(e)}", None
     
-    def get_user_accounts(self, user_id: str, currency_code: str = None) -> List[BankAccount]:
+    async def get_user_accounts(self, user_id: str, currency_code: str = None) -> List[BankAccount]:
         """获取用户账户列表
         
         Args:
@@ -187,18 +195,20 @@ class BankService:
             账户列表
         """
         try:
-            query = self.uow.query(BankAccount).filter_by(
-                user_id=user_id, is_enabled=True
-            )
-            
-            if currency_code:
-                currency = self.uow.query(Currency).filter_by(code=currency_code).first()
-                if currency:
-                    query = query.filter_by(currency_id=currency.currency_id)
-            
-            return query.order_by(BankAccount.is_default.desc(), 
-                                BankAccount.created_at.desc()).all()
-            
+            async with self.uow:
+                stmt = select(BankAccount).filter_by(
+                    user_id=user_id, is_enabled=True
+                )
+                
+                if currency_code:
+                    result = await self.uow.session.execute(select(Currency).filter_by(code=currency_code))
+                    currency = result.scalars().first()
+                    if currency:
+                        stmt = stmt.filter_by(currency_id=currency.currency_id)
+                
+                result = await self.uow.session.execute(stmt.order_by(BankAccount.is_default.desc(), 
+                                    BankAccount.created_at.desc()))
+                return result.scalars().all()
         except Exception:
             return []
     
@@ -521,7 +531,7 @@ class BankService:
                 
                 await self.uow.commit()
                 
-                return True, f"成功还款 {amount}，剩余欠款: {loan.remaining_balance}"
+                return True, f"成功还款 {amount}，剩余欠款: {loan.outstanding_balance}"
                 
         except Exception as e:
             await self.uow.rollback()
@@ -694,7 +704,7 @@ class BankService:
         except Exception:
             return None
     
-    def get_account_overview(self, user_id: str) -> Dict:
+    async def get_account_overview(self, user_id: str) -> Dict:
         """获取账户概览
         
         Args:
@@ -704,38 +714,52 @@ class BankService:
             账户概览信息
         """
         try:
-            # 获取银行卡
-            bank_cards = self.get_user_bank_cards(user_id)
+            async with self.uow:
+                # 获取银行卡
+                print("Getting bank cards...")
+                bank_cards = self.get_user_bank_cards(user_id)
+                print(f"Found {len(bank_cards)} bank cards.")
+                
+                # 获取账户
+                print("Getting accounts...")
+                accounts = self.get_user_accounts(user_id)
+                print(f"Found {len(accounts)} accounts.")
+                
+                # 获取贷款
+                print("Getting loans...")
+                loans = self.get_user_loans(user_id, 'approved')
+                print(f"Found {len(loans)} loans.")
+                
+                # 计算总资产
+                print("Calculating total assets...")
+                total_assets = sum(account.balance or 0 for account in accounts)
+                print(f"Total assets: {total_assets}")
+                
+                # 计算总负债
+                print("Calculating total debt...")
+                total_debt = sum(loan.outstanding_balance or 0 for loan in loans)
+                print(f"Total debt: {total_debt}")
+                
+                # 获取信用档案
+                print("Getting credit profile...")
+                credit_profile = CreditProfile.get_or_create_profile(self.uow, user_id)
+                print("Credit profile obtained.")
+                
+                return {
+                    'user_id': user_id,
+                    'bank_cards': [card.get_display_info() for card in bank_cards],
+                    'accounts': [account.get_account_summary() for account in accounts],
+                    'loans': [loan.get_loan_summary() for loan in loans],
+                    'total_assets': float(total_assets),
+                    'total_debt': float(total_debt),
+                    'net_worth': float(total_assets - total_debt),
+                    'credit_score': credit_profile.credit_score if credit_profile else 0,
+                    'account_count': len(accounts),
+                    'loan_count': len(loans)
+                }
             
-            # 获取账户
-            accounts = self.get_user_accounts(user_id)
-            
-            # 获取贷款
-            loans = self.get_user_loans(user_id, 'approved')
-            
-            # 计算总资产
-            total_assets = sum(account.balance for account in accounts)
-            
-            # 计算总负债
-            total_debt = sum(loan.remaining_balance for loan in loans)
-            
-            # 获取信用档案
-            credit_profile = CreditProfile.get_or_create_profile(self.uow, user_id)
-            
-            return {
-                'user_id': user_id,
-                'bank_cards': [card.get_display_info() for card in bank_cards],
-                'accounts': [account.get_account_summary() for account in accounts],
-                'loans': [loan.get_loan_summary() for loan in loans],
-                'total_assets': float(total_assets),
-                'total_debt': float(total_debt),
-                'net_worth': float(total_assets - total_debt),
-                'credit_score': credit_profile.credit_score if credit_profile else 0,
-                'account_count': len(accounts),
-                'loan_count': len(loans)
-            }
-            
-        except Exception:
+        except Exception as e:
+            print(f"Error in get_account_overview: {e}")
             return {
                 'user_id': user_id,
                 'error': '获取账户概览失败'

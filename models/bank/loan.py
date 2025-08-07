@@ -1,11 +1,11 @@
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, Text, Numeric, Integer
+from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, Text, Numeric, Integer, select
 from sqlalchemy.orm import relationship
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Optional, List
 from enum import Enum
 
-from dal.database import Base
+from models.base import BaseModel
 
 
 class LoanStatus(Enum):
@@ -28,7 +28,7 @@ class LoanType(Enum):
     CREDIT_LINE = "credit_line"  # 信用额度
 
 
-class Loan(Base):
+class Loan(BaseModel):
     """贷款模型"""
     __tablename__ = 'loans'
     
@@ -36,7 +36,7 @@ class Loan(Base):
     loan_id = Column(String(36), primary_key=True)
     user_id = Column(String(36), ForeignKey('users.user_id'), nullable=False)
     bank_code = Column(String(10), nullable=False)  # 放贷银行
-    currency_id = Column(String(36), ForeignKey('currencies.currency_id'), nullable=False)
+    currency_id = Column(Integer, ForeignKey('currencies.id'), nullable=False)
     
     # 贷款信息
     loan_number = Column(String(20), unique=True, nullable=False)
@@ -347,11 +347,11 @@ class Loan(Base):
         }
     
     @classmethod
-    def get_user_loans(cls, uow, user_id: str, status: str = None) -> List['Loan']:
+    async def get_user_loans(cls, session, user_id: str, status: str = None) -> List['Loan']:
         """获取用户贷款列表
         
         Args:
-            uow: 工作单元
+            session: 数据库会话
             user_id: 用户ID
             status: 贷款状态过滤
             
@@ -359,12 +359,13 @@ class Loan(Base):
             贷款列表
         """
         try:
-            query = uow.query(cls).filter_by(user_id=user_id)
+            stmt = select(cls).filter_by(user_id=user_id)
             
             if status:
-                query = query.filter_by(status=status)
+                stmt = stmt.filter_by(status=status)
             
-            return query.order_by(cls.created_at.desc()).all()
+            result = await session.execute(stmt.order_by(cls.created_at.desc()))
+            return result.scalars().all()
         except Exception:
             return []
     
@@ -372,7 +373,7 @@ class Loan(Base):
         return f"<Loan(loan_id='{self.loan_id}', number='{self.loan_number}', amount={self.loan_amount}, status='{self.status}')>"
 
 
-class LoanPayment(Base):
+class LoanPayment(BaseModel):
     """贷款还款记录模型"""
     __tablename__ = 'loan_payments'
     

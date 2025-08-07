@@ -15,7 +15,7 @@ class NewsCommand(AppCommand):
     
     @property
     def aliases(self) -> list[str]:
-        return ["headlines", "info", "updates"]
+        return ["headlines", "updates"]
     
     def __init__(self, news_service: NewsService):
         super().__init__()

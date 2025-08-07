@@ -13,6 +13,7 @@ from typing import Optional, List, Dict, Any, Set
 from datetime import datetime, timedelta
 from dataclasses import dataclass
 from enum import Enum
+from sqlalchemy import select
 from dal.unit_of_work import AbstractUnitOfWork
 from models.auth.user import User
 from models.auth.role import Role
@@ -114,7 +115,8 @@ class AuthService:
             
             async with self.uow:
                 # 检查用户名是否已存在
-                existing_user = self.uow.query(User).filter_by(username=username).first()
+                result = await self.uow.session.execute(select(User).filter_by(username=username))
+                existing_user = result.scalars().first()
                 
                 if existing_user:
                     return False, "用户名已存在", None
@@ -138,7 +140,7 @@ class AuthService:
                 # 分配默认角色
                 await self._assign_default_role(user)
                 
-                self.uow.commit()
+                await self.uow.commit()
                 
                 self._stats['users_created'] += 1
                 self._logger.info(f"新用户注册成功: {username} (ID: {user_id})")
@@ -168,7 +170,8 @@ class AuthService:
         try:
             async with self.uow:
                 # 查找用户
-                user = self.uow.query(User).filter_by(username=username).first()
+                result = await self.uow.session.execute(select(User).filter_by(username=username))
+                user = result.scalars().first()
                 
                 if not user:
                     await self._record_login_attempt(None, ip_address, False, "user_not_found")
@@ -196,7 +199,7 @@ class AuthService:
                 
                 # 认证成功
                 user.last_login = datetime.now()
-                self.uow.commit()
+                await self.uow.commit()
                 
                 # 清除失败尝试记录
                 if user.user_id in self._failed_attempts:

@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from dal.database import get_session
 from models.stock.stock import Stock
 from models.stock.stock_price import StockPrice
-from models.stock.portfolio import Portfolio
+from models.stock.portfolio import Portfolio, PortfolioItem
 from models.finance.account import Account
 from models.auth.user import User
 from core.event_bus import EventBus
@@ -145,12 +145,12 @@ class StockService:
         with get_session() as session:
             for stock_data in stock_definitions['stocks']:
                 # 检查股票是否已存在
-                existing_stock = session.query(Stock).filter_by(ticker=stock_data['ticker']).first()
+                existing_stock = session.query(Stock).filter_by(symbol=stock_data['ticker']).first()
                 if existing_stock:
                     continue
                 
                 stock = Stock(
-                    ticker=stock_data['ticker'],
+                    symbol=stock_data['ticker'],
                     name=stock_data['name'],
                     sector=stock_data['sector'],
                     ipo_price=Decimal(str(stock_data['ipo_price'])),
@@ -171,7 +171,7 @@ class StockService:
     def get_stock_by_ticker(self, ticker: str) -> Optional[Stock]:
         """根据代码获取股票"""
         with get_session() as session:
-            return session.query(Stock).filter_by(ticker=ticker).first()
+            return session.query(Stock).filter_by(symbol=ticker).first()
     
     def get_stock_price_history(self, ticker: str, days: int = 30) -> List[StockPrice]:
         """获取股票价格历史"""
@@ -209,26 +209,33 @@ class StockService:
             # 扣除费用
             account.balance -= total_cost
             
-            # 更新或创建投资组合记录
-            portfolio = session.query(Portfolio).filter_by(
-                user_id=user_id, 
+            # 获取或创建投资组合
+            portfolio = session.query(Portfolio).filter_by(user_id=user_id).first()
+            if not portfolio:
+                portfolio = Portfolio(user_id=user_id, name=f"User {user_id}'s Portfolio")
+                session.add(portfolio)
+                session.flush()
+
+            # 更新或创建投资组合项目
+            portfolio_item = session.query(PortfolioItem).filter_by(
+                portfolio_id=portfolio.id, 
                 stock_id=stock.id
             ).first()
             
-            if portfolio:
+            if portfolio_item:
                 # 计算新的平均成本
-                total_shares = portfolio.quantity + quantity
-                total_value = (portfolio.average_cost * portfolio.quantity) + total_cost
-                portfolio.average_cost = total_value / total_shares
-                portfolio.quantity = total_shares
+                total_shares = portfolio_item.quantity + quantity
+                total_value = (portfolio_item.average_cost * portfolio_item.quantity) + total_cost
+                portfolio_item.average_cost = total_value / total_shares
+                portfolio_item.quantity = total_shares
             else:
-                portfolio = Portfolio(
-                    user_id=user_id,
+                portfolio_item = PortfolioItem(
+                    portfolio_id=portfolio.id,
                     stock_id=stock.id,
                     quantity=quantity,
                     average_cost=stock.current_price
                 )
-                session.add(portfolio)
+                session.add(portfolio_item)
             
             session.commit()
             
@@ -257,13 +264,17 @@ class StockService:
         
         with get_session() as session:
             # 检查持仓
-            portfolio = session.query(Portfolio).filter_by(
-                user_id=user_id,
+            portfolio = session.query(Portfolio).filter_by(user_id=user_id).first()
+            if not portfolio:
+                return {'success': False, 'message': '用户没有投资组合'}
+
+            portfolio_item = session.query(PortfolioItem).filter_by(
+                portfolio_id=portfolio.id,
                 stock_id=stock.id
             ).first()
             
-            if not portfolio or portfolio.quantity < quantity:
-                return {'success': False, 'message': f'持仓不足，当前持有 {portfolio.quantity if portfolio else 0} 股'}
+            if not portfolio_item or portfolio_item.quantity < quantity:
+                return {'success': False, 'message': f'持仓不足，当前持有 {portfolio_item.quantity if portfolio_item else 0} 股'}
             
             # 计算收益
             total_revenue = stock.current_price * quantity
@@ -273,9 +284,9 @@ class StockService:
             account.balance += total_revenue
             
             # 更新投资组合
-            portfolio.quantity -= quantity
-            if portfolio.quantity == 0:
-                session.delete(portfolio)
+            portfolio_item.quantity -= quantity
+            if portfolio_item.quantity == 0:
+                session.delete(portfolio_item)
             
             session.commit()
             
@@ -296,22 +307,26 @@ class StockService:
     def get_user_portfolio(self, user_id: int) -> List[Dict[str, Any]]:
         """获取用户投资组合"""
         with get_session() as session:
-            portfolios = session.query(Portfolio).filter_by(user_id=user_id).all()
+            portfolio = session.query(Portfolio).filter_by(user_id=user_id).first()
+            if not portfolio:
+                return []
+
+            portfolio_items = session.query(PortfolioItem).filter_by(portfolio_id=portfolio.id).all()
             
             result = []
-            for portfolio in portfolios:
-                stock = session.query(Stock).filter_by(id=portfolio.stock_id).first()
+            for item in portfolio_items:
+                stock = session.query(Stock).filter_by(id=item.stock_id).first()
                 if stock:
-                    current_value = stock.current_price * portfolio.quantity
-                    cost_value = portfolio.average_cost * portfolio.quantity
+                    current_value = stock.current_price * item.quantity
+                    cost_value = item.average_cost * item.quantity
                     profit_loss = current_value - cost_value
                     profit_loss_pct = (profit_loss / cost_value) * 100 if cost_value > 0 else 0
                     
                     result.append({
-                        'ticker': stock.ticker,
+                        'ticker': stock.symbol,
                         'name': stock.name,
-                        'quantity': portfolio.quantity,
-                        'average_cost': float(portfolio.average_cost),
+                        'quantity': item.quantity,
+                        'average_cost': float(item.average_cost),
                         'current_price': float(stock.current_price),
                         'current_value': float(current_value),
                         'cost_value': float(cost_value),

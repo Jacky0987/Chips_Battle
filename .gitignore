@@ -1,0 +1,14 @@
+# Python artifacts
+*.pkl
+**/*__pycache__*/
+**/*.pyc
+
+
+# Vercel deployment folder
+/.vercel
+
+# VSCode editor settings
+/.vscode
+
+# macOS specific files
+.DS_Store

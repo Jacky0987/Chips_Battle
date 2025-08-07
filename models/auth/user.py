@@ -10,6 +10,7 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 from typing import Optional, Dict, Any
 from models.base import BaseModel
+from models.bank.bank_card import BankCard
 
 
 class User(BaseModel):
@@ -57,6 +58,10 @@ class User(BaseModel):
     roles = relationship('Role', secondary='user_roles', back_populates='users')
     accounts = relationship('Account', back_populates='user')
     app_ownerships = relationship('UserAppOwnership', back_populates='user')
+    bank_accounts = relationship('BankAccount', back_populates='user')
+    bank_cards = relationship('BankCard', back_populates='user')
+    loans = relationship('Loan', back_populates='user')
+    credit_profile = relationship('CreditProfile', back_populates='user', uselist=False)
     # wallets = relationship('Wallet', back_populates='user')
     # achievements = relationship('Achievement', secondary='user_achievements', back_populates='users')
     # news_articles = relationship('NewsArticle', back_populates='author')

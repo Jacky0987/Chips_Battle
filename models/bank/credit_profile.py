@@ -1,11 +1,12 @@
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, Text, Numeric, Integer, JSON
+from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, Text, Numeric, Integer, JSON, select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import relationship
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Dict, List, Optional
 from enum import Enum
 
-from dal.database import Base
+from models.base import BaseModel
 
 
 class CreditRating(Enum):
@@ -18,7 +19,7 @@ class CreditRating(Enum):
     VERY_POOR = "very_poor"  # 很差 (<550)
 
 
-class CreditProfile(Base):
+class CreditProfile(BaseModel):
     """信用档案模型"""
     __tablename__ = 'credit_profiles'
     
@@ -100,6 +101,45 @@ class CreditProfile(Base):
         
         self.profile_id = str(uuid.uuid4())
         self.user_id = user_id
+        
+        # Initialize fields with defaults
+        self.credit_score = 600
+        self.credit_rating = CreditRating.FAIR.value
+        self.credit_history_length = 0
+        self.oldest_account_date = None
+        self.total_accounts = 0
+        self.open_accounts = 0
+        self.closed_accounts = 0
+        self.total_loans = 0
+        self.active_loans = 0
+        self.completed_loans = 0
+        self.defaulted_loans = 0
+        self.total_debt = Decimal('0')
+        self.available_credit = Decimal('0')
+        self.credit_utilization = Decimal('0')
+        self.on_time_payments = 0
+        self.late_payments = 0
+        self.missed_payments = 0
+        self.hard_inquiries = 0
+        self.soft_inquiries = 0
+        self.last_inquiry_date = None
+        self.bankruptcies = 0
+        self.foreclosures = 0
+        self.collections = 0
+        self.annual_income = None
+        self.employment_length = None
+        self.debt_to_income_ratio = None
+        self.total_assets = Decimal('0')
+        self.liquid_assets = Decimal('0')
+        self.payment_history_score = 0
+        self.credit_utilization_score = 0
+        self.credit_history_score = 0
+        self.credit_mix_score = 0
+        self.new_credit_score = 0
+        self.risk_factors = None
+        self.improvement_suggestions = None
+        self.notes = None
+
         self.next_review_date = datetime.utcnow() + timedelta(days=30)
         
         # 应用其他参数
@@ -508,26 +548,31 @@ class CreditProfile(Base):
             return "高风险"
     
     @classmethod
-    def get_or_create_profile(cls, uow, user_id: str) -> 'CreditProfile':
+    async def get_or_create_profile(cls, session: AsyncSession, user_id: str) -> 'CreditProfile':
         """获取或创建信用档案
         
         Args:
-            uow: 工作单元
+            session: 数据库会话
             user_id: 用户ID
             
         Returns:
             信用档案
         """
         try:
-            profile = uow.query(cls).filter_by(user_id=user_id).first()
+            stmt = select(cls).where(cls.user_id == user_id)
+            result = await session.execute(stmt)
+            profile = result.scalars().first()
             
             if not profile:
                 profile = cls(user_id=user_id)
-                uow.add(profile)
+                session.add(profile)
             
             return profile
-        except Exception:
-            return cls(user_id=user_id)
+        except Exception as e:
+            print(f"Error in get_or_create_profile: {e}")
+            profile = cls(user_id=user_id)
+            session.add(profile)
+            return profile
     
     def __repr__(self):
         return f"<CreditProfile(profile_id='{self.profile_id}', score={self.credit_score}, rating='{self.credit_rating}')>"

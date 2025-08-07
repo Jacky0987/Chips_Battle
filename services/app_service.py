@@ -116,10 +116,12 @@ class AppService:
         total_apps = len(available_apps)
         owned_count = len(owned_apps)
         free_apps = [app for app in available_apps if app.get('price', 0) == 0]
+        ownership_rate = (owned_count / total_apps) * 100 if total_apps > 0 else 0.0
         
         return {
             'total_apps': total_apps,
             'owned_apps': owned_count,
             'free_apps': len(free_apps),
-            'owned_app_names': owned_apps
+            'owned_app_names': owned_apps,
+            'ownership_rate': ownership_rate
         }

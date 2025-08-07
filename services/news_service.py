@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from dal.database import get_session
 from models.news.news import News
 from models.stock.stock import Stock
-from core.event_bus import EventBus
+from core.event_bus import EventBus, TimeTickEvent
 from services.time_service import TimeService
 import json
 import os
@@ -17,10 +17,14 @@ class NewsService:
         self.event_bus = event_bus
         self.time_service = time_service
         self._templates_cache = None
-        
-        # 订阅时间事件
-        self.event_bus.subscribe('time_tick', self._on_time_tick)
-    
+        self.event_bus.subscribe(TimeTickEvent, self.on_time_tick)
+
+    def on_time_tick(self, event: TimeTickEvent):
+        """处理时间流逝事件，随机生成新闻"""
+        # 每小时有20%概率生成新闻
+        if random.random() < 0.2:
+            self._generate_random_news()
+
     def _load_news_templates(self) -> Dict[str, Any]:
         """加载新闻模板文件"""
         if self._templates_cache is None:
@@ -28,12 +32,6 @@ class NewsService:
             with open(templates_file, 'r', encoding='utf-8') as f:
                 self._templates_cache = json.load(f)
         return self._templates_cache
-    
-    def _on_time_tick(self, event_data: Dict[str, Any]):
-        """处理时间滴答事件，可能生成新闻"""
-        # 每小时有20%概率生成新闻
-        if random.random() < 0.2:
-            self._generate_random_news()
     
     def _generate_random_news(self) -> Optional[News]:
         """生成随机新闻"""
@@ -47,7 +45,7 @@ class NewsService:
         template_data = templates['templates'][news_type]
         
         # 随机选择模板
-        template = random.choice(template_data['templates'])
+        template = random.choice(template_data)
         
         # 生成新闻内容
         title = self._fill_template(template['title'], news_type)
@@ -58,8 +56,8 @@ class NewsService:
             title=title,
             content=content,
             category=news_type,
-            impact_type=template_data.get('impact_type', 'neutral'),
-            impact_strength=template_data.get('impact_strength', 0.0)
+            impact_type=template.get('impact_type', 'neutral'),
+            impact_strength=template.get('impact_strength', 0.0)
         )
         
         return news

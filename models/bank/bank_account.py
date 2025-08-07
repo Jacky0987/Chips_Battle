@@ -4,10 +4,10 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
-from dal.database import Base
+from models.base import BaseModel
 
 
-class BankAccount(Base):
+class BankAccount(BaseModel):
     """银行账户模型"""
     __tablename__ = 'bank_accounts'
     
@@ -15,7 +15,7 @@ class BankAccount(Base):
     account_id = Column(String(36), primary_key=True)
     user_id = Column(String(36), ForeignKey('users.user_id'), nullable=False)
     card_id = Column(String(36), ForeignKey('bank_cards.card_id'), nullable=False)
-    currency_id = Column(String(36), ForeignKey('currencies.currency_id'), nullable=False)
+    currency_id = Column(Integer, ForeignKey('currencies.id'), nullable=False)
     
     # 账户信息
     account_number = Column(String(20), unique=True, nullable=False)

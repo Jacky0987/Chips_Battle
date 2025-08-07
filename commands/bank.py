@@ -105,7 +105,7 @@ class BankCommands:
     async def _show_bank_overview(self, user_id: str) -> str:
         """显示银行概览"""
         try:
-            overview = self.bank_service.get_account_overview(user_id)
+            overview = await self.bank_service.get_account_overview(user_id)
             
             if 'error' in overview:
                 return f"❌ 获取银行信息失败: {overview['error']}"
@@ -189,9 +189,9 @@ class BankCommands:
         result.append("🏦 可申请的银行:")
         result.append("")
         
-        for code, info in banks.items():
-            result.append(f"🏛️ {code} - {info['name']}")
-            result.append(f"   业务特色: {info['specialty']}")
+        for bank_info in banks:
+            result.append(f"🏛️ {bank_info['code']} - {bank_info['name']}")
+            result.append(f"   业务特色: {bank_info['focus']}")
             result.append("")
         
         result.append("💡 使用方法: bank apply_card <银行代码>")

@@ -10,6 +10,7 @@ import logging
 from typing import Optional, Type, List, Any, Dict
 from contextlib import contextmanager, asynccontextmanager
 from abc import ABC, abstractmethod
+from sqlalchemy import select, update, delete
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from dal.database import Base
@@ -29,12 +30,12 @@ class AbstractUnitOfWork(ABC):
         pass
     
     @abstractmethod
-    def commit(self):
+    async def commit(self):
         """提交事务"""
         pass
     
     @abstractmethod
-    def rollback(self):
+    async def rollback(self):
         """回滚事务"""
         pass
     
@@ -49,13 +50,8 @@ class AbstractUnitOfWork(ABC):
         pass
     
     @abstractmethod
-    def get(self, entity_type: Type[Base], entity_id: Any) -> Optional[Base]:
+    async def get(self, entity_type: Type[Base], entity_id: Any) -> Optional[Base]:
         """根据ID获取实体"""
-        pass
-    
-    @abstractmethod
-    def query(self, entity_type: Type[Base]):
-        """查询实体"""
         pass
 
 
@@ -82,64 +78,48 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
         try:
             if exc_type is not None:
                 # 发生异常，回滚事务
-                self.rollback()
+                await self.rollback()
                 self._logger.error(f"异步事务回滚，异常: {exc_val}")
             elif not self._is_committed and not self._is_rolled_back:
                 # 没有显式提交或回滚，自动提交
-                self.commit()
+                await self.commit()
         finally:
             if self.session:
-                self.session.close()
+                await self.session.close()
                 self.session = None
                 self._logger.debug("异步数据库会话已关闭")
     
     def __enter__(self):
         """进入上下文管理器"""
-        self.session = self.sessionmaker()
-        self._is_committed = False
-        self._is_rolled_back = False
-        self._logger.debug("开始数据库事务")
-        return self
+        raise NotImplementedError("Use async with for async unit of work")
     
     def __exit__(self, exc_type, exc_val, exc_tb):
         """退出上下文管理器"""
-        try:
-            if exc_type is not None:
-                # 发生异常，回滚事务
-                self.rollback()
-                self._logger.error(f"事务回滚，异常: {exc_val}")
-            elif not self._is_committed and not self._is_rolled_back:
-                # 没有显式提交或回滚，自动提交
-                self.commit()
-        finally:
-            if self.session:
-                self.session.close()
-                self.session = None
-                self._logger.debug("数据库会话已关闭")
+        raise NotImplementedError("Use async with for async unit of work")
     
-    def commit(self):
+    async def commit(self):
         """提交事务"""
         if self._is_committed or self._is_rolled_back:
             self._logger.warning("尝试重复提交或在回滚后提交")
             return
         
         try:
-            self.session.commit()
+            await self.session.commit()
             self._is_committed = True
             self._logger.debug("事务提交成功")
         except SQLAlchemyError as e:
             self._logger.error(f"事务提交失败: {e}")
-            self.rollback()
+            await self.rollback()
             raise
     
-    def rollback(self):
+    async def rollback(self):
         """回滚事务"""
         if self._is_rolled_back:
             self._logger.warning("尝试重复回滚")
             return
         
         try:
-            self.session.rollback()
+            await self.session.rollback()
             self._is_rolled_back = True
             self._logger.debug("事务回滚成功")
         except SQLAlchemyError as e:
@@ -170,7 +150,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
         self.session.delete(entity)
         self._logger.debug(f"删除实体: {type(entity).__name__}")
     
-    def get(self, entity_type: Type[Base], entity_id: Any) -> Optional[Base]:
+    async def get(self, entity_type: Type[Base], entity_id: Any) -> Optional[Base]:
         """根据ID获取实体
         
         Args:
@@ -183,25 +163,11 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
         if not self.session:
             raise RuntimeError("会话未初始化")
         
-        entity = self.session.get(entity_type, entity_id)
+        entity = await self.session.get(entity_type, entity_id)
         self._logger.debug(f"获取实体: {entity_type.__name__}({entity_id}) -> {'Found' if entity else 'Not Found'}")
         return entity
     
-    def query(self, entity_type: Type[Base]):
-        """创建查询对象
-        
-        Args:
-            entity_type: 实体类型
-            
-        Returns:
-            SQLAlchemy查询对象
-        """
-        if not self.session:
-            raise RuntimeError("会话未初始化")
-        
-        return self.session.query(entity_type)
-    
-    def execute_sql(self, sql: str, params: Dict[str, Any] = None) -> Any:
+    async def execute_sql(self, sql: str, params: Dict[str, Any] = None) -> Any:
         """执行原始SQL
         
         Args:
@@ -215,10 +181,11 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
             raise RuntimeError("会话未初始化")
         
         try:
+            from sqlalchemy import text
             if params:
-                result = self.session.execute(sql, params)
+                result = await self.session.execute(text(sql), params)
             else:
-                result = self.session.execute(sql)
+                result = await self.session.execute(text(sql))
             
             self._logger.debug(f"执行SQL: {sql[:100]}...")
             return result
@@ -226,19 +193,19 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
             self._logger.error(f"SQL执行失败: {e}")
             raise
     
-    def flush(self):
+    async def flush(self):
         """刷新会话（将更改发送到数据库但不提交）"""
         if not self.session:
             raise RuntimeError("会话未初始化")
         
         try:
-            self.session.flush()
+            await self.session.flush()
             self._logger.debug("会话刷新成功")
         except SQLAlchemyError as e:
             self._logger.error(f"会话刷新失败: {e}")
             raise
     
-    def refresh(self, entity: Base):
+    async def refresh(self, entity: Base):
         """刷新实体（从数据库重新加载）
         
         Args:
@@ -248,13 +215,13 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
             raise RuntimeError("会话未初始化")
         
         try:
-            self.session.refresh(entity)
+            await self.session.refresh(entity)
             self._logger.debug(f"刷新实体: {type(entity).__name__}")
         except SQLAlchemyError as e:
             self._logger.error(f"实体刷新失败: {e}")
             raise
     
-    def merge(self, entity: Base) -> Base:
+    async def merge(self, entity: Base) -> Base:
         """合并实体（处理分离状态的实体）
         
         Args:
@@ -267,7 +234,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
             raise RuntimeError("会话未初始化")
         
         try:
-            merged_entity = self.session.merge(entity)
+            merged_entity = await self.session.merge(entity)
             self._logger.debug(f"合并实体: {type(entity).__name__}")
             return merged_entity
         except SQLAlchemyError as e:
@@ -290,7 +257,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
             self._logger.error(f"批量插入失败: {e}")
             raise
     
-    def bulk_update(self, entity_type: Type[Base], values: Dict[str, Any], 
+    async def bulk_update(self, entity_type: Type[Base], values: Dict[str, Any], 
                    where_clause=None) -> int:
         """批量更新实体
         
@@ -306,18 +273,18 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
             raise RuntimeError("会话未初始化")
         
         try:
-            query = self.session.query(entity_type)
+            stmt = update(entity_type).values(values)
             if where_clause is not None:
-                query = query.filter(where_clause)
+                stmt = stmt.where(where_clause)
             
-            count = query.update(values)
-            self._logger.debug(f"批量更新 {count} 个 {entity_type.__name__} 实体")
-            return count
+            result = await self.session.execute(stmt)
+            self._logger.debug(f"批量更新 {result.rowcount} 个 {entity_type.__name__} 实体")
+            return result.rowcount
         except SQLAlchemyError as e:
             self._logger.error(f"批量更新失败: {e}")
             raise
     
-    def bulk_delete(self, entity_type: Type[Base], where_clause=None) -> int:
+    async def bulk_delete(self, entity_type: Type[Base], where_clause=None) -> int:
         """批量删除实体
         
         Args:
@@ -331,13 +298,13 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
             raise RuntimeError("会话未初始化")
         
         try:
-            query = self.session.query(entity_type)
+            stmt = delete(entity_type)
             if where_clause is not None:
-                query = query.filter(where_clause)
+                stmt = stmt.where(where_clause)
             
-            count = query.delete()
-            self._logger.debug(f"批量删除 {count} 个 {entity_type.__name__} 实体")
-            return count
+            result = await self.session.execute(stmt)
+            self._logger.debug(f"批量删除 {result.rowcount} 个 {entity_type.__name__} 实体")
+            return result.rowcount
         except SQLAlchemyError as e:
             self._logger.error(f"批量删除失败: {e}")
             raise
@@ -372,9 +339,7 @@ def unit_of_work(sessionmaker) -> SqlAlchemyUnitOfWork:
     Yields:
         工作单元实例
     """
-    uow = SqlAlchemyUnitOfWork(sessionmaker)
-    with uow:
-        yield uow
+    raise NotImplementedError("Use async_unit_of_work for async operations")
 
 
 @asynccontextmanager
@@ -388,14 +353,8 @@ async def async_unit_of_work(sessionmaker) -> SqlAlchemyUnitOfWork:
         工作单元实例
     """
     uow = SqlAlchemyUnitOfWork(sessionmaker)
-    try:
-        uow.__enter__()
+    async with uow:
         yield uow
-    except Exception as e:
-        uow.__exit__(type(e), e, e.__traceback__)
-        raise
-    else:
-        uow.__exit__(None, None, None)
 
 
 # 为了向后兼容，提供 UnitOfWork 别名

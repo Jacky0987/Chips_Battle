@@ -24,6 +24,8 @@ class Stock(Base):
     description = Column(Text, comment='公司描述')
     sector = Column(String(50), comment='行业')
     market_cap = Column(Numeric(20, 2), comment='市值')
+    ipo_price = Column(Numeric(10, 2), comment='IPO价格')
+    volatility = Column(Numeric(10, 4), comment='波动率')
     current_price = Column(Numeric(10, 2), comment='当前价格')
     opening_price = Column(Numeric(10, 2), comment='开盘价')
     closing_price = Column(Numeric(10, 2), comment='收盘价')

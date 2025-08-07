@@ -7,9 +7,9 @@
 
 import logging
 from typing import Optional
-from sqlalchemy import create_engine, MetaData, event
+from sqlalchemy import MetaData, event
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import StaticPool
 from config.settings import Settings
 
@@ -34,7 +34,7 @@ class DatabaseEngine:
         """初始化数据库引擎"""
         try:
             # 创建数据库引擎
-            self.engine = create_engine(
+            self.engine = create_async_engine(
                 self.settings.get_database_url(),
                 echo=self.settings.DATABASE_ECHO,
                 # SQLite特定配置
@@ -53,11 +53,12 @@ class DatabaseEngine:
                 self._configure_sqlite()
             
             # 创建会话工厂
-            self.sessionmaker = sessionmaker(
+            self.sessionmaker = async_sessionmaker(
                 bind=self.engine,
                 autocommit=False,
                 autoflush=False,
-                expire_on_commit=False
+                expire_on_commit=False,
+                class_=AsyncSession
             )
             
             # 创建所有表
@@ -71,7 +72,7 @@ class DatabaseEngine:
     
     def _configure_sqlite(self):
         """配置SQLite特定设置"""
-        @event.listens_for(self.engine, "connect")
+        @event.listens_for(self.engine.sync_engine, "connect")
         def set_sqlite_pragma(dbapi_connection, connection_record):
             """设置SQLite编译指示"""
             cursor = dbapi_connection.cursor()
@@ -102,9 +103,9 @@ class DatabaseEngine:
             # 导入所有模型以确保它们被注册
             self._import_all_models()
             
-            # 创建所有表
-            Base.metadata.create_all(bind=self.engine)
-            
+            async with self.engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+
             self._logger.info("数据库表创建完成")
             
         except Exception as e:
@@ -133,7 +134,7 @@ class DatabaseEngine:
             self._logger.warning(f"导入模型类时出现警告: {e}")
             # 在开发阶段，某些模型可能还未创建，这是正常的
     
-    def get_session(self) -> Session:
+    def get_session(self) -> AsyncSession:
         """获取数据库会话"""
         if not self.sessionmaker:
             raise RuntimeError("数据库引擎未初始化")
@@ -142,10 +143,10 @@ class DatabaseEngine:
     async def close(self):
         """关闭数据库引擎"""
         if self.engine:
-            self.engine.dispose()
+            await self.engine.dispose()
             self._logger.info("数据库引擎已关闭")
     
-    def execute_raw_sql(self, sql: str, params: dict = None):
+    async def execute_raw_sql(self, sql: str, params: dict = None):
         """执行原始SQL语句
         
         Args:
@@ -155,20 +156,20 @@ class DatabaseEngine:
         Returns:
             执行结果
         """
-        with self.get_session() as session:
+        async with self.get_session() as session:
             try:
                 if params:
-                    result = session.execute(sql, params)
+                    result = await session.execute(sql, params)
                 else:
-                    result = session.execute(sql)
-                session.commit()
+                    result = await session.execute(sql)
+                await session.commit()
                 return result
             except Exception as e:
-                session.rollback()
+                await session.rollback()
                 self._logger.error(f"执行SQL失败: {e}")
                 raise
     
-    def get_table_info(self, table_name: str) -> dict:
+    async def get_table_info(self, table_name: str) -> dict:
         """获取表信息
         
         Args:
@@ -179,19 +180,21 @@ class DatabaseEngine:
         """
         try:
             from sqlalchemy import inspect
-            inspector = inspect(self.engine)
             
-            return {
-                'columns': inspector.get_columns(table_name),
-                'primary_keys': inspector.get_pk_constraint(table_name),
-                'foreign_keys': inspector.get_foreign_keys(table_name),
-                'indexes': inspector.get_indexes(table_name)
-            }
+            async with self.engine.connect() as conn:
+                inspector = inspect(await conn.get_raw_connection())
+            
+                return {
+                    'columns': inspector.get_columns(table_name),
+                    'primary_keys': inspector.get_pk_constraint(table_name),
+                    'foreign_keys': inspector.get_foreign_keys(table_name),
+                    'indexes': inspector.get_indexes(table_name)
+                }
         except Exception as e:
             self._logger.error(f"获取表信息失败: {e}")
             return {}
     
-    def get_database_stats(self) -> dict:
+    async def get_database_stats(self) -> dict:
         """获取数据库统计信息"""
         try:
             stats = {
@@ -200,17 +203,16 @@ class DatabaseEngine:
                 'checked_in': self.engine.pool.checkedin(),
                 'checked_out': self.engine.pool.checkedout(),
                 'overflow': self.engine.pool.overflow(),
-                'invalid': self.engine.pool.invalid()
             }
             
             # 如果是SQLite，获取额外信息
             if "sqlite" in str(self.engine.url):
-                with self.get_session() as session:
+                async with self.get_session() as session:
                     # 获取数据库大小
-                    result = session.execute("PRAGMA page_count")
+                    result = await session.execute("PRAGMA page_count")
                     page_count = result.scalar()
                     
-                    result = session.execute("PRAGMA page_size")
+                    result = await session.execute("PRAGMA page_size")
                     page_size = result.scalar()
                     
                     stats['database_size_bytes'] = page_count * page_size
@@ -237,7 +239,7 @@ def set_global_engine(engine: DatabaseEngine):
     _global_engine = engine
 
 
-def get_session() -> Session:
+def get_session() -> AsyncSession:
     """获取数据库会话
     
     Returns:

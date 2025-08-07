@@ -4,10 +4,10 @@ from datetime import datetime, timedelta
 import random
 import string
 
-from dal.database import Base
+from models.base import BaseModel
 
 
-class BankCard(Base):
+class BankCard(BaseModel):
     """银行卡模型"""
     __tablename__ = 'bank_cards'
     

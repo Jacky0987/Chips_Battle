@@ -48,7 +48,7 @@ class Settings:
         # 数据库配置
         self.DATABASE_URL = os.getenv(
             "DATABASE_URL", 
-            f"sqlite:///{self.DATABASE_DIR / 'chips_battle.db'}"
+            f"sqlite+aiosqlite:///{self.DATABASE_DIR / 'chips_battle.db'}"
         )
         self.DATABASE_ECHO = os.getenv("DATABASE_ECHO", "false").lower() == "true"
         

@@ -5,15 +5,14 @@
 定义所有数据模型的基类和通用功能。
 """
 
-from sqlalchemy.ext.declarative import declarative_base
+from dal.database import Base
 from sqlalchemy import Column, DateTime, String, Text, Boolean, Integer
 from datetime import datetime
 from typing import Dict, Any, Optional
 import json
 
 
-# 创建基础模型类
-Base = declarative_base()
+
 
 
 class BaseModel(Base):

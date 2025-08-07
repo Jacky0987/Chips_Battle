@@ -31,6 +31,7 @@ from services.command_dispatcher import CommandDispatcher
 from services.auth_service import AuthService, AuthResult
 from services.app_service import AppService
 from services.news_service import NewsService
+from services.currency_service import CurrencyService
 from commands.registry import CommandRegistry
 from rich.console import Console
 from rich.panel import Panel
@@ -50,6 +51,7 @@ class ChipsBattleGame:
         self.auth_service = None
         self.app_service = None
         self.news_service = None
+        self.currency_service = None
         self.command_dispatcher = None
         self.current_user = None
         self.running = True
@@ -74,9 +76,10 @@ class ChipsBattleGame:
             # 初始化服务
             self.console.print("[yellow]正在启动核心服务...[/yellow]")
             self.time_service = TimeService(self.event_bus)
+            self.currency_service = CurrencyService(self.uow, self.event_bus)
             self.auth_service = AuthService(self.uow, self.event_bus)
-            self.app_service = AppService(self.uow, self.event_bus)
-            self.news_service = NewsService(self.uow, self.event_bus)
+            self.app_service = AppService(self.event_bus, self.currency_service)
+            self.news_service = NewsService(self.event_bus, self.time_service)
             
             # 初始化命令系统
             self.console.print("[yellow]正在加载命令系统...[/yellow]")
