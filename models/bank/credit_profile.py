@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, Text, Numeric, Integer, JSON, select
-from sqlalchemy.ext.asyncio import AsyncSession
+
 from sqlalchemy.orm import relationship
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -7,6 +7,7 @@ from typing import Dict, List, Optional
 from enum import Enum
 
 from models.base import BaseModel
+from dal.unit_of_work import AbstractUnitOfWork
 
 
 class CreditRating(Enum):
@@ -548,31 +549,27 @@ class CreditProfile(BaseModel):
             return "高风险"
     
     @classmethod
-    async def get_or_create_profile(cls, session: AsyncSession, user_id: str) -> 'CreditProfile':
+    async def get_or_create_profile(cls, uow: AbstractUnitOfWork, user_id: str) -> 'CreditProfile':
         """获取或创建信用档案
         
         Args:
-            session: 数据库会话
+            uow: 工作单元
             user_id: 用户ID
             
         Returns:
-            信用档案
+            信用档案对象
         """
-        try:
-            stmt = select(cls).where(cls.user_id == user_id)
-            result = await session.execute(stmt)
-            profile = result.scalars().first()
-            
-            if not profile:
-                profile = cls(user_id=user_id)
-                session.add(profile)
-            
-            return profile
-        except Exception as e:
-            print(f"Error in get_or_create_profile: {e}")
+        stmt = select(cls).filter_by(user_id=user_id)
+        result = await uow.session.execute(stmt)
+        profile = result.scalars().first()
+        
+        if not profile:
             profile = cls(user_id=user_id)
-            session.add(profile)
-            return profile
+            uow.session.add(profile)
+            await uow.commit()
+            await uow.session.refresh(profile)
+            
+        return profile
     
     def __repr__(self):
         return f"<CreditProfile(profile_id='{self.profile_id}', score={self.credit_score}, rating='{self.credit_rating}')>"

@@ -5,6 +5,7 @@ from typing import Dict, List, Optional, Tuple
 from decimal import Decimal, ROUND_HALF_UP
 from datetime import datetime, timedelta
 from pathlib import Path
+from sqlalchemy import select, update
 
 from dal.unit_of_work import AbstractUnitOfWork
 from models.finance.currency import Currency
@@ -51,9 +52,9 @@ class CurrencyService:
             async with self.uow:
                 for currency_data in data['currencies']:
                     # 检查货币是否已存在
-                    existing = self.uow.query(Currency).filter_by(
-                        code=currency_data['code']
-                    ).first()
+                    stmt = select(Currency).filter_by(code=currency_data['code'])
+                    result = await self.uow.session.execute(stmt)
+                    existing = result.scalar_one_or_none()
                     
                     if not existing:
                         currency = Currency(
@@ -69,7 +70,7 @@ class CurrencyService:
                         self.uow.add(currency)
                         self._logger.info(f"添加货币: {currency.code} - {currency.name}")
                 
-                self.uow.commit()
+                await self.uow.commit()
                 self._logger.info("货币数据初始化完成")
                 return True
                 
@@ -77,38 +78,40 @@ class CurrencyService:
             self._logger.error(f"初始化货币数据失败: {e}")
             return False
     
-    def get_currency(self, code: str) -> Optional[Currency]:
+    async def get_currency(self, code: str) -> Optional[Currency]:
         """根据代码获取货币"""
         try:
-            with self.uow:
-                return self.uow.query(Currency).filter_by(
-                    code=code.upper(), is_active=True
-                ).first()
+            async with self.uow:
+                stmt = select(Currency).filter_by(code=code.upper(), is_active=True)
+                result = await self.uow.session.execute(stmt)
+                return result.scalar_one_or_none()
         except Exception as e:
             self._logger.error(f"获取货币失败 {code}: {e}")
             return None
     
-    def get_all_currencies(self) -> List[Currency]:
+    async def get_all_currencies(self) -> List[Currency]:
         """获取所有活跃货币"""
         try:
-            with self.uow:
-                return self.uow.query(Currency).filter_by(is_active=True).all()
+            async with self.uow:
+                stmt = select(Currency).filter_by(is_active=True)
+                result = await self.uow.session.execute(stmt)
+                return result.scalars().all()
         except Exception as e:
             self._logger.error(f"获取货币列表失败: {e}")
             return []
     
-    def get_base_currency(self) -> Optional[Currency]:
+    async def get_base_currency(self) -> Optional[Currency]:
         """获取基础货币 (JCY)"""
         try:
-            with self.uow:
-                return self.uow.query(Currency).filter_by(
-                    is_base_currency=True, is_active=True
-                ).first()
+            async with self.uow:
+                stmt = select(Currency).filter_by(is_base_currency=True, is_active=True)
+                result = await self.uow.session.execute(stmt)
+                return result.scalar_one_or_none()
         except Exception as e:
             self._logger.error(f"获取基础货币失败: {e}")
             return None
     
-    def convert_currency(self, amount: Decimal, from_code: str, to_code: str) -> Optional[Decimal]:
+    async def convert_currency(self, amount: Decimal, from_code: str, to_code: str) -> Optional[Decimal]:
         """货币兑换
         
         Args:
@@ -123,8 +126,8 @@ class CurrencyService:
             if from_code.upper() == to_code.upper():
                 return amount
             
-            from_currency = self.get_currency(from_code)
-            to_currency = self.get_currency(to_code)
+            from_currency = await self.get_currency(from_code)
+            to_currency = await self.get_currency(to_code)
             
             if not from_currency or not to_currency:
                 self._logger.error(f"货币不存在: {from_code} -> {to_code}")
@@ -146,7 +149,7 @@ class CurrencyService:
             self._logger.error(f"货币兑换失败 {from_code}->{to_code}: {e}")
             return None
     
-    def format_amount(self, amount: Decimal, currency_code: str) -> str:
+    async def format_amount(self, amount: Decimal, currency_code: str) -> str:
         """格式化金额显示
         
         Args:
@@ -156,7 +159,7 @@ class CurrencyService:
         Returns:
             格式化后的金额字符串
         """
-        currency = self.get_currency(currency_code)
+        currency = await self.get_currency(currency_code)
         if not currency:
             return f"{amount} {currency_code}"
         
@@ -164,12 +167,11 @@ class CurrencyService:
         if currency.decimal_places == 0:
             formatted_amount = f"{int(amount):,}"
         else:
-            format_str = f"{{:,.{currency.decimal_places}f}}"
-            formatted_amount = format_str.format(float(amount))
+            formatted_amount = f"{amount:,.{currency.decimal_places}f}"
         
         return f"{currency.symbol}{formatted_amount}"
     
-    def get_exchange_rate(self, from_code: str, to_code: str) -> Optional[Decimal]:
+    async def get_exchange_rate(self, from_code: str, to_code: str) -> Optional[Decimal]:
         """获取汇率
         
         Args:
@@ -182,8 +184,8 @@ class CurrencyService:
         if from_code.upper() == to_code.upper():
             return Decimal('1.0')
         
-        from_currency = self.get_currency(from_code)
-        to_currency = self.get_currency(to_code)
+        from_currency = await self.get_currency(from_code)
+        to_currency = await self.get_currency(to_code)
         
         if not from_currency or not to_currency:
             return None
@@ -203,11 +205,13 @@ class CurrencyService:
     async def _update_exchange_rates(self):
         """更新汇率 - 模拟市场波动"""
         try:
-            async with self.uow:
-                currencies = self.uow.query(Currency).filter(
+            async with self.uow as uow:
+                stmt = select(Currency).filter(
                     Currency.is_active == True,
                     Currency.is_base_currency == False
-                ).all()
+                )
+                result = await uow.session.execute(stmt)
+                currencies = result.scalars().all()
                 
                 for currency in currencies:
                     config = self.volatility_config.get(currency.code, {
@@ -228,33 +232,33 @@ class CurrencyService:
                     max_rate = currency.exchange_rate * Decimal('1.2')
                     new_rate = max(min_rate, min(max_rate, new_rate))
                     
-                    currency.exchange_rate = new_rate
-                    currency.updated_at = datetime.utcnow()
-                    
+                    # 更新汇率
+                    update_stmt = update(Currency).where(Currency.id == currency.id).values(exchange_rate=new_rate, updated_at=datetime.utcnow())
+                    await uow.session.execute(update_stmt)
+
                     self._logger.debug(
-                        f"汇率更新: {currency.code} {currency.exchange_rate:.6f} "
+                        f"汇率更新: {currency.code} {new_rate:.6f} "
                         f"(变化: {change_percent:.4f}%)"
                     )
                 
-                self.uow.commit()
+                await uow.commit()
                 self._logger.info("汇率更新完成")
                 
         except Exception as e:
             self._logger.error(f"更新汇率失败: {e}")
     
-    def get_currency_stats(self) -> Dict:
+    async def get_currency_stats(self) -> Dict:
         """获取货币统计信息"""
         try:
-            with self.uow:
-                currencies = self.get_all_currencies()
-                base_currency = self.get_base_currency()
-                
-                return {
-                    'total_currencies': len(currencies),
-                    'base_currency': base_currency.code if base_currency else None,
-                    'active_currencies': [c.code for c in currencies],
-                    'last_updated': datetime.utcnow().isoformat()
-                }
+            currencies = await self.get_all_currencies()
+            base_currency = await self.get_base_currency()
+            
+            return {
+                'total_currencies': len(currencies),
+                'base_currency': base_currency.code if base_currency else None,
+                'active_currencies': [c.code for c in currencies],
+                'last_updated': datetime.utcnow().isoformat()
+            }
         except Exception as e:
             self._logger.error(f"获取货币统计失败: {e}")
             return {}

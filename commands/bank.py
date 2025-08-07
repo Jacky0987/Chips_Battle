@@ -644,13 +644,13 @@ class BankCommands:
         """显示任务概览"""
         try:
             # 获取用户任务统计
-            my_tasks = self.task_service.get_user_task_history(user_id, limit=100)
+            my_tasks = await self.task_service.get_user_task_history(user_id, limit=100)
             
             completed_count = len([t for t in my_tasks if t['status'] == 'completed'])
             in_progress_count = len([t for t in my_tasks if t['status'] in ['accepted', 'in_progress']])
             
             # 获取可用任务数量
-            available_tasks = self.task_service.get_available_tasks_for_user(user_id, limit=100)
+            available_tasks = await self.task_service.get_available_tasks_for_user(user_id, limit=100)
             
             result = []
             result.append("🎯 银行任务中心:")
@@ -769,7 +769,7 @@ class BankCommands:
     async def _show_my_tasks(self, user_id: str) -> str:
         """显示我的任务"""
         try:
-            tasks = self.task_service.get_user_task_history(user_id, limit=20)
+            tasks = await self.task_service.get_user_task_history(user_id, limit=20)
             
             if not tasks:
                 return "🎯 您还没有接取任何任务"

@@ -81,7 +81,7 @@ class ChipsBattleGame:
             self.time_service = TimeService(self.event_bus)
             self.currency_service = CurrencyService(self.uow, self.event_bus)
             self.auth_service = AuthService(self.uow, self.event_bus)
-            self.app_service = AppService(self.event_bus, self.currency_service)
+            self.app_service = AppService(self.uow, self.event_bus, self.currency_service)
             self.news_service = NewsService(self.event_bus, self.time_service)
             
             # 初始化命令系统

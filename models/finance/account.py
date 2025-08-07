@@ -5,7 +5,7 @@
 定义用户的金融账户，包括余额、交易记录等。
 """
 
-from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime, Text, ForeignKey
+from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime, Text, ForeignKey, select
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from models.base import BaseModel, SoftDeleteMixin
@@ -106,31 +106,35 @@ class Account(BaseModel, SoftDeleteMixin):
         return False
     
     @classmethod
-    def get_user_accounts(cls, session, user_id: int):
+    async def get_user_accounts(cls, uow, user_id: int):
         """获取用户的所有账户
         
         Args:
-            session: 数据库会话
+            uow: 工作单元
             user_id: 用户ID
             
         Returns:
             账户列表
         """
-        return session.query(cls).filter_by(user_id=user_id, is_active=True).all()
+        stmt = select(cls).filter_by(user_id=user_id, is_active=True)
+        result = await uow.session.execute(stmt)
+        return result.scalars().all()
     
     @classmethod
-    def get_default_account(cls, session, user_id: int):
+    async def get_default_account(cls, uow, user_id: int):
         """获取用户的默认账户
         
         Args:
-            session: 数据库会话
+            uow: 工作单元
             user_id: 用户ID
             
         Returns:
             默认账户
         """
-        return session.query(cls).filter_by(
+        stmt = select(cls).filter_by(
             user_id=user_id, 
             is_default=True, 
             is_active=True
-        ).first()
+        )
+        result = await uow.session.execute(stmt)
+        return result.scalars().first()

@@ -108,35 +108,32 @@ class CreditService:
             return False, f"计算失败: {str(e)}", 0
     
     async def _update_payment_history(self, user_id: str, credit_profile: CreditProfile):
-        """更新还款历史
+        """更新支付历史
         
         Args:
             user_id: 用户ID
             credit_profile: 信用档案
         """
         try:
-            # 获取最近12个月的还款记录
-            twelve_months_ago = datetime.utcnow() - timedelta(days=365)
+            async with self.uow:
+                stmt = select(LoanPayment).join(Loan).where(Loan.user_id == user_id)
+                result = await self.uow.session.execute(stmt)
+                payments = result.scalars().all()
             
-            payments = self.uow.query(LoanPayment).join(Loan).filter(
-                Loan.user_id == user_id,
-                LoanPayment.payment_date >= twelve_months_ago
-            ).all()
-            
-            if payments:
-                total_payments = len(payments)
-                on_time_payments = sum(1 for p in payments if not p.is_late)
+                if payments:
+                    total_payments = len(payments)
+                    on_time_payments = sum(1 for p in payments if not p.is_late)
+                    
+                    payment_history = {
+                        'total_payments': total_payments,
+                        'on_time_payments': on_time_payments,
+                        'late_payments': total_payments - on_time_payments,
+                        'on_time_rate': on_time_payments / total_payments if total_payments > 0 else 1.0,
+                        'last_updated': datetime.utcnow().isoformat()
+                    }
+                    
+                    credit_profile.update_payment_history(payment_history)
                 
-                payment_history = {
-                    'total_payments': total_payments,
-                    'on_time_payments': on_time_payments,
-                    'late_payments': total_payments - on_time_payments,
-                    'on_time_rate': on_time_payments / total_payments if total_payments > 0 else 1.0,
-                    'last_updated': datetime.utcnow().isoformat()
-                }
-                
-                credit_profile.update_payment_history(payment_history)
-            
         except Exception:
             pass
     
@@ -148,35 +145,33 @@ class CreditService:
             credit_profile: 信用档案
         """
         try:
-            # 获取当前所有贷款
-            active_loans = self.uow.query(Loan).filter(
-                Loan.user_id == user_id,
-                Loan.status == 'approved',
-                Loan.remaining_balance > 0
-            ).all()
+            async with self.uow:
+                stmt = select(Loan).where(Loan.user_id == user_id)
+                result = await self.uow.session.execute(stmt)
+                loans = result.scalars().all()
+    
+                stmt = select(BankAccount).where(and_(BankAccount.user_id == user_id, BankAccount.is_active == True))
+                result = await self.uow.session.execute(stmt)
+                accounts = result.scalars().all()
             
-            total_debt = sum(loan.remaining_balance for loan in active_loans)
-            total_credit_limit = sum(loan.principal_amount for loan in active_loans)
-            
-            # 获取账户总资产
-            accounts = self.uow.query(BankAccount).filter(
-                BankAccount.user_id == user_id,
-                BankAccount.is_enabled == True
-            ).all()
-            
-            total_assets = sum(account.balance for account in accounts)
-            
-            debt_info = {
-                'total_debt': float(total_debt),
-                'total_credit_limit': float(total_credit_limit),
-                'credit_utilization': float(total_debt / total_credit_limit) if total_credit_limit > 0 else 0,
-                'debt_to_income_ratio': 0,  # 需要收入信息
-                'debt_to_asset_ratio': float(total_debt / total_assets) if total_assets > 0 else 0,
-                'number_of_debts': len(active_loans)
-            }
-            
-            credit_profile.update_debt_info(debt_info)
-            
+                if loans and accounts:
+                    active_loans = [loan for loan in loans if loan.status == 'approved']
+                    total_debt = sum(loan.remaining_balance for loan in active_loans)
+                    total_credit_limit = sum(loan.principal_amount for loan in active_loans)
+                    
+                    total_assets = sum(account.balance for account in accounts)
+                    
+                    debt_info = {
+                        'total_debt': float(total_debt),
+                        'total_credit_limit': float(total_credit_limit),
+                        'credit_utilization': float(total_debt / total_credit_limit) if total_credit_limit > 0 else 0,
+                        'debt_to_income_ratio': 0,  # 需要收入信息
+                        'debt_to_asset_ratio': float(total_debt / total_assets) if total_assets > 0 else 0,
+                        'number_of_debts': len(active_loans)
+                    }
+                    
+                    credit_profile.update_debt_info(debt_info)
+                    
         except Exception:
             pass
     
@@ -188,24 +183,25 @@ class CreditService:
             credit_profile: 信用档案
         """
         try:
-            accounts = self.uow.query(BankAccount).filter(
-                BankAccount.user_id == user_id
-            ).all()
-            
-            if accounts:
-                oldest_account = min(accounts, key=lambda a: a.created_at)
-                account_age_months = (datetime.utcnow() - oldest_account.created_at).days // 30
+            async with self.uow:
+                stmt = select(BankAccount).where(BankAccount.user_id == user_id)
+                result = await self.uow.session.execute(stmt)
+                accounts = result.scalars().all()
+    
+                if accounts:
+                    oldest_account = min(accounts, key=lambda a: a.created_at)
+                    account_age_months = (datetime.utcnow() - oldest_account.created_at).days // 30
+                    
+                    account_info = {
+                        'total_accounts': len(accounts),
+                        'active_accounts': len([a for a in accounts if a.is_enabled]),
+                        'oldest_account_age_months': account_age_months,
+                        'average_account_balance': float(sum(a.balance for a in accounts) / len(accounts)),
+                        'total_balance': float(sum(a.balance for a in accounts))
+                    }
+                    
+                    credit_profile.update_account_info(account_info)
                 
-                account_info = {
-                    'total_accounts': len(accounts),
-                    'active_accounts': len([a for a in accounts if a.is_enabled]),
-                    'oldest_account_age_months': account_age_months,
-                    'average_account_balance': float(sum(a.balance for a in accounts) / len(accounts)),
-                    'total_balance': float(sum(a.balance for a in accounts))
-                }
-                
-                credit_profile.update_account_info(account_info)
-            
         except Exception:
             pass
     
@@ -217,9 +213,10 @@ class CreditService:
             credit_profile: 信用档案
         """
         try:
-            all_loans = self.uow.query(Loan).filter(
-                Loan.user_id == user_id
-            ).all()
+            async with self.uow:
+                stmt = select(Loan).where(Loan.user_id == user_id)
+                result = await self.uow.session.execute(stmt)
+                all_loans = result.scalars().all()
             
             active_loans = [loan for loan in all_loans if loan.status == 'approved']
             completed_loans = [loan for loan in all_loans if loan.status == 'completed']
@@ -272,7 +269,7 @@ class CreditService:
     
     # ==================== 贷款资格评估 ====================
     
-    def evaluate_loan_eligibility(self, user_id: str, loan_amount: Decimal, 
+    async def evaluate_loan_eligibility(self, user_id: str, loan_amount: Decimal, 
                                 loan_type: str) -> Dict[str, Any]:
         """评估贷款资格
         
@@ -285,7 +282,8 @@ class CreditService:
             评估结果
         """
         try:
-            credit_profile = self.get_or_create_credit_profile(user_id)
+            async with self.uow:
+                credit_profile = await self.get_or_create_credit_profile(user_id)
             
             # 计算批准概率
             approval_probability = credit_profile.calculate_loan_approval_probability(
@@ -334,7 +332,7 @@ class CreditService:
     
     # ==================== 信用改进建议 ====================
     
-    def get_credit_improvement_suggestions(self, user_id: str) -> List[Dict[str, Any]]:
+    async def get_credit_improvement_suggestions(self, user_id: str) -> List[Dict[str, Any]]:
         """获取信用改进建议
         
         Args:
@@ -344,8 +342,9 @@ class CreditService:
             改进建议列表
         """
         try:
-            credit_profile = self.get_or_create_credit_profile(user_id)
-            return credit_profile.get_credit_improvement_suggestions()
+            async with self.uow:
+                credit_profile = await self.get_or_create_credit_profile(user_id)
+                return credit_profile.get_credit_improvement_suggestions()
             
         except Exception:
             return []
@@ -384,6 +383,7 @@ class CreditService:
             else:
                 change_factors.append("信用状况稳定")
             
+            recommendations = await self.get_credit_improvement_suggestions(user_id)
             return {
                 'user_id': user_id,
                 'previous_score': old_score,
@@ -392,7 +392,7 @@ class CreditService:
                 'change_percentage': (score_change / old_score * 100) if old_score > 0 else 0,
                 'change_factors': change_factors,
                 'monitoring_date': datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
-                'recommendations': self.get_credit_improvement_suggestions(user_id)
+                'recommendations': recommendations
             }
             
         except Exception as e:
@@ -400,7 +400,7 @@ class CreditService:
     
     # ==================== 信用报告 ====================
     
-    def generate_credit_report(self, user_id: str) -> Dict[str, Any]:
+    async def generate_credit_report(self, user_id: str) -> Dict[str, Any]:
         """生成信用报告
         
         Args:
@@ -410,20 +410,23 @@ class CreditService:
             信用报告
         """
         try:
-            credit_profile = self.get_or_create_credit_profile(user_id)
-            
-            # 获取用户基本信息
-            user = self.uow.query(User).filter_by(user_id=user_id).first()
-            
-            # 获取账户信息
-            accounts = self.uow.query(BankAccount).filter(
-                BankAccount.user_id == user_id
-            ).all()
-            
-            # 获取贷款信息
-            loans = self.uow.query(Loan).filter(
-                Loan.user_id == user_id
-            ).all()
+            async with self.uow:
+                credit_profile = await self.get_or_create_credit_profile(user_id)
+                
+                # 获取用户基本信息
+                stmt = select(User).filter_by(user_id=user_id)
+                result = await self.uow.session.execute(stmt)
+                user = result.scalars().first()
+                
+                # 获取账户信息
+                stmt = select(BankAccount).where(BankAccount.user_id == user_id)
+                result = await self.uow.session.execute(stmt)
+                accounts = result.scalars().all()
+                
+                # 获取贷款信息
+                stmt = select(Loan).where(Loan.user_id == user_id)
+                result = await self.uow.session.execute(stmt)
+                loans = result.scalars().all()
             
             # 获取最近的查询记录
             recent_inquiries = credit_profile.inquiry_history[-10:] if credit_profile.inquiry_history else []
@@ -457,7 +460,7 @@ class CreditService:
                 'debt_information': credit_profile.debt_info or {},
                 'recent_inquiries': recent_inquiries,
                 'negative_records': credit_profile.negative_records or [],
-                'improvement_suggestions': self.get_credit_improvement_suggestions(user_id),
+                'improvement_suggestions': await self.get_credit_improvement_suggestions(user_id),
                 'report_date': datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
             }
             
@@ -480,9 +483,12 @@ class CreditService:
         """
         try:
             if user_ids is None:
-                # 获取所有有信用档案的用户
-                credit_profiles = self.uow.query(CreditProfile).all()
-                user_ids = [cp.user_id for cp in credit_profiles]
+                async with self.uow:
+                    # 获取所有有信用档案的用户
+                    stmt = select(CreditProfile)
+                    result = await self.uow.session.execute(stmt)
+                    credit_profiles = result.scalars().all()
+                    user_ids = [cp.user_id for cp in credit_profiles]
             
             success_count = 0
             error_count = 0
@@ -515,15 +521,18 @@ class CreditService:
     
     # ==================== 统计分析 ====================
     
-    def get_credit_statistics(self) -> Dict[str, Any]:
+    async def get_credit_statistics(self) -> Dict[str, Any]:
         """获取信用统计信息
         
         Returns:
             统计信息
         """
         try:
-            # 获取所有信用档案
-            credit_profiles = self.uow.query(CreditProfile).all()
+            async with self.uow:
+                # 获取所有信用档案
+                stmt = select(CreditProfile)
+                result = await self.uow.session.execute(stmt)
+                credit_profiles = result.scalars().all()
             
             if not credit_profiles:
                 return {'message': '暂无信用数据'}

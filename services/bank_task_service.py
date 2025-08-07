@@ -1,7 +1,7 @@
 from typing import Dict, List, Optional, Tuple, Any
 from decimal import Decimal
 from datetime import datetime, timedelta
-from sqlalchemy import and_, or_, func
+from sqlalchemy import and_, or_, func, select
 import random
 import uuid
 
@@ -322,7 +322,9 @@ class BankTaskService:
         """
         try:
             async with self.uow:
-                task = self.uow.query(BankTask).filter_by(task_id=task_id).first()
+                stmt = select(BankTask).filter_by(task_id=task_id)
+                result = await self.uow.session.execute(stmt)
+                task = result.scalars().first()
                 if not task:
                     return False, "任务不存在"
                 
@@ -353,7 +355,9 @@ class BankTaskService:
         """
         try:
             async with self.uow:
-                task = self.uow.query(BankTask).filter_by(task_id=task_id).first()
+                stmt = select(BankTask).filter_by(task_id=task_id)
+                result = await self.uow.session.execute(stmt)
+                task = result.scalars().first()
                 if not task:
                     return False, "任务不存在"
                 
@@ -373,7 +377,7 @@ class BankTaskService:
     
     # ==================== 任务查询 ====================
     
-    def get_available_tasks_for_user(self, user_id: str, bank_code: str = None, 
+    async def get_available_tasks_for_user(self, user_id: str, bank_code: str = None, 
                                    task_type: str = None, limit: int = 20) -> List[Dict]:
         """获取用户可用任务
         
@@ -387,7 +391,7 @@ class BankTaskService:
             任务列表
         """
         try:
-            tasks = BankTask.get_available_tasks(self.uow, user_id, bank_code, task_type)
+            tasks = await BankTask.get_available_tasks(self.uow, user_id, bank_code, task_type)
             
             # 限制返回数量
             tasks = tasks[:limit]
@@ -398,7 +402,7 @@ class BankTaskService:
                 task_info = task.get_task_summary()
                 
                 # 检查用户是否可以接取
-                can_accept, reason = task.can_user_accept(user_id, self.uow)
+                can_accept, reason = await task.can_user_accept(user_id, self.uow)
                 task_info['can_accept'] = can_accept
                 task_info['accept_reason'] = reason
                 
@@ -409,7 +413,7 @@ class BankTaskService:
         except Exception:
             return []
     
-    def get_user_task_history(self, user_id: str, status: str = None, 
+    async def get_user_task_history(self, user_id: str, status: str = None, 
                             limit: int = 50) -> List[Dict]:
         """获取用户任务历史
         
@@ -422,21 +426,21 @@ class BankTaskService:
             任务历史列表
         """
         try:
-            query = self.uow.query(UserBankTask).filter_by(user_id=user_id)
+            stmt = select(UserBankTask).filter_by(user_id=user_id)
             
             if status:
-                query = query.filter_by(status=status)
+                stmt = stmt.filter_by(status=status)
             
-            user_tasks = query.order_by(
-                UserBankTask.created_at.desc()
-            ).limit(limit).all()
+            stmt = stmt.order_by(UserBankTask.created_at.desc()).limit(limit)
+            result = await self.uow.session.execute(stmt)
+            user_tasks = result.scalars().all()
             
             return [ut.get_task_summary() for ut in user_tasks]
             
         except Exception:
             return []
     
-    def get_task_statistics(self, bank_code: str = None, 
+    async def get_task_statistics(self, bank_code: str = None, 
                           days: int = 30) -> Dict[str, Any]:
         """获取任务统计
         
@@ -451,46 +455,48 @@ class BankTaskService:
             start_date = datetime.utcnow() - timedelta(days=days)
             
             # 基础查询
-            task_query = self.uow.query(BankTask).filter(
+            task_stmt = select(BankTask).filter(
                 BankTask.created_at >= start_date
             )
             
-            user_task_query = self.uow.query(UserBankTask).filter(
+            user_task_stmt = select(UserBankTask).filter(
                 UserBankTask.created_at >= start_date
             )
             
             if bank_code:
-                task_query = task_query.filter(BankTask.bank_code == bank_code)
-                user_task_query = user_task_query.join(BankTask).filter(
+                task_stmt = task_stmt.filter(BankTask.bank_code == bank_code)
+                user_task_stmt = user_task_stmt.join(BankTask).filter(
                     BankTask.bank_code == bank_code
                 )
             
             # 统计数据
-            total_tasks = task_query.count()
-            active_tasks = task_query.filter(BankTask.is_active == True).count()
+            total_tasks_result = await self.uow.session.execute(select(func.count()).select_from(task_stmt.alias()))
+            total_tasks = total_tasks_result.scalar_one()
+
+            active_tasks_result = await self.uow.session.execute(select(func.count()).select_from(task_stmt.filter(BankTask.is_active == True).alias()))
+            active_tasks = active_tasks_result.scalar_one()
             
-            total_accepted = user_task_query.count()
-            total_completed = user_task_query.filter(
-                UserBankTask.status == TaskStatus.COMPLETED.value
-            ).count()
+            total_accepted_result = await self.uow.session.execute(select(func.count()).select_from(user_task_stmt.alias()))
+            total_accepted = total_accepted_result.scalar_one()
+
+            total_completed_result = await self.uow.session.execute(select(func.count()).select_from(user_task_stmt.filter(UserBankTask.status == TaskStatus.COMPLETED.value).alias()))
+            total_completed = total_completed_result.scalar_one()
             
             # 按类型统计
             type_stats = {}
             for task_type in TaskType:
-                count = task_query.filter(
-                    BankTask.task_type == task_type.value
-                ).count()
-                type_stats[task_type.value] = count
+                type_stmt = task_stmt.filter(BankTask.task_type == task_type.value)
+                type_count_result = await self.uow.session.execute(select(func.count()).select_from(type_stmt.alias()))
+                type_stats[task_type.value] = type_count_result.scalar_one()
             
             # 按银行统计
             bank_stats = {}
             for bank_code_key, bank_name in self.banks.items():
-                count = task_query.filter(
-                    BankTask.bank_code == bank_code_key
-                ).count()
+                bank_stmt = task_stmt.filter(BankTask.bank_code == bank_code_key)
+                bank_count_result = await self.uow.session.execute(select(func.count()).select_from(bank_stmt.alias()))
                 bank_stats[bank_code_key] = {
                     'name': bank_name,
-                    'task_count': count
+                    'task_count': bank_count_result.scalar_one()
                 }
             
             return {
@@ -537,7 +543,7 @@ class BankTaskService:
                 
                 # 验证完成条件
                 task = user_task.task
-                if not task._verify_completion(user_task.user_id, self.uow, 
+                if not await task.verify_completion(user_task.user_id, self.uow, 
                                              user_task.submission_data):
                     user_task.reject_task("未满足完成条件")
                     await self.uow.commit()

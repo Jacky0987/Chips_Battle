@@ -1,5 +1,5 @@
 from typing import List, Optional, Dict, Any
-from dal.database import get_session
+from dal.unit_of_work import UnitOfWork
 from models.apps.app import App
 from models.apps.ownership import UserAppOwnership
 from models.auth.user import User
@@ -13,7 +13,8 @@ import os
 class AppService:
     """应用市场服务，管理应用购买和所有权"""
     
-    def __init__(self, event_bus: EventBus, currency_service: CurrencyService):
+    def __init__(self, uow: UnitOfWork, event_bus: EventBus, currency_service: CurrencyService):
+        self.uow = uow
         self.event_bus = event_bus
         self.currency_service = currency_service
         self._apps_cache = None
@@ -39,30 +40,33 @@ class AppService:
                 return app
         return None
     
-    def get_user_owned_apps(self, user_id: int) -> List[str]:
+    async def get_user_owned_apps(self, user_id: int) -> List[str]:
         """获取用户拥有的应用列表"""
-        with get_session() as session:
-            ownerships = session.query(UserAppOwnership).filter_by(user_id=user_id).all()
-            return [ownership.app_name for ownership in ownerships]
+        async with self.uow:
+            stmt = select(UserAppOwnership.app_name).filter_by(user_id=user_id)
+            result = await self.uow.session.execute(stmt)
+            return result.scalars().all()
     
-    def purchase_app(self, user_id: int, app_name: str) -> Dict[str, Any]:
+    async def purchase_app(self, user_id: int, app_name: str) -> Dict[str, Any]:
         """购买应用"""
         app_info = self.get_app_by_name(app_name)
         if not app_info:
             return {'success': False, 'message': f'应用 {app_name} 不存在'}
         
         # 检查用户是否已拥有该应用
-        owned_apps = self.get_user_owned_apps(user_id)
+        owned_apps = await self.get_user_owned_apps(user_id)
         if app_name in owned_apps:
             return {'success': False, 'message': f'您已拥有应用 {app_name}'}
         
-        with get_session() as session:
+        async with self.uow:
             # 检查用户余额
-            user = session.query(User).filter_by(id=user_id).first()
+            user_result = await self.uow.session.execute(select(User).filter_by(id=user_id))
+            user = user_result.scalars().first()
             if not user:
                 return {'success': False, 'message': '用户不存在'}
             
-            account = session.query(Account).filter_by(user_id=user_id, currency_code='JCC').first()
+            account_result = await self.uow.session.execute(select(Account).filter_by(user_id=user_id, currency_code='JCC'))
+            account = account_result.scalars().first()
             if not account:
                 return {'success': False, 'message': '用户账户不存在'}
             
@@ -79,8 +83,8 @@ class AppService:
                 app_name=app_name,
                 purchase_price=price
             )
-            session.add(ownership)
-            session.commit()
+            self.uow.session.add(ownership)
+            await self.uow.commit()
             
             # 发布事件
             self.event_bus.publish('app_purchased', {
@@ -94,7 +98,7 @@ class AppService:
                 'message': f'成功购买应用 {app_name}，花费 {price} JCC'
             }
     
-    def can_use_app(self, user_id: int, app_name: str) -> bool:
+    async def can_use_app(self, user_id: int, app_name: str) -> bool:
         """检查用户是否可以使用指定应用"""
         app_info = self.get_app_by_name(app_name)
         if not app_info:
@@ -105,12 +109,12 @@ class AppService:
             return True
         
         # 付费应用需要检查所有权
-        owned_apps = self.get_user_owned_apps(user_id)
+        owned_apps = await self.get_user_owned_apps(user_id)
         return app_name in owned_apps
     
-    def get_app_usage_stats(self, user_id: int) -> Dict[str, Any]:
+    async def get_app_usage_stats(self, user_id: int) -> Dict[str, Any]:
         """获取用户应用使用统计"""
-        owned_apps = self.get_user_owned_apps(user_id)
+        owned_apps = await self.get_user_owned_apps(user_id)
         available_apps = self.get_available_apps()
         
         total_apps = len(available_apps)

@@ -574,7 +574,7 @@ class BankService:
             self.logger.error(f"获取用户 {user_id} 的贷款时出错: {e}")
             raise
 
-    def get_available_tasks(self, user_id: str = None, bank_code: str = None) -> List[BankTask]:
+    async def get_available_tasks(self, user_id: str = None, bank_code: str = None) -> List[BankTask]:
         """获取可用任务
         
         Args:
@@ -584,7 +584,7 @@ class BankService:
         Returns:
             任务列表
         """
-        return BankTask.get_available_tasks(self.uow, user_id, bank_code)
+        return await BankTask.get_available_tasks(self.uow, user_id, bank_code)
     
     async def accept_task(self, user_id: str, task_id: str) -> Tuple[bool, str, Optional[UserBankTask]]:
         """接取任务
@@ -598,11 +598,12 @@ class BankService:
         """
         try:
             async with self.uow:
-                task = self.uow.query(BankTask).filter_by(task_id=task_id).first()
+                result = await self.uow.session.execute(select(BankTask).filter_by(task_id=task_id))
+                task = result.scalars().first()
                 if not task:
                     return False, "任务不存在", None
                 
-                success, message, user_task = task.accept_task(user_id, self.uow)
+                success, message, user_task = await task.accept_task(user_id, self.uow)
                 
                 if success:
                     await self.uow.commit()
@@ -627,11 +628,12 @@ class BankService:
         """
         try:
             async with self.uow:
-                task = self.uow.query(BankTask).filter_by(task_id=task_id).first()
+                result = await self.uow.session.execute(select(BankTask).filter_by(task_id=task_id))
+                task = result.scalars().first()
                 if not task:
                     return False, "任务不存在"
                 
-                success, message = task.complete_task(user_id, self.uow, submission_data)
+                success, message = await task.complete_task(user_id, self.uow, submission_data)
                 
                 if success:
                     await self.uow.commit()
@@ -642,7 +644,7 @@ class BankService:
             await self.uow.rollback()
             return False, f"提交任务失败: {str(e)}"
     
-    def get_user_tasks(self, user_id: str, status: str = None) -> List[UserBankTask]:
+    async def get_user_tasks(self, user_id: str, status: str = None) -> List[UserBankTask]:
         """获取用户任务列表
         
         Args:
@@ -653,12 +655,13 @@ class BankService:
             用户任务列表
         """
         try:
-            query = self.uow.query(UserBankTask).filter_by(user_id=user_id)
+            stmt = select(UserBankTask).filter_by(user_id=user_id)
             
             if status:
-                query = query.filter_by(status=status)
+                stmt = stmt.filter_by(status=status)
             
-            return query.order_by(UserBankTask.created_at.desc()).all()
+            result = await self.uow.session.execute(stmt.order_by(UserBankTask.created_at.desc()))
+            return result.scalars().all()
             
         except Exception:
             return []
@@ -759,7 +762,7 @@ class BankService:
 
                 # 获取信用档案
                 print("Getting credit profile...")
-                credit_profile = await CreditProfile.get_or_create_profile(self.uow.session, user_id)
+                credit_profile = await CreditProfile.get_or_create_profile(self.uow, user_id)
                 print("Credit profile obtained.")
 
                 return {

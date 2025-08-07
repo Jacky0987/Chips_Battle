@@ -265,7 +265,7 @@ class BankAccount(BaseModel):
         }
     
     @classmethod
-    def get_user_accounts(cls, uow, user_id: str) -> list:
+    async def get_user_accounts(cls, uow, user_id: str) -> list:
         """获取用户所有账户
         
         Args:
@@ -276,14 +276,16 @@ class BankAccount(BaseModel):
             用户账户列表
         """
         try:
-            return uow.query(cls).filter_by(
+            stmt = select(cls).filter_by(
                 user_id=user_id, is_active=True
-            ).all()
+            )
+            result = await uow.session.execute(stmt)
+            return result.scalars().all()
         except Exception:
             return []
     
     @classmethod
-    def get_user_default_account(cls, uow, user_id: str, currency_code: str = 'JCY') -> Optional['BankAccount']:
+    async def get_user_default_account(cls, uow, user_id: str, currency_code: str = 'JCY') -> Optional['BankAccount']:
         """获取用户默认账户
         
         Args:
@@ -296,22 +298,26 @@ class BankAccount(BaseModel):
         """
         try:
             # 先查找指定货币的默认账户
-            account = uow.query(cls).join(cls.currency).filter(
+            stmt = select(cls).join(cls.currency).filter(
                 cls.user_id == user_id,
                 cls.is_active == True,
                 cls.is_default == True,
                 cls.currency.has(code=currency_code)
-            ).first()
+            )
+            result = await uow.session.execute(stmt)
+            account = result.scalars().first()
             
             if account:
                 return account
             
             # 如果没有默认账户，返回第一个指定货币的账户
-            return uow.query(cls).join(cls.currency).filter(
+            stmt = select(cls).join(cls.currency).filter(
                 cls.user_id == user_id,
                 cls.is_active == True,
                 cls.currency.has(code=currency_code)
-            ).first()
+            )
+            result = await uow.session.execute(stmt)
+            return result.scalars().first()
             
         except Exception:
             return None

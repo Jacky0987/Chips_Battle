@@ -1,9 +1,10 @@
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
+from sqlalchemy import select, func
 from dal.database import get_session
 from models.news.news import News
 from models.stock.stock import Stock
-from core.event_bus import EventBus, TimeTickEvent
+from core.event_bus import EventBus, TimeTickEvent, NewsPublishedEvent
 from services.time_service import TimeService
 import json
 import os
@@ -19,11 +20,11 @@ class NewsService:
         self._templates_cache = None
         self.event_bus.subscribe(TimeTickEvent, self.on_time_tick)
 
-    def on_time_tick(self, event: TimeTickEvent):
+    async def on_time_tick(self, event: TimeTickEvent):
         """处理时间流逝事件，随机生成新闻"""
         # 每小时有20%概率生成新闻
         if random.random() < 0.2:
-            self._generate_random_news()
+            await self._generate_random_news()
 
     def _load_news_templates(self) -> Dict[str, Any]:
         """加载新闻模板文件"""
@@ -33,7 +34,7 @@ class NewsService:
                 self._templates_cache = json.load(f)
         return self._templates_cache
     
-    def _generate_random_news(self) -> Optional[News]:
+    async def _generate_random_news(self) -> Optional[News]:
         """生成随机新闻"""
         templates = self._load_news_templates()
         news_types = list(templates['templates'].keys())
@@ -48,11 +49,11 @@ class NewsService:
         template = random.choice(template_group['templates'])
         
         # 生成新闻内容
-        title = self._fill_template(template['title'], news_type)
-        content = self._fill_template(template['content'], news_type)
+        title = await self._fill_template(template['title'], news_type)
+        content = await self._fill_template(template['content'], news_type)
         
         # 创建新闻
-        news = self._create_news(
+        news = await self._create_news(
             title=title,
             content=content,
             category=news_type,
@@ -62,7 +63,7 @@ class NewsService:
         
         return news
     
-    def _fill_template(self, template: str, news_type: str) -> str:
+    async def _fill_template(self, template: str, news_type: str) -> str:
         """填充新闻模板"""
         templates = self._load_news_templates()
         variables = templates.get('variables', {})
@@ -76,7 +77,7 @@ class NewsService:
         
         # 替换股票相关变量
         if '{stock_name}' in template or '{ticker}' in template:
-            stock = self._get_random_stock()
+            stock = await self._get_random_stock()
             if stock:
                 template = template.replace('{stock_name}', stock.name)
                 template = template.replace('{ticker}', stock.ticker)
@@ -93,91 +94,90 @@ class NewsService:
         
         return template
     
-    def _get_random_stock(self) -> Optional[Stock]:
+    async def _get_random_stock(self) -> Optional[Stock]:
         """获取随机股票"""
-        with get_session() as session:
-            stocks = session.query(Stock).all()
+        async with get_session() as session:
+            result = await session.execute(select(Stock))
+            stocks = result.scalars().all()
             return random.choice(stocks) if stocks else None
     
-    def _create_news(self, title: str, content: str, category: str, 
+    async def _create_news(self, title: str, content: str, category: str, 
                     impact_type: str = 'neutral', impact_strength: float = 0.0) -> News:
         """创建新闻记录"""
-        with get_session() as session:
-            news = News(
-                title=title,
-                content=content,
-                category=category,
-                impact_type=impact_type,
-                impact_strength=Decimal(str(impact_strength)),
-                published_at=self.time_service.get_current_time()
-            )
-            session.add(news)
-            session.commit()
-            session.refresh(news)
+        async with get_session() as session:
+            async with session.begin():
+                news = News(
+                    title=title,
+                    content=content,
+                    category=category,
+                    impact_type=impact_type,
+                    impact_strength=Decimal(str(impact_strength)),
+                    published_at=self.time_service.get_game_time().current_time
+                )
+                session.add(news)
+                await session.flush()
+                await session.refresh(news)
             
             # 发布新闻事件
-            self.event_bus.publish('news_published', {
-                'news_id': news.id,
-                'title': news.title,
-                'category': news.category,
-                'impact_type': news.impact_type,
-                'impact_strength': float(news.impact_strength)
-            })
+            await self.event_bus.publish(NewsPublishedEvent(news_id=news.id, title=news.title, category=news.category, impact_type=news.impact_type, impact_strength=float(news.impact_strength)))
             
             return news
     
-    def get_latest_news(self, limit: int = 10, category: Optional[str] = None) -> List[News]:
+    async def get_latest_news(self, limit: int = 10, category: Optional[str] = None) -> List[News]:
         """获取最新新闻"""
-        with get_session() as session:
-            query = session.query(News)
+        async with get_session() as session:
+            query = select(News)
             
             if category:
                 query = query.filter_by(category=category)
             
-            news_list = query.order_by(News.published_at.desc()).limit(limit).all()
-            return news_list
+            result = await session.execute(query.order_by(News.published_at.desc()).limit(limit))
+            return result.scalars().all()
     
-    def get_news_by_id(self, news_id: int) -> Optional[News]:
+    async def get_news_by_id(self, news_id: int) -> Optional[News]:
         """根据ID获取新闻"""
-        with get_session() as session:
-            return session.query(News).filter_by(id=news_id).first()
+        async with get_session() as session:
+            result = await session.execute(select(News).filter_by(id=news_id))
+            return result.scalars().first()
     
-    def get_market_impact_news(self, hours_back: int = 24) -> List[News]:
+    async def get_market_impact_news(self, hours_back: int = 24) -> List[News]:
         """获取有市场影响的新闻"""
-        cutoff_time = self.time_service.get_current_time() - timedelta(hours=hours_back)
+        cutoff_time = self.time_service.get_game_time().current_time - timedelta(hours=hours_back)
         
-        with get_session() as session:
-            news_list = session.query(News).filter(
+        async with get_session() as session:
+            result = await session.execute(select(News).filter(
                 News.published_at >= cutoff_time,
                 News.impact_type != 'neutral'
-            ).order_by(News.published_at.desc()).all()
+            ).order_by(News.published_at.desc()))
             
-            return news_list
+            return result.scalars().all()
     
-    def create_manual_news(self, title: str, content: str, category: str = 'general',
+    async def create_manual_news(self, title: str, content: str, category: str = 'general',
                           impact_type: str = 'neutral', impact_strength: float = 0.0) -> News:
         """手动创建新闻"""
-        return self._create_news(title, content, category, impact_type, impact_strength)
+        return await self._create_news(title, content, category, impact_type, impact_strength)
     
     def get_news_categories(self) -> List[str]:
         """获取新闻分类列表"""
         templates = self._load_news_templates()
         return list(templates.get('templates', {}).keys())
     
-    def get_news_stats(self) -> Dict[str, Any]:
+    async def get_news_stats(self) -> Dict[str, Any]:
         """获取新闻统计信息"""
-        with get_session() as session:
-            total_news = session.query(News).count()
+        async with get_session() as session:
+            total_news_result = await session.execute(select(func.count(News.id)))
+            total_news = total_news_result.scalar_one()
             
             # 按分类统计
             categories = {}
             for category in self.get_news_categories():
-                count = session.query(News).filter_by(category=category).count()
-                categories[category] = count
+                count_result = await session.execute(select(func.count(News.id)).filter_by(category=category))
+                categories[category] = count_result.scalar_one()
             
             # 最近24小时新闻数量
-            recent_cutoff = self.time_service.get_current_time() - timedelta(hours=24)
-            recent_count = session.query(News).filter(News.published_at >= recent_cutoff).count()
+            recent_cutoff = self.time_service.get_game_time().current_time - timedelta(hours=24)
+            recent_count_result = await session.execute(select(func.count(News.id)).filter(News.published_at >= recent_cutoff))
+            recent_count = recent_count_result.scalar_one()
             
             return {
                 'total_news': total_news,

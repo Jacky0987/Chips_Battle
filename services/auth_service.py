@@ -315,18 +315,14 @@ class AuthService:
         try:
             async with self.uow:
                 # 通过用户角色查询权限
-                user_roles = await self.uow.query(
-                    Role,
-                    joins=[('users', User)],
-                    filters={'users.user_id': user.user_id}
-                )
+                stmt = select(Role).join(User.roles).where(User.user_id == user.user_id)
+                result = await self.uow.session.execute(stmt)
+                user_roles = result.scalars().all()
                 
                 for role in user_roles:
-                    role_permissions = await self.uow.query(
-                        Permission,
-                        joins=[('roles', Role)],
-                        filters={'roles.role_id': role.role_id}
-                    )
+                    stmt = select(Permission).join(Role.permissions).where(Role.role_id == role.role_id)
+                    result = await self.uow.session.execute(stmt)
+                    role_permissions = result.scalars().all()
                     
                     for permission in role_permissions:
                         if permission.name == permission_name:
@@ -351,10 +347,9 @@ class AuthService:
         try:
             async with self.uow:
                 # 查询用户是否有指定角色
-                user_roles = self.uow.query(Role).join(Role.users).filter(
-                    User.user_id == user.user_id,
-                    Role.name == role_name
-                ).all()
+                stmt = select(Role).join(User.roles).where(User.user_id == user.user_id, Role.name == role_name)
+                result = await self.uow.session.execute(stmt)
+                user_roles = result.scalars().all()
                 
                 return len(user_roles) > 0
                 
@@ -385,11 +380,9 @@ class AuthService:
         """
         try:
             async with self.uow:
-                return await self.uow.query(
-                    Role,
-                    joins=[('users', User)],
-                    filters={'users.user_id': user.user_id}
-                )
+                stmt = select(Role).join(User.roles).where(User.user_id == user.user_id)
+                result = await self.uow.session.execute(stmt)
+                return result.scalars().all()
                 
         except Exception as e:
             self._logger.error(f"获取用户角色异常: {e}", exc_info=True)
@@ -410,11 +403,9 @@ class AuthService:
             
             async with self.uow:
                 for role in user_roles:
-                    role_permissions = await self.uow.query(
-                        Permission,
-                        joins=[('roles', Role)],
-                        filters={'roles.role_id': role.role_id}
-                    )
+                    stmt = select(Permission).join(Role.permissions).where(Role.role_id == role.role_id)
+                    result = await self.uow.session.execute(stmt)
+                    role_permissions = result.scalars().all()
                     permissions.update(role_permissions)
             
             return list(permissions)
@@ -535,14 +526,17 @@ class AuthService:
             user: 用户对象
         """
         try:
-            # 查找默认角色
-            default_role = self.uow.query(Role).filter_by(name='user', is_default=True).first()
+            async with self.uow:
+                # 查找默认角色
+                stmt = select(Role).filter_by(name='user', is_default=True)
+                result = await self.uow.session.execute(stmt)
+                default_role = result.scalars().first()
             
-            if default_role:
-                # 将角色添加到用户的角色列表中
-                if not user.roles:
-                    user.roles = []
-                user.roles.append(default_role)
+                if default_role:
+                    # 将角色添加到用户的角色列表中
+                    if not user.roles:
+                        user.roles = []
+                    user.roles.append(default_role)
                 
         except Exception as e:
             self._logger.error(f"分配默认角色失败: {e}", exc_info=True)
