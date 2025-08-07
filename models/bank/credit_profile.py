@@ -566,8 +566,30 @@ class CreditProfile(BaseModel):
         if not profile:
             profile = cls(user_id=user_id)
             uow.session.add(profile)
-            await uow.commit()
-            await uow.session.refresh(profile)
+            # 不在这里提交，让调用者处理事务
+            
+        return profile
+    
+    @classmethod
+    async def get_or_create_profile_by_session(cls, session, user_id: str) -> 'CreditProfile':
+        """通过session获取或创建信用档案
+        
+        Args:
+            session: 数据库会话
+            user_id: 用户ID
+            
+        Returns:
+            信用档案对象
+        """
+        # 使用session的正确方式是在其上下文管理器中执行操作
+        stmt = select(cls).filter_by(user_id=user_id)
+        result = await session.execute(stmt)
+        profile = result.scalars().first()
+        
+        if not profile:
+            profile = cls(user_id=user_id)
+            session.add(profile)
+            # 不在这里提交，让调用者处理事务
             
         return profile
     

@@ -65,7 +65,7 @@ class SudoCommand(AdminCommand):
             
             # 如果用户输入密码进行认证
             if first_arg == "admin" and len(args) == 1:
-                return self.error("❌ 请输入管理员密码。使用: sudo admin")
+                return self.error("❌ 请输入管理员密码。使用: sudo admin <password>")
             elif first_arg == "admin" and len(args) >= 2:
                 password = args[1]
                 if password == "admin":
@@ -82,8 +82,9 @@ class SudoCommand(AdminCommand):
             if is_admin:
                 return await self._execute_admin_command(args, context)
             
-            # 如果不是管理员模式，提示需要认证
-            return self.error("需要管理员认证")
+            # 如果不是管理员模式且没有提供参数，提示需要认证
+            if not args:
+                return self.error("🔐 需要管理员认证\n请使用: sudo admin <password>\n管理员密码为: admin")
         except Exception as e:
             self.logger.error(f"Sudo命令执行失败: {e}")
             return self.error(f"Sudo命令执行失败: {str(e)}")

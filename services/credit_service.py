@@ -26,7 +26,7 @@ class CreditService:
     
     # ==================== 信用档案管理 ====================
     
-    def get_or_create_credit_profile(self, user_id: str) -> CreditProfile:
+    async def get_or_create_credit_profile(self, user_id: str) -> CreditProfile:
         """获取或创建信用档案
         
         Args:
@@ -35,7 +35,7 @@ class CreditService:
         Returns:
             信用档案对象
         """
-        return CreditProfile.get_or_create_profile(self.uow, user_id)
+        return await CreditProfile.get_or_create_profile(self.uow, user_id)
     
     async def update_credit_profile(self, user_id: str, **kwargs) -> Tuple[bool, str]:
         """更新信用档案
@@ -49,7 +49,7 @@ class CreditService:
         """
         try:
             async with self.uow:
-                credit_profile = self.get_or_create_credit_profile(user_id)
+                credit_profile = await self.get_or_create_credit_profile(user_id)
                 
                 # 更新字段
                 for key, value in kwargs.items():
@@ -82,7 +82,7 @@ class CreditService:
         """
         try:
             async with self.uow:
-                credit_profile = self.get_or_create_credit_profile(user_id)
+                credit_profile = await self.get_or_create_credit_profile(user_id)
                 
                 # 更新相关数据
                 await self._update_payment_history(user_id, credit_profile)
@@ -252,7 +252,7 @@ class CreditService:
         """
         try:
             async with self.uow:
-                credit_profile = self.get_or_create_credit_profile(user_id)
+                credit_profile = await self.get_or_create_credit_profile(user_id)
                 
                 if inquiry_type == 'hard':
                     credit_profile.add_hard_inquiry(inquirer, purpose)
@@ -361,7 +361,7 @@ class CreditService:
             信用变化报告
         """
         try:
-            credit_profile = self.get_or_create_credit_profile(user_id)
+            credit_profile = await self.get_or_create_credit_profile(user_id)
             
             # 获取历史分数（简化实现，实际应该存储历史记录）
             old_score = credit_profile.credit_score

@@ -5,6 +5,7 @@
 定义新闻的数据结构和业务逻辑
 """
 
+import uuid
 from sqlalchemy import Column, String, Text, DateTime, Boolean, Integer, Numeric
 from sqlalchemy.sql import func
 from models.base import Base
@@ -17,7 +18,7 @@ class News(Base):
     """
     __tablename__ = 'news'
     
-    id = Column(String(36), primary_key=True)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     title = Column(String(200), nullable=False, comment='新闻标题')
     content = Column(Text, nullable=False, comment='新闻内容')
     summary = Column(String(500), comment='新闻摘要')
