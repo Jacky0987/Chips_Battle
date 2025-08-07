@@ -36,6 +36,8 @@ from commands.registry import CommandRegistry
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
+from prompt_toolkit import PromptSession
+from prompt_toolkit.history import FileHistory
 
 
 class ChipsBattleGame:
@@ -55,6 +57,7 @@ class ChipsBattleGame:
         self.command_dispatcher = None
         self.current_user = None
         self.running = True
+        self.session = PromptSession(history=FileHistory(os.path.expanduser('~/.chips_battle_history')))
         
     async def initialize(self):
         """初始化游戏系统"""
@@ -228,8 +231,8 @@ class ChipsBattleGame:
         while self.running:
             try:
                 # 显示提示符
-                prompt = f"[bold green]{self.current_user.username}@ChipsBattle[/bold green]$ "
-                command_input = self.console.input(prompt)
+                prompt = f"{self.current_user.username}@ChipsBattle$ "
+                command_input = await self.session.prompt_async(prompt)
                 
                 if not command_input.strip():
                     continue

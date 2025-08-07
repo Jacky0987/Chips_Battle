@@ -195,7 +195,7 @@ class CurrencyService:
         """处理时间事件，更新汇率"""
         try:
             # 每小时更新一次汇率
-            if event.current_time.minute == 0:
+            if event.game_time.minute == 0:
                 await self._update_exchange_rates()
         except Exception as e:
             self._logger.error(f"处理时间事件失败: {e}")

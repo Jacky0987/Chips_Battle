@@ -15,71 +15,7 @@ from collections import defaultdict
 import weakref
 import inspect
 
-
-@dataclass
-class Event:
-    """事件基类"""
-    timestamp: datetime
-    event_id: str
-    source: str = "unknown"
-    data: Dict[str, Any] = None
-    
-    def __post_init__(self):
-        if self.data is None:
-            self.data = {}
-        if not self.event_id:
-            import uuid
-            self.event_id = str(uuid.uuid4())
-
-
-@dataclass
-class TimeTickEvent(Event):
-    """时间流逝事件"""
-    game_time: datetime = None
-    tick_number: int = 0
-    hours_elapsed: int = 0
-    
-    def __post_init__(self):
-        super().__post_init__()
-        if self.game_time is None:
-            self.game_time = datetime.now()
-
-
-@dataclass
-class NewsPublishedEvent(Event):
-    """新闻发布事件"""
-    news_id: str = ""
-    headline: str = ""
-    impact_tags: List[str] = None
-    severity: float = 0.0  # 0.0 - 1.0
-    
-    def __post_init__(self):
-        super().__post_init__()
-        if self.impact_tags is None:
-            self.impact_tags = []
-
-
-@dataclass
-class UserActionEvent(Event):
-    """用户行为事件"""
-    user_id: str = ""
-    action: str = ""
-    details: Dict[str, Any] = None
-    
-    def __post_init__(self):
-        super().__post_init__()
-        if self.details is None:
-            self.details = {}
-
-
-@dataclass
-class MarketUpdateEvent(Event):
-    """市场更新事件"""
-    market_type: str = ""  # "stock", "currency", etc.
-    symbol: str = ""
-    old_price: float = 0.0
-    new_price: float = 0.0
-    change_percent: float = 0.0
+from .events import Event, TimeTickEvent, NewsPublishedEvent, UserActionEvent, MarketUpdateEvent
 
 
 class EventHandler:

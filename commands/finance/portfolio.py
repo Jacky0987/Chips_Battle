@@ -1,9 +1,9 @@
-from commands.base import Command
+from commands.base import FinanceCommand
 from services.stock_service import StockService
 from services.currency_service import CurrencyService
 from typing import Dict, Any
 
-class PortfolioCommand(Command):
+class PortfolioCommand(FinanceCommand):
     """投资组合命令 - 查看和管理投资组合"""
     
     def __init__(self, stock_service: StockService, currency_service: CurrencyService):

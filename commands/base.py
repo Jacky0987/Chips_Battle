@@ -247,6 +247,8 @@ class BasicCommand(Command):
         return "basic"
 
 
+
+
 class CommandParser:
     """命令解析器"""
     

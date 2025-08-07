@@ -6,7 +6,7 @@ from models.stock.stock_price import StockPrice
 from models.stock.portfolio import Portfolio, PortfolioItem
 from models.finance.account import Account
 from models.auth.user import User
-from core.event_bus import EventBus
+from core.event_bus import EventBus, TimeTickEvent
 from services.time_service import TimeService
 from services.currency_service import CurrencyService
 import json
@@ -25,7 +25,7 @@ class StockService:
         self._stocks_cache = None
         
         # 订阅事件
-        self.event_bus.subscribe('time_tick', self._on_time_tick)
+        self.event_bus.subscribe(TimeTickEvent, self._on_time_tick)
         self.event_bus.subscribe('news_published', self._on_news_published)
     
     def _load_stock_definitions(self) -> Dict[str, Any]:
@@ -36,9 +36,11 @@ class StockService:
                 self._stocks_cache = json.load(f)
         return self._stocks_cache
     
-    def _on_time_tick(self, event_data: Dict[str, Any]):
+    async def _on_time_tick(self, event: TimeTickEvent):
         """处理时间滴答事件，更新股价"""
-        self._update_stock_prices()
+        if not self.time_service.get_game_time().is_market_hours():
+            return
+        await self._update_stock_prices(event.game_time)
     
     def _on_news_published(self, event_data: Dict[str, Any]):
         """处理新闻发布事件，影响股价"""
@@ -48,7 +50,7 @@ class StockService:
         if impact_type != 'neutral' and impact_strength != 0.0:
             self._apply_news_impact(impact_type, impact_strength)
     
-    def _update_stock_prices(self):
+    async def _update_stock_prices(self, current_time: datetime):
         """更新所有股票价格"""
         with get_session() as session:
             stocks = session.query(Stock).all()
@@ -61,7 +63,7 @@ class StockService:
                     stock_id=stock.id,
                     price=new_price,
                     volume=random.randint(1000, 100000),
-                    timestamp=self.time_service.get_current_time()
+                    timestamp=current_time
                 )
                 session.add(price_record)
                 

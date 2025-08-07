@@ -77,9 +77,17 @@ class BankService:
                 )
                 
                 self.uow.add(bank_card)
+                
+                # 自动创建默认的JCY账户
+                await self.create_bank_account(
+                    user_id=user_id,
+                    bank_card_id=bank_card.card_id,
+                    currency_code='JCY'
+                )
+                
                 await self.uow.commit()
                 
-                return True, f"成功申请{bank_code.upper()}银行卡", bank_card
+                return True, f"成功申请{bank_code.upper()}银行卡，并已自动为您开通JCY账户", bank_card
                 
         except Exception as e:
             await self.uow.rollback()
@@ -95,18 +103,13 @@ class BankService:
         Returns:
             银行卡列表
         """
-        try:
-            async with self.uow:
-                stmt = select(BankCard).filter_by(user_id=user_id)
-                
-                if active_only:
-                    stmt = stmt.filter_by(is_active=True)
-                
-                result = await self.uow.session.execute(stmt.order_by(BankCard.created_at.desc()))
-                return result.scalars().all()
-            
-        except Exception:
-            return []
+        stmt = select(BankCard).filter_by(user_id=user_id)
+        
+        if active_only:
+            stmt = stmt.filter_by(is_active=True)
+        
+        result = await self.uow.session.execute(stmt.order_by(BankCard.created_at.desc()))
+        return result.scalars().all()
     
     # ==================== 账户管理 ====================
     
@@ -194,23 +197,27 @@ class BankService:
         Returns:
             账户列表
         """
-        try:
-            async with self.uow:
-                stmt = select(BankAccount).filter_by(
-                    user_id=user_id, is_active=True
-                )
-                
-                if currency_code:
-                    result = await self.uow.session.execute(select(Currency).filter_by(code=currency_code))
-                    currency = result.scalars().first()
-                    if currency:
-                        stmt = stmt.filter_by(currency_id=currency.currency_id)
-                
-                result = await self.uow.session.execute(stmt.order_by(BankAccount.is_default.desc(), 
-                                    BankAccount.created_at.desc()))
-                return result.scalars().all()
-        except Exception:
-            return []
+        stmt = select(BankAccount).filter_by(
+            user_id=user_id, is_active=True
+        )
+        
+        if currency_code:
+            result = await self.uow.session.execute(select(Currency).filter_by(code=currency_code))
+            currency = result.scalars().first()
+            if currency:
+                stmt = stmt.filter_by(currency_id=currency.currency_id)
+        
+        result = await self.uow.session.execute(stmt.order_by(BankAccount.is_default.desc(), 
+                            BankAccount.created_at.desc()))
+        return result.scalars().all()
+    
+    async def get_account_by_card_and_currency(self, card_id: str, currency_code: str) -> Optional[BankAccount]:
+        """根据银行卡和货币获取账户"""
+        return await self.uow.session.scalar(
+            select(BankAccount)
+            .join(Currency)
+            .where(BankAccount.card_id == card_id, Currency.code == currency_code)
+        )
     
     # ==================== 存取款操作 ====================
     
@@ -230,11 +237,12 @@ class BankService:
         try:
             async with self.uow:
                 # 验证账户
-                account = self.uow.query(BankAccount).filter_by(
+                result = await self.uow.session.execute(select(BankAccount).filter_by(
                     account_id=account_id,
                     user_id=user_id,
                     is_enabled=True
-                ).first()
+                ))
+                account = result.scalars().first()
                 
                 if not account:
                     return False, "账户不存在或未启用"
@@ -278,11 +286,12 @@ class BankService:
         try:
             async with self.uow:
                 # 验证账户
-                account = self.uow.query(BankAccount).filter_by(
+                result = await self.uow.session.execute(select(BankAccount).filter_by(
                     account_id=account_id,
                     user_id=user_id,
                     is_enabled=True
-                ).first()
+                ))
+                account = result.scalars().first()
                 
                 if not account:
                     return False, "账户不存在或未启用"
@@ -335,21 +344,23 @@ class BankService:
         try:
             async with self.uow:
                 # 验证转出账户
-                from_account = self.uow.query(BankAccount).filter_by(
+                result = await self.uow.session.execute(select(BankAccount).filter_by(
                     account_id=from_account_id,
                     user_id=from_user_id,
                     is_enabled=True
-                ).first()
+                ))
+                from_account = result.scalars().first()
                 
                 if not from_account:
                     return False, "转出账户不存在或未启用"
                 
                 # 验证转入账户
-                to_account = self.uow.query(BankAccount).filter_by(
+                result = await self.uow.session.execute(select(BankAccount).filter_by(
                     account_id=to_account_id,
                     user_id=to_user_id,
                     is_enabled=True
-                ).first()
+                ))
+                to_account = result.scalars().first()
                 
                 if not to_account:
                     return False, "转入账户不存在或未启用"
@@ -487,24 +498,26 @@ class BankService:
         try:
             async with self.uow:
                 # 验证贷款
-                loan = self.uow.query(Loan).filter_by(
+                result = await self.uow.session.execute(select(Loan).filter_by(
                     loan_id=loan_id,
                     user_id=user_id,
                     status='approved'
-                ).first()
+                ))
+                loan = result.scalars().first()
                 
                 if not loan:
                     return False, "贷款不存在或状态异常"
                 
                 # 获取还款账户
                 if account_id:
-                    account = self.uow.query(BankAccount).filter_by(
+                    result = await self.uow.session.execute(select(BankAccount).filter_by(
                         account_id=account_id,
                         user_id=user_id,
                         is_enabled=True
-                    ).first()
+                    ))
+                    account = result.scalars().first()
                 else:
-                    account = BankAccount.get_user_default_account(self.uow, user_id)
+                    account = await BankAccount.get_user_default_account(self.uow, user_id)
                 
                 if not account:
                     return False, "还款账户不存在"

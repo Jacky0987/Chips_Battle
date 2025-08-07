@@ -42,10 +42,10 @@ class NewsService:
             return None
         
         news_type = random.choice(news_types)
-        template_data = templates['templates'][news_type]
+        template_group = templates['templates'][news_type]
         
         # 随机选择模板
-        template = random.choice(template_data)
+        template = random.choice(template_group['templates'])
         
         # 生成新闻内容
         title = self._fill_template(template['title'], news_type)
@@ -56,8 +56,8 @@ class NewsService:
             title=title,
             content=content,
             category=news_type,
-            impact_type=template.get('impact_type', 'neutral'),
-            impact_strength=template.get('impact_strength', 0.0)
+            impact_type=template_group.get('impact_type', 'neutral'),
+            impact_strength=template_group.get('impact_strength', 0.0)
         )
         
         return news

@@ -210,9 +210,10 @@ class BankCard(BaseModel):
             'card_id': self.card_id,
             'bank_name': bank_info['name'],
             'bank_code': self.bank_code,
-            'card_number': self.get_masked_card_number(),
+            'card_number': self.card_number,
             'card_type': self.card_type,
             'status': 'active' if self.can_use() else 'inactive',
+            'is_active': self.is_active,
             'expiry_date': self.expiry_date.strftime('%m/%y'),
             'issued_date': self.issued_date.strftime('%Y-%m-%d')
         }
@@ -233,4 +234,4 @@ class BankCard(BaseModel):
         ]
     
     def __repr__(self):
-        return f"<BankCard(card_id='{self.card_id}', bank='{self.bank_code}', number='{self.get_masked_card_number()}')>"
+        return f"<BankCard(card_id='{self.card_id}', bank='{self.bank_code}', number='{self.card_number}')>"

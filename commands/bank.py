@@ -69,36 +69,40 @@ class BankCommands:
         """
         # 确保服务已初始化
         self._ensure_initialized()
-        
-        if not args:
-            return await self._show_bank_overview(user_id)
-        
-        subcommand = args[0].lower()
-        
-        if subcommand == 'apply_card':
-            return await self._apply_card(user_id, args[1:] if len(args) > 1 else [])
-        elif subcommand == 'cards':
-            return await self._show_cards(user_id)
-        elif subcommand == 'accounts':
-            return await self._show_accounts(user_id)
-        elif subcommand == 'deposit':
-            return await self._deposit(user_id, args[1:] if len(args) > 1 else [])
-        elif subcommand == 'withdraw':
-            return await self._withdraw(user_id, args[1:] if len(args) > 1 else [])
-        elif subcommand == 'transfer':
-            return await self._transfer(user_id, args[1:] if len(args) > 1 else [])
-        elif subcommand == 'loan':
-            return await self._loan_menu(user_id, args[1:] if len(args) > 1 else [])
-        elif subcommand == 'repay':
-            return await self._repay_loan(user_id, args[1:] if len(args) > 1 else [])
-        elif subcommand == 'credit':
-            return await self._credit_info(user_id)
-        elif subcommand == 'task':
-            return await self._task_menu(user_id, args[1:] if len(args) > 1 else [])
-        elif subcommand == 'help':
-            return self._show_help()
-        else:
-            return f"未知的银行命令: {subcommand}\n使用 'bank help' 查看帮助"
+        uow = SqlAlchemyUnitOfWork(self.sessionmaker)
+        self.bank_service.uow = uow
+        self.credit_service.uow = uow
+        self.task_service.uow = uow
+        self.currency_service.uow = uow
+
+        async with uow:
+            if not args:
+                return await self._show_bank_overview(user_id)
+            
+            subcommand = args[0].lower()
+            
+            if subcommand == 'apply_card':
+                return await self._apply_card(user_id, args[1:] if len(args) > 1 else [])
+            elif subcommand == 'cards':
+                return await self._show_cards(user_id)
+            elif subcommand == 'deposit':
+                return await self._deposit(user_id, args[1:] if len(args) > 1 else [])
+            elif subcommand == 'withdraw':
+                return await self._withdraw(user_id, args[1:] if len(args) > 1 else [])
+            elif subcommand == 'transfer':
+                return await self._transfer(user_id, args[1:] if len(args) > 1 else [])
+            elif subcommand == 'loan':
+                return await self._loan_menu(user_id, args[1:] if len(args) > 1 else [])
+            elif subcommand == 'repay':
+                return await self._repay_loan(user_id, args[1:] if len(args) > 1 else [])
+            elif subcommand == 'credit':
+                return await self._credit_info(user_id)
+            elif subcommand == 'task':
+                return await self._task_menu(user_id, args[1:] if len(args) > 1 else [])
+            elif subcommand == 'help':
+                return self._show_help()
+            else:
+                return f"未知的银行命令: {subcommand}\n使用 'bank help' 查看帮助"
     
     # ==================== 银行概览 ====================
     
@@ -127,7 +131,7 @@ class BankCommands:
                 result.append("💳 银行卡:")
                 for card in overview['bank_cards']:
                     status = "✅" if card['is_active'] else "❌"
-                    result.append(f"  {status} {card['bank_name']} - {card['masked_card_number']}")
+                    result.append(f"  {status} {card['bank_name']} - {card['card_number']}")
             else:
                 result.append("💳 银行卡: 暂无")
             result.append("")
@@ -216,7 +220,7 @@ class BankCommands:
                 status = "✅ 正常" if info['is_active'] else "❌ 停用"
                 
                 result.append(f"🏛️ {info['bank_name']}")
-                result.append(f"   卡号: {info['masked_card_number']}")
+                result.append(f"   卡号: {info['card_number']}")
                 result.append(f"   类型: {info['card_type']}")
                 result.append(f"   状态: {status}")
                 result.append(f"   开卡日期: {info['created_at']}")
@@ -227,96 +231,112 @@ class BankCommands:
         except Exception as e:
             return f"❌ 获取银行卡信息失败: {str(e)}"
     
-    # ==================== 账户管理 ====================
-    
-    async def _show_accounts(self, user_id: str) -> str:
-        """显示银行账户列表"""
-        try:
-            accounts = self.bank_service.get_user_accounts(user_id)
-            
-            if not accounts:
-                return "🏛️ 您还没有银行账户\n请先申请银行卡"
-            
-            result = []
-            result.append("🏛️ 您的银行账户:")
-            result.append("")
-            
-            for account in accounts:
-                summary = account.get_account_summary()
-                default_mark = "⭐ 默认" if summary['is_default'] else ""
-                
-                result.append(f"🏦 {summary['account_name']} {default_mark}")
-                result.append(f"   账户号: {summary['account_number']}")
-                result.append(f"   余额: {format_currency(summary['balance'], summary['currency_code'])}")
-                result.append(f"   可用余额: {format_currency(summary['available_balance'], summary['currency_code'])}")
-                result.append(f"   账户类型: {summary['account_type']}")
-                result.append(f"   开户日期: {summary['created_at']}")
-                result.append("")
-            
-            return "\n".join(result)
-            
-        except Exception as e:
-            return f"❌ 获取账户信息失败: {str(e)}"
-    
     # ==================== 存取款操作 ====================
     
     async def _deposit(self, user_id: str, args: List[str]) -> str:
-        """存款"""
-        if len(args) < 2:
-            return "❌ 用法: bank deposit <账户ID> <金额> [描述]"
-        
-        account_id = args[0]
-        
+        """存款到银行卡"""
+        cards = await self.bank_service.get_user_bank_cards(user_id)
+        if not cards:
+            return "❌ 您还没有银行卡，无法存款。请先使用 `bank apply_card` 申请银行卡。"
+
+        if not args or len(args) < 2:
+            return await self._prompt_card_selection(user_id, "deposit", cards)
+
+        try:
+            card_index = int(args[0]) - 1
+            if not (0 <= card_index < len(cards)):
+                return "❌ 无效的卡片选择。"
+            selected_card = cards[card_index]
+        except ValueError:
+            return "❌ 请输入有效的卡片序号。"
+
         try:
             amount = Decimal(args[1])
             if amount <= 0:
-                return "❌ 存款金额必须大于0"
+                return "❌ 存款金额必须大于0。"
         except (ValueError, TypeError):
-            return "❌ 无效的金额格式"
-        
-        description = " ".join(args[2:]) if len(args) > 2 else None
-        
+            return "❌ 无效的金额格式。"
+
+        description = " ".join(args[2:]) if len(args) > 2 else "存款"
+
         try:
+            # Since BankAccount is tied to BankCard, we find the JCY account for that card
+            jcy_account = await self.bank_service.get_account_by_card_and_currency(selected_card.card_id, 'JCY')
+            if not jcy_account:
+                return f"❌ 未找到卡号 {selected_card.card_number} 对应的JCY账户。"
+
             success, message = await self.bank_service.deposit(
-                user_id, account_id, amount, description
+                user_id, jcy_account.account_id, amount, description
             )
-            
+
             if success:
                 return f"✅ {message}"
             else:
                 return f"❌ {message}"
-                
+
         except Exception as e:
             return f"❌ 存款失败: {str(e)}"
     
     async def _withdraw(self, user_id: str, args: List[str]) -> str:
-        """取款"""
-        if len(args) < 2:
-            return "❌ 用法: bank withdraw <账户ID> <金额> [描述]"
-        
-        account_id = args[0]
-        
+        """从银行卡取款"""
+        cards = await self.bank_service.get_user_bank_cards(user_id)
+        if not cards:
+            return "❌ 您还没有银行卡，无法取款。请先使用 `bank apply_card` 申请银行卡。"
+
+        if not args or len(args) < 2:
+            return await self._prompt_card_selection(user_id, "withdraw", cards)
+
+        try:
+            card_index = int(args[0]) - 1
+            if not (0 <= card_index < len(cards)):
+                return "❌ 无效的卡片选择。"
+            selected_card = cards[card_index]
+        except ValueError:
+            return "❌ 请输入有效的卡片序号。"
+
         try:
             amount = Decimal(args[1])
             if amount <= 0:
-                return "❌ 取款金额必须大于0"
+                return "❌ 取款金额必须大于0。"
         except (ValueError, TypeError):
-            return "❌ 无效的金额格式"
-        
-        description = " ".join(args[2:]) if len(args) > 2 else None
-        
+            return "❌ 无效的金额格式。"
+
+        description = " ".join(args[2:]) if len(args) > 2 else "取款"
+
         try:
+            jcy_account = await self.bank_service.get_account_by_card_and_currency(selected_card.card_id, 'JCY')
+            if not jcy_account:
+                return f"❌ 未找到卡号 {selected_card.card_number} 对应的JCY账户。"
+
             success, message = await self.bank_service.withdraw(
-                user_id, account_id, amount, description
+                user_id, jcy_account.account_id, amount, description
             )
-            
+
             if success:
                 return f"✅ {message}"
             else:
                 return f"❌ {message}"
-                
+
         except Exception as e:
             return f"❌ 取款失败: {str(e)}"
+    
+    async def _prompt_card_selection(self, user_id: str, action: str, cards: List[BankCard]) -> str:
+        """提示用户选择银行卡"""
+        result = []
+        result.append(f"请选择要{action}的银行卡 (输入序号):\n")
+        
+        for i, card in enumerate(cards):
+            info = card.get_display_info()
+            # We need to get the balance from the associated JCY account
+            jcy_account = await self.bank_service.get_account_by_card_and_currency(card.card_id, 'JCY')
+            balance_str = "查询中..." # Default text
+            if jcy_account:
+                balance_str = format_currency(jcy_account.balance, 'JCY')
+
+            result.append(f"  [{i+1}] {info['bank_name']} ({info['card_number']}) - 余额: {balance_str}")
+        
+        result.append(f"\n用法: bank {action} <卡片序号> <金额> [描述]")
+        return "\n".join(result)
     
     # ==================== 转账功能 ====================
     
