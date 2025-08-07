@@ -169,7 +169,7 @@ class BankService:
                 
                 # 如果是用户第一个账户，设为默认账户
                 result = await self.uow.session.execute(select(func.count(BankAccount.account_id)).filter_by(
-                    user_id=user_id, is_enabled=True
+                    user_id=user_id, is_active=True
                 ))
                 user_accounts = result.scalar_one()
                 
@@ -197,7 +197,7 @@ class BankService:
         try:
             async with self.uow:
                 stmt = select(BankAccount).filter_by(
-                    user_id=user_id, is_enabled=True
+                    user_id=user_id, is_active=True
                 )
                 
                 if currency_code:
@@ -537,29 +537,30 @@ class BankService:
             await self.uow.rollback()
             return False, f"还款失败: {str(e)}"
     
-    def get_user_loans(self, user_id: str, status: str = None) -> List[Loan]:
-        """获取用户贷款列表
-        
-        Args:
-            user_id: 用户ID
-            status: 状态过滤
-            
-        Returns:
-            贷款列表
-        """
+    async def get_user_accounts(self, user_id: str, is_active: bool = True) -> List[BankAccount]:
+        """获取用户的所有银行账户"""
         try:
-            query = self.uow.query(Loan).filter_by(user_id=user_id)
-            
+            accounts = await self.uow.session.execute(
+                select(BankAccount).filter_by(user_id=user_id, is_active=is_active)
+            )
+            return accounts.scalars().all()
+        except Exception as e:
+            self.logger.error(f"获取用户 {user_id} 的银行账户时出错: {e}")
+            raise
+
+    async def get_user_loans(self, user_id: str, status: Optional[str] = None) -> List[Loan]:
+        """获取用户的所有贷款"""
+        try:
+            stmt = select(Loan).filter_by(user_id=user_id)
             if status:
-                query = query.filter_by(status=status)
+                stmt = stmt.filter_by(status=status)
             
-            return query.order_by(Loan.application_date.desc()).all()
-            
-        except Exception:
-            return []
-    
-    # ==================== 银行任务管理 ====================
-    
+            loans = await self.uow.session.execute(stmt)
+            return loans.scalars().all()
+        except Exception as e:
+            self.logger.error(f"获取用户 {user_id} 的贷款时出错: {e}")
+            raise
+
     def get_available_tasks(self, user_id: str = None, bank_code: str = None) -> List[BankTask]:
         """获取可用任务
         
@@ -704,47 +705,50 @@ class BankService:
         except Exception:
             return None
     
-    async def get_account_overview(self, user_id: str) -> Dict:
+    async def get_account_overview(self, user_id: str) -> Dict[str, Any]:
         """获取账户概览
-        
+
         Args:
             user_id: 用户ID
-            
+
         Returns:
             账户概览信息
+
+        Raises:
+            ValueError: 如果获取概览失败
         """
-        try:
-            async with self.uow:
+        async with self.uow:
+            try:
                 # 获取银行卡
                 print("Getting bank cards...")
-                bank_cards = self.get_user_bank_cards(user_id)
+                bank_cards = await self.get_user_bank_cards(user_id)
                 print(f"Found {len(bank_cards)} bank cards.")
-                
+
                 # 获取账户
                 print("Getting accounts...")
-                accounts = self.get_user_accounts(user_id)
+                accounts = await self.get_user_accounts(user_id)
                 print(f"Found {len(accounts)} accounts.")
-                
+
                 # 获取贷款
                 print("Getting loans...")
-                loans = self.get_user_loans(user_id, 'approved')
+                loans = await self.get_user_loans(user_id, 'approved')
                 print(f"Found {len(loans)} loans.")
-                
+
                 # 计算总资产
                 print("Calculating total assets...")
                 total_assets = sum(account.balance or 0 for account in accounts)
                 print(f"Total assets: {total_assets}")
-                
+
                 # 计算总负债
                 print("Calculating total debt...")
                 total_debt = sum(loan.outstanding_balance or 0 for loan in loans)
                 print(f"Total debt: {total_debt}")
-                
+
                 # 获取信用档案
                 print("Getting credit profile...")
-                credit_profile = CreditProfile.get_or_create_profile(self.uow, user_id)
+                credit_profile = await CreditProfile.get_or_create_profile(self.uow.session, user_id)
                 print("Credit profile obtained.")
-                
+
                 return {
                     'user_id': user_id,
                     'bank_cards': [card.get_display_info() for card in bank_cards],
@@ -757,10 +761,7 @@ class BankService:
                     'account_count': len(accounts),
                     'loan_count': len(loans)
                 }
-            
-        except Exception as e:
-            print(f"Error in get_account_overview: {e}")
-            return {
-                'user_id': user_id,
-                'error': '获取账户概览失败'
-            }
+
+            except Exception as e:
+                print(f"Error in get_account_overview: {e}")
+                raise ValueError(f"获取账户概览失败") from e

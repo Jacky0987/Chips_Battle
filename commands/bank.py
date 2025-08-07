@@ -202,7 +202,7 @@ class BankCommands:
     async def _show_cards(self, user_id: str) -> str:
         """显示银行卡列表"""
         try:
-            cards = self.bank_service.get_user_bank_cards(user_id)
+            cards = await self.bank_service.get_user_bank_cards(user_id)
             
             if not cards:
                 return "💳 您还没有银行卡\n使用 'bank apply_card' 申请银行卡"
