@@ -1,0 +1,272 @@
+{
+  "stocks": [
+    {
+      "ticker": "JCTECH",
+      "name": "JC科技集团",
+      "sector": "科技",
+      "ipo_price": 50.00,
+      "current_price": 125.50,
+      "market_cap": 25000000000,
+      "volatility": 0.025,
+      "description": "领先的科技创新公司，专注于人工智能、云计算和大数据解决方案"
+    },
+    {
+      "ticker": "JCBANK",
+      "name": "JC银行",
+      "sector": "金融",
+      "ipo_price": 30.00,
+      "current_price": 45.80,
+      "market_cap": 18000000000,
+      "volatility": 0.015,
+      "description": "JCMarket最大的商业银行，提供全方位金融服务"
+    },
+    {
+      "ticker": "JCPHARMA",
+      "name": "JC制药",
+      "sector": "医药",
+      "ipo_price": 80.00,
+      "current_price": 156.20,
+      "market_cap": 12000000000,
+      "volatility": 0.020,
+      "description": "创新药物研发和生产企业，在生物技术领域处于领先地位"
+    },
+    {
+      "ticker": "JCENERGY",
+      "name": "JC能源",
+      "sector": "能源",
+      "ipo_price": 25.00,
+      "current_price": 32.15,
+      "market_cap": 8000000000,
+      "volatility": 0.030,
+      "description": "综合性能源公司，业务涵盖石油、天然气和可再生能源"
+    },
+    {
+      "ticker": "JCRETAIL",
+      "name": "JC零售",
+      "sector": "消费",
+      "ipo_price": 40.00,
+      "current_price": 68.90,
+      "market_cap": 15000000000,
+      "volatility": 0.018,
+      "description": "大型零售连锁企业，线上线下一体化运营模式"
+    },
+    {
+      "ticker": "JCAUTO",
+      "name": "JC汽车",
+      "sector": "工业",
+      "ipo_price": 60.00,
+      "current_price": 89.75,
+      "market_cap": 20000000000,
+      "volatility": 0.022,
+      "description": "新能源汽车制造商，智能驾驶技术的先驱者"
+    },
+    {
+      "ticker": "JCREAL",
+      "name": "JC地产",
+      "sector": "房地产",
+      "ipo_price": 35.00,
+      "current_price": 28.60,
+      "market_cap": 6000000000,
+      "volatility": 0.025,
+      "description": "大型房地产开发企业，专注于住宅和商业地产开发"
+    },
+    {
+      "ticker": "JCFOOD",
+      "name": "JC食品",
+      "sector": "消费",
+      "ipo_price": 20.00,
+      "current_price": 38.45,
+      "market_cap": 5000000000,
+      "volatility": 0.016,
+      "description": "知名食品饮料生产企业，拥有多个知名品牌"
+    },
+    {
+      "ticker": "JCMEDIA",
+      "name": "JC传媒",
+      "sector": "科技",
+      "ipo_price": 45.00,
+      "current_price": 72.30,
+      "market_cap": 8000000000,
+      "volatility": 0.028,
+      "description": "数字媒体和娱乐内容提供商，在流媒体领域占据重要地位"
+    },
+    {
+      "ticker": "JCLOGIS",
+      "name": "JC物流",
+      "sector": "工业",
+      "ipo_price": 30.00,
+      "current_price": 52.80,
+      "market_cap": 7000000000,
+      "volatility": 0.020,
+      "description": "现代化物流服务企业，智能仓储和配送网络覆盖全国"
+    },
+    {
+      "ticker": "JCINSURE",
+      "name": "JC保险",
+      "sector": "金融",
+      "ipo_price": 25.00,
+      "current_price": 41.25,
+      "market_cap": 9000000000,
+      "volatility": 0.014,
+      "description": "综合性保险公司，提供人寿、财产和健康保险服务"
+    },
+    {
+      "ticker": "JCMINING",
+      "name": "JC矿业",
+      "sector": "能源",
+      "ipo_price": 40.00,
+      "current_price": 35.90,
+      "market_cap": 4000000000,
+      "volatility": 0.035,
+      "description": "大型矿业公司，主要开采铁矿石、铜矿和稀土元素"
+    },
+    {
+      "ticker": "JCGAME",
+      "name": "JC游戏",
+      "sector": "科技",
+      "ipo_price": 55.00,
+      "current_price": 98.60,
+      "market_cap": 6000000000,
+      "volatility": 0.032,
+      "description": "移动游戏开发和发行商，多款游戏在全球市场表现优异"
+    },
+    {
+      "ticker": "JCHOTEL",
+      "name": "JC酒店",
+      "sector": "消费",
+      "ipo_price": 35.00,
+      "current_price": 29.75,
+      "market_cap": 3000000000,
+      "volatility": 0.024,
+      "description": "高端酒店连锁集团，在主要城市拥有豪华酒店物业"
+    },
+    {
+      "ticker": "JCAIR",
+      "name": "JC航空",
+      "sector": "工业",
+      "ipo_price": 50.00,
+      "current_price": 42.10,
+      "market_cap": 5000000000,
+      "volatility": 0.028,
+      "description": "国内领先的航空公司，国内外航线网络完善"
+    },
+    {
+      "ticker": "JCBIO",
+      "name": "JC生物",
+      "sector": "医药",
+      "ipo_price": 70.00,
+      "current_price": 134.80,
+      "market_cap": 4000000000,
+      "volatility": 0.026,
+      "description": "生物技术研发公司，专注于基因治疗和精准医疗"
+    },
+    {
+      "ticker": "JCSEMI",
+      "name": "JC半导体",
+      "sector": "科技",
+      "ipo_price": 90.00,
+      "current_price": 178.50,
+      "market_cap": 15000000000,
+      "volatility": 0.030,
+      "description": "半导体芯片设计和制造企业，在AI芯片领域技术领先"
+    },
+    {
+      "ticker": "JCGREEN",
+      "name": "JC新能源",
+      "sector": "能源",
+      "ipo_price": 45.00,
+      "current_price": 67.20,
+      "market_cap": 8000000000,
+      "volatility": 0.025,
+      "description": "可再生能源开发商，太阳能和风能项目遍布全国"
+    },
+    {
+      "ticker": "JCWATER",
+      "name": "JC水务",
+      "sector": "公用事业",
+      "ipo_price": 20.00,
+      "current_price": 26.85,
+      "market_cap": 3000000000,
+      "volatility": 0.012,
+      "description": "城市供水和污水处理服务提供商，环保技术先进"
+    },
+    {
+      "ticker": "JCSPORT",
+      "name": "JC体育",
+      "sector": "消费",
+      "ipo_price": 30.00,
+      "current_price": 48.90,
+      "market_cap": 2000000000,
+      "volatility": 0.022,
+      "description": "体育用品制造和体育赛事运营企业，品牌影响力强"
+    }
+  ],
+  "market_info": {
+    "name": "JCMarket",
+    "currency": "JCC",
+    "trading_hours": {
+      "open": "09:30",
+      "close": "15:00",
+      "timezone": "JCT"
+    },
+    "market_cap_total": 200000000000,
+    "daily_volume_avg": 5000000000,
+    "listed_companies": 20
+  },
+  "sectors": {
+    "科技": {
+      "description": "科技创新企业，包括软件、硬件、互联网等",
+      "companies": ["JCTECH", "JCMEDIA", "JCGAME", "JCSEMI"],
+      "market_cap_percentage": 27.0
+    },
+    "金融": {
+      "description": "银行、保险、证券等金融服务企业",
+      "companies": ["JCBANK", "JCINSURE"],
+      "market_cap_percentage": 13.5
+    },
+    "医药": {
+      "description": "制药、生物技术、医疗设备企业",
+      "companies": ["JCPHARMA", "JCBIO"],
+      "market_cap_percentage": 8.0
+    },
+    "能源": {
+      "description": "传统能源和新能源企业",
+      "companies": ["JCENERGY", "JCMINING", "JCGREEN"],
+      "market_cap_percentage": 10.0
+    },
+    "消费": {
+      "description": "零售、食品、酒店、体育等消费类企业",
+      "companies": ["JCRETAIL", "JCFOOD", "JCHOTEL", "JCSPORT"],
+      "market_cap_percentage": 12.5
+    },
+    "工业": {
+      "description": "制造业、物流、航空等工业企业",
+      "companies": ["JCAUTO", "JCLOGIS", "JCAIR"],
+      "market_cap_percentage": 16.0
+    },
+    "房地产": {
+      "description": "房地产开发和投资企业",
+      "companies": ["JCREAL"],
+      "market_cap_percentage": 3.0
+    },
+    "公用事业": {
+      "description": "水务、电力、燃气等公用事业企业",
+      "companies": ["JCWATER"],
+      "market_cap_percentage": 1.5
+    }
+  },
+  "indices": {
+    "JC100": {
+      "name": "JCMarket 100指数",
+      "description": "JCMarket最具代表性的100只股票组成的指数",
+      "base_value": 1000,
+      "current_value": 2850.75
+    },
+    "JCTECH": {
+      "name": "JC科技指数",
+      "description": "科技行业股票组成的指数",
+      "base_value": 1000,
+      "current_value": 3420.60
+    }
+  }
+}

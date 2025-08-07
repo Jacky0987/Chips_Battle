@@ -1,0 +1,181 @@
+{
+  "apps": [
+    {
+      "name": "calculator",
+      "display_name": "计算器",
+      "description": "基础数学计算工具，支持四则运算和科学计算",
+      "version": "1.0.0",
+      "price": 0,
+      "category": "工具",
+      "developer": "ChipsCorp",
+      "icon": "🧮",
+      "features": [
+        "基础四则运算",
+        "科学计算函数",
+        "历史记录",
+        "表达式求值"
+      ],
+      "requirements": [],
+      "file_size": "2.1KB",
+      "rating": 4.8,
+      "downloads": 15420
+    },
+    {
+      "name": "weather",
+      "display_name": "天气预报",
+      "description": "实时天气信息和未来预报，支持多城市查询",
+      "version": "2.3.1",
+      "price": 5.99,
+      "category": "生活",
+      "developer": "WeatherTech",
+      "icon": "🌤️",
+      "features": [
+        "实时天气",
+        "7天预报",
+        "多城市支持",
+        "天气警报"
+      ],
+      "requirements": ["网络连接"],
+      "file_size": "8.7KB",
+      "rating": 4.6,
+      "downloads": 8932
+    },
+    {
+      "name": "news",
+      "display_name": "新闻阅读器",
+      "description": "获取最新的JCMarket新闻和市场动态",
+      "version": "1.5.2",
+      "price": 12.50,
+      "category": "新闻",
+      "developer": "NewsFlow Inc",
+      "icon": "📰",
+      "features": [
+        "实时新闻推送",
+        "市场分析",
+        "个性化推荐",
+        "离线阅读"
+      ],
+      "requirements": ["网络连接", "JCMarket账户"],
+      "file_size": "15.3KB",
+      "rating": 4.7,
+      "downloads": 12456
+    },
+    {
+      "name": "stock_tracker",
+      "display_name": "股票追踪器",
+      "description": "专业的股票市场监控和分析工具",
+      "version": "3.1.0",
+      "price": 29.99,
+      "category": "金融",
+      "developer": "FinTech Solutions",
+      "icon": "📈",
+      "features": [
+        "实时股价监控",
+        "技术分析图表",
+        "投资组合管理",
+        "价格预警"
+      ],
+      "requirements": ["网络连接", "JCMarket账户", "银行账户"],
+      "file_size": "45.2KB",
+      "rating": 4.9,
+      "downloads": 6789
+    },
+    {
+      "name": "file_manager",
+      "display_name": "文件管理器",
+      "description": "高效的文件和文档管理工具",
+      "version": "2.0.5",
+      "price": 8.00,
+      "category": "工具",
+      "developer": "SystemTools Ltd",
+      "icon": "📁",
+      "features": [
+        "文件浏览",
+        "批量操作",
+        "搜索功能",
+        "压缩解压"
+      ],
+      "requirements": [],
+      "file_size": "12.8KB",
+      "rating": 4.5,
+      "downloads": 9876
+    },
+    {
+      "name": "music_player",
+      "display_name": "音乐播放器",
+      "description": "支持多种格式的音乐播放器",
+      "version": "1.8.3",
+      "price": 15.00,
+      "category": "娱乐",
+      "developer": "AudioWave",
+      "icon": "🎵",
+      "features": [
+        "多格式支持",
+        "播放列表",
+        "均衡器",
+        "歌词显示"
+      ],
+      "requirements": [],
+      "file_size": "28.4KB",
+      "rating": 4.4,
+      "downloads": 5432
+    },
+    {
+      "name": "text_editor",
+      "display_name": "文本编辑器",
+      "description": "功能强大的代码和文本编辑器",
+      "version": "4.2.1",
+      "price": 19.99,
+      "category": "开发",
+      "developer": "CodeCraft",
+      "icon": "📝",
+      "features": [
+        "语法高亮",
+        "代码补全",
+        "多标签页",
+        "插件支持"
+      ],
+      "requirements": [],
+      "file_size": "35.7KB",
+      "rating": 4.8,
+      "downloads": 7654
+    },
+    {
+      "name": "game_center",
+      "display_name": "游戏中心",
+      "description": "集成多种小游戏的娱乐平台",
+      "version": "1.0.0",
+      "price": 25.00,
+      "category": "娱乐",
+      "developer": "GameHub",
+      "icon": "🎮",
+      "features": [
+        "多种游戏",
+        "成就系统",
+        "排行榜",
+        "社交功能"
+      ],
+      "requirements": ["网络连接"],
+      "file_size": "52.1KB",
+      "rating": 4.3,
+      "downloads": 3210
+    }
+  ],
+  "categories": [
+    "工具",
+    "生活",
+    "新闻",
+    "金融",
+    "娱乐",
+    "开发"
+  ],
+  "featured_apps": [
+    "stock_tracker",
+    "news",
+    "calculator"
+  ],
+  "new_releases": [
+    "game_center",
+    "text_editor"
+  ]
+}

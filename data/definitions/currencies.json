@@ -1,0 +1,104 @@
+{
+  "currencies": [
+    {
+      "code": "JCY",
+      "name": "Jacky Yuan",
+      "symbol": "J$",
+      "decimal_places": 2,
+      "exchange_rate": 1.0,
+      "is_active": true,
+      "is_base_currency": true,
+      "description": "杰克币游戏世界的基础货币"
+    },
+    {
+      "code": "USD",
+      "name": "US Dollar",
+      "symbol": "$",
+      "decimal_places": 2,
+      "exchange_rate": 6.85,
+      "is_active": true,
+      "is_base_currency": false,
+      "description": "美元"
+    },
+    {
+      "code": "CNY",
+      "name": "Chinese Yuan",
+      "symbol": "¥",
+      "decimal_places": 2,
+      "exchange_rate": 1.0,
+      "is_active": true,
+      "is_base_currency": false,
+      "description": "人民币"
+    },
+    {
+      "code": "EUR",
+      "name": "Euro",
+      "symbol": "€",
+      "decimal_places": 2,
+      "exchange_rate": 7.45,
+      "is_active": true,
+      "is_base_currency": false,
+      "description": "欧元"
+    },
+    {
+      "code": "GBP",
+      "name": "British Pound",
+      "symbol": "£",
+      "decimal_places": 2,
+      "exchange_rate": 8.65,
+      "is_active": true,
+      "is_base_currency": false,
+      "description": "英镑"
+    },
+    {
+      "code": "JPY",
+      "name": "Japanese Yen",
+      "symbol": "¥",
+      "decimal_places": 0,
+      "exchange_rate": 0.048,
+      "is_active": true,
+      "is_base_currency": false,
+      "description": "日元"
+    },
+    {
+      "code": "KRW",
+      "name": "South Korean Won",
+      "symbol": "₩",
+      "decimal_places": 0,
+      "exchange_rate": 0.0052,
+      "is_active": true,
+      "is_base_currency": false,
+      "description": "韩元"
+    },
+    {
+      "code": "AUD",
+      "name": "Australian Dollar",
+      "symbol": "A$",
+      "decimal_places": 2,
+      "exchange_rate": 4.55,
+      "is_active": true,
+      "is_base_currency": false,
+      "description": "澳元"
+    },
+    {
+      "code": "CAD",
+      "name": "Canadian Dollar",
+      "symbol": "C$",
+      "decimal_places": 2,
+      "exchange_rate": 5.05,
+      "is_active": true,
+      "is_base_currency": false,
+      "description": "加元"
+    },
+    {
+      "code": "CHF",
+      "name": "Swiss Franc",
+      "symbol": "CHF",
+      "decimal_places": 2,
+      "exchange_rate": 7.65,
+      "is_active": true,
+      "is_base_currency": false,
+      "description": "瑞士法郎"
+    }
+  ]
+}
