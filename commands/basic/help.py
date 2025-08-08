@@ -5,7 +5,9 @@
 提供系统帮助信息和命令使用说明。
 """
 
-from typing import List
+import json
+import os
+from typing import Dict, List, Optional
 from commands.base import BasicCommand, CommandResult, CommandContext
 from rich.console import Console
 from rich.table import Table
@@ -106,14 +108,227 @@ class HelpCommand(BasicCommand):
             help_text += "📰 新闻命令: news, subscribe\n"
             help_text += "⚙️  管理命令: admin, config, logs\n\n"
         
+        # 添加可用分类信息
+        help_text += "📂 可用的分类:\n"
+        if context.registry:
+            categories = context.registry.get_categories()
+            help_text += f"{', '.join(sorted(categories))}\n\n"
+        else:
+            help_text += "admin, apps, basic, finance, stock\n\n"
+        
+        # 添加特殊帮助主题
+        help_text += "🌟 特殊帮助主题:\n"
+        help_text += "whatsnew, tutorial, developers\n\n"
+        
         # 添加使用提示
         help_text += "💡 使用技巧:\n"
         help_text += "• 命令不区分大小写\n"
         help_text += "• 可以使用命令别名（如 'h' 代替 'help'）\n"
         help_text += "• 输入 'quit' 或 'exit' 退出游戏\n"
         help_text += "• 输入 'status' 查看当前状态\n"
+        help_text += "• 使用 'help <分类>' 查看分类命令\n"
+        help_text += "• 使用 'help <主题>' 查看特殊主题\n"
         
         return self.success(help_text)
+    
+    def _load_help_data(self, filename: str) -> Optional[Dict]:
+        """加载帮助数据文件
+        
+        Args:
+            filename: JSON文件名
+            
+        Returns:
+            加载的数据字典，失败时返回None
+        """
+        try:
+            # 构建文件路径 - 指向项目根目录下的data/help
+            current_dir = os.path.dirname(__file__)
+            project_root = os.path.join(current_dir, '..', '..')
+            help_dir = os.path.join(project_root, 'data', 'help')
+            file_path = os.path.join(help_dir, filename)
+            
+            # 检查文件是否存在
+            if not os.path.exists(file_path):
+                return None
+            
+            # 读取并解析JSON文件
+            with open(file_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+                
+        except (json.JSONDecodeError, IOError, OSError) as e:
+            # 记录错误但不抛出异常
+            return None
+    
+    async def _show_whatsnew_help(self) -> CommandResult:
+        """显示游戏更新日志"""
+        try:
+            whatsnew_data = self._load_help_data('whatsnew.json')
+            if not whatsnew_data:
+                return self.error("无法加载更新日志数据")
+            
+            content = f"\n🆕 {whatsnew_data['title']}\n\n"
+            content += f"📝 {whatsnew_data['description']}\n\n"
+            
+            # 显示最新更新
+            if whatsnew_data.get('updates'):
+                latest_update = whatsnew_data['updates'][0]
+                content += f"🎯 最新版本: {latest_update['version']} ({latest_update['date']})\n"
+                content += f"📋 {latest_update['title']}\n\n"
+                
+                # 显示亮点
+                if latest_update.get('highlights'):
+                    content += "✨ 主要亮点:\n"
+                    for highlight in latest_update['highlights']:
+                        content += f"  {highlight}\n"
+                    content += "\n"
+                
+                # 显示功能分类
+                if latest_update.get('features'):
+                    content += "🔧 新增功能:\n"
+                    for feature_category in latest_update['features']:
+                        content += f"\n📂 {feature_category['category']}:\n"
+                        for item in feature_category['items']:
+                            content += f"  • {item}\n"
+                    content += "\n"
+                
+                # 显示修复内容
+                if latest_update.get('fixes'):
+                    content += "🐛 问题修复:\n"
+                    for fix in latest_update['fixes']:
+                        content += f"  • {fix}\n"
+                    content += "\n"
+            
+            # 显示开发路线图
+            if whatsnew_data.get('roadmap'):
+                roadmap = whatsnew_data['roadmap']
+                content += f"🗺️ {roadmap['title']}:\n"
+                for upcoming in roadmap.get('upcoming', []):
+                    content += f"\n📅 {upcoming['version']} (计划: {upcoming['planned_date']}):\n"
+                    for feature in upcoming['features']:
+                        content += f"  • {feature}\n"
+                content += "\n"
+            
+            # 显示页脚信息
+            if whatsnew_data.get('footer'):
+                footer = whatsnew_data['footer']
+                content += f"💡 {footer['note']}\n"
+                content += f"📧 联系方式: {footer['contact']}"
+            
+            return self.success(content)
+            
+        except Exception as e:
+            return self.error(f"加载更新日志时发生错误: {str(e)}")
+    
+    async def _show_tutorial_help(self) -> CommandResult:
+        """显示游戏上手分页教程"""
+        try:
+            tutorial_data = self._load_help_data('tutorial.json')
+            if not tutorial_data:
+                return self.error("无法加载教程数据")
+            
+            content = f"\n📚 {tutorial_data['title']}\n\n"
+            content += f"📖 {tutorial_data['description']}\n\n"
+            
+            # 显示所有页面
+            for i, page in enumerate(tutorial_data.get('pages', []), 1):
+                content += f"📄 第{i}页: {page['title']}\n\n"
+                
+                # 显示步骤
+                if page.get('steps'):
+                    for step in page['steps']:
+                        content += f"   {step['icon']} {step['title']}\n"
+                        for command in step.get('commands', []):
+                            content += f"     • {command}\n"
+                        if step.get('note'):
+                            content += f"     💡 {step['note']}\n"
+                        content += "\n"
+                
+                # 显示内容列表
+                if page.get('content'):
+                    for item in page['content']:
+                        content += f"   • {item}\n"
+                    content += "\n"
+                
+                content += "─" * 50 + "\n\n"
+            
+            # 显示导航提示
+            if tutorial_data.get('navigation'):
+                nav = tutorial_data['navigation']
+                content += f"🧭 {nav['title']}:\n"
+                for tip in nav['tips']:
+                    content += f"• {tip}\n"
+                content += "\n"
+            
+            # 显示联系信息
+            if tutorial_data.get('contact'):
+                contact = tutorial_data['contact']
+                content += f"📞 {contact['title']}:\n"
+                content += f"📧 邮箱: {contact['email']}\n"
+                content += f"💬 {contact['note']}"
+            
+            return self.success(content)
+            
+        except Exception as e:
+            return self.error(f"加载教程时发生错误: {str(e)}")
+    
+    async def _show_developers_help(self) -> CommandResult:
+        """显示开发者鸣谢菜单与联系方式"""
+        try:
+            developers_data = self._load_help_data('developers.json')
+            if not developers_data:
+                return self.error("无法加载开发者信息数据")
+            
+            content = f"\n👥 {developers_data['title']}\n\n"
+            content += f"📝 {developers_data['description']}\n\n"
+            
+            # 显示主要开发者
+            if developers_data.get('developers'):
+                content += "🎯 主要开发者:\n"
+                for dev in developers_data['developers']:
+                    content += f"• {dev['name']} - {dev['role']}\n"
+                    if dev.get('title'):
+                        content += f"  {dev['title']}\n"
+                content += "\n"
+            
+            # 显示特别鸣谢
+            if developers_data.get('acknowledgments'):
+                ack = developers_data['acknowledgments']
+                content += f"🙏 {ack['title']}:\n"
+                for section in ack.get('sections', []):
+                    content += f"\n📂 {section['category']}:\n"
+                    for item in section.get('items', []):
+                        content += f"• {item['name']} - {item['description']}\n"
+                content += "\n"
+            
+            # 显示项目信息
+            if developers_data.get('project_info'):
+                project = developers_data['project_info']
+                content += f"📜 {project['title']}:\n"
+                for key, value in project['details'].items():
+                    content += f"• {key}：{value}\n"
+                content += "\n"
+            
+            # 显示社区贡献
+            if developers_data.get('community'):
+                community = developers_data['community']
+                content += f"🌟 {community['title']}:\n"
+                for line in community.get('content', []):
+                    if line.strip():  # 跳过空行
+                        content += f"{line}\n"
+                    else:
+                        content += "\n"
+                content += "\n"
+            
+            # 显示页脚信息
+            if developers_data.get('footer'):
+                footer = developers_data['footer']
+                content += f"📧 联系方式: {footer['contact']}\n"
+                content += f"💡 {footer['note']}"
+            
+            return self.success(content)
+            
+        except Exception as e:
+            return self.error(f"加载开发者信息时发生错误: {str(e)}")
     
     async def _show_specific_help(self, target: str, context: CommandContext) -> CommandResult:
         """显示特定命令或分类的帮助
@@ -125,6 +340,14 @@ class HelpCommand(BasicCommand):
         Returns:
             命令执行结果
         """
+        # 处理特殊帮助主题
+        if target == "whatsnew":
+            return await self._show_whatsnew_help()
+        elif target == "tutorial":
+            return await self._show_tutorial_help()
+        elif target == "developers":
+            return await self._show_developers_help()
+        
         if not context.registry:
             return self.error("命令注册器不可用")
         
@@ -170,7 +393,8 @@ class HelpCommand(BasicCommand):
         available_categories = ', '.join(sorted(categories)) if categories else '无'
         error_text = f"未找到命令或分类 '{target}'\n\n"
         error_text += f"可用的分类: {available_categories}\n"
-        error_text += "使用 'help' 查看所有可用命令"
+        error_text += "使用 'help' 查看所有可用命令\n"
+        error_text += "特殊帮助主题: whatsnew, tutorial, developers"
         
         return self.error(error_text)
     

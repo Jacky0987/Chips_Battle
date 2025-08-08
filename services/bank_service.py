@@ -12,7 +12,6 @@ from models.bank.credit_profile import CreditProfile
 from models.bank.bank_task import BankTask, UserBankTask, TaskStatus
 from models.finance.currency import Currency
 from services.currency_service import CurrencyService
-from services.credit_service import CreditService
 from dal.unit_of_work import UnitOfWork
 
 
@@ -28,10 +27,9 @@ class BankService:
     - 银行任务管理
     """
     
-    def __init__(self, uow: UnitOfWork, currency_service: CurrencyService, credit_service: CreditService):
+    def __init__(self, uow: UnitOfWork, currency_service: CurrencyService):
         self.uow = uow
         self.currency_service = currency_service
-        self.credit_service = credit_service
     
     # ==================== 银行卡管理 ====================
     
@@ -71,7 +69,7 @@ class BankService:
                 if existing_card:
                     return False, f"您已拥有{bank_code.upper()}银行的银行卡", None
                 
-                # 创建银行卡（已包含默认账户）
+                # 创建银行卡
                 bank_card = BankCard(
                     user_id=user_id,
                     bank_code=bank_code.upper(),
@@ -79,9 +77,17 @@ class BankService:
                 )
                 
                 self.uow.add(bank_card)
+                
+                # 自动创建默认的JCY账户
+                await self.create_bank_account(
+                    user_id=user_id,
+                    bank_card_id=bank_card.card_id,
+                    currency_code='JCY'
+                )
+                
                 await self.uow.commit()
                 
-                return True, f"成功申请{bank_code.upper()}银行卡，已自动开通JCY账户", bank_card
+                return True, f"成功申请{bank_code.upper()}银行卡，并已自动为您开通JCY账户", bank_card
                 
         except Exception as e:
             await self.uow.rollback()
@@ -122,63 +128,59 @@ class BankService:
             (是否成功, 消息, 银行账户对象)
         """
         try:
-            async with self.uow:
-                # 验证银行卡
-                result = await self.uow.session.execute(select(BankCard).filter_by(
-                    card_id=bank_card_id,
-                    user_id=user_id,
-                    is_active=True
-                ))
-                bank_card = result.scalars().first()
-                
-                if not bank_card:
-                    return False, "银行卡不存在或未激活", None
-                
-                # 验证货币
-                result = await self.uow.session.execute(select(Currency).filter_by(code=currency_code))
-                currency = result.scalars().first()
-                if not currency:
-                    return False, f"不支持的货币: {currency_code}", None
-                
-                # 检查是否已有相同货币的账户
-                result = await self.uow.session.execute(select(BankAccount).filter_by(
-                    user_id=user_id,
-                    bank_card_id=bank_card_id,
-                    currency_id=currency.currency_id
-                ))
-                existing_account = result.scalars().first()
-                
-                if existing_account:
-                    return False, f"已存在{currency_code}账户", None
-                
-                # 创建账户
-                if not account_name:
-                    account_name = f"{bank_card.get_bank_info()['name']}{currency_code}账户"
-                
-                bank_account = BankAccount(
-                    user_id=user_id,
-                    bank_card_id=bank_card_id,
-                    currency_id=currency.currency_id,
-                    account_name=account_name
-                )
-                
-                self.uow.add(bank_account)
-                
-                # 如果是用户第一个账户，设为默认账户
-                result = await self.uow.session.execute(select(func.count(BankAccount.account_id)).filter_by(
-                    user_id=user_id, is_active=True
-                ))
-                user_accounts = result.scalar_one()
-                
-                if user_accounts == 0:
-                    await bank_account.set_as_default(self.uow)
-                
-                await self.uow.commit()
-                
-                return True, f"成功创建{currency_code}账户", bank_account
-                
+            # 验证银行卡
+            result = await self.uow.session.execute(select(BankCard).filter_by(
+                card_id=bank_card_id,
+                user_id=user_id,
+                is_active=True
+            ))
+            bank_card = result.scalars().first()
+            
+            if not bank_card:
+                return False, "银行卡不存在或未激活", None
+            
+            # 验证货币
+            result = await self.uow.session.execute(select(Currency).filter_by(code=currency_code))
+            currency = result.scalars().first()
+            if not currency:
+                return False, f"不支持的货币: {currency_code}", None
+            
+            # 检查是否已有相同货币的账户
+            result = await self.uow.session.execute(select(BankAccount).filter_by(
+                user_id=user_id,
+                bank_card_id=bank_card_id,
+                currency_id=currency.currency_id
+            ))
+            existing_account = result.scalars().first()
+            
+            if existing_account:
+                return False, f"已存在{currency_code}账户", None
+            
+            # 创建账户
+            if not account_name:
+                account_name = f"{bank_card.get_bank_info()['name']}{currency_code}账户"
+            
+            bank_account = BankAccount(
+                user_id=user_id,
+                bank_card_id=bank_card_id,
+                currency_id=currency.currency_id,
+                account_name=account_name
+            )
+            
+            self.uow.add(bank_account)
+            
+            # 如果是用户第一个账户，设为默认账户
+            result = await self.uow.session.execute(select(func.count(BankAccount.account_id)).filter_by(
+                user_id=user_id, is_active=True
+            ))
+            user_accounts = result.scalar_one()
+            
+            if user_accounts == 0:
+                await bank_account.set_as_default(self.uow)
+            
+            return True, f"成功创建{currency_code}账户", bank_account
+            
         except Exception as e:
-            await self.uow.rollback()
             return False, f"创建账户失败: {str(e)}", None
     
     async def get_user_accounts(self, user_id: str, currency_code: str = None) -> List[BankAccount]:
@@ -215,13 +217,13 @@ class BankService:
     
     # ==================== 存取款操作 ====================
     
-    async def deposit(self, user_id: str, card_id: str, amount: Decimal, 
+    async def deposit(self, user_id: str, account_id: str, amount: Decimal, 
                     description: str = None) -> Tuple[bool, str]:
         """存款
         
         Args:
             user_id: 用户ID
-            card_id: 银行卡ID（现在直接对应账户）
+            account_id: 账户ID
             amount: 存款金额
             description: 描述
             
@@ -229,48 +231,44 @@ class BankService:
             (是否成功, 消息)
         """
         try:
-            async with self.uow:
-                # 验证银行卡
-                result = await self.uow.session.execute(select(BankCard).filter_by(
-                    card_id=card_id,
-                    user_id=user_id,
-                    is_active=True
-                ))
-                card = result.scalars().first()
-                
-                if not card:
-                    return False, "银行卡不存在或未启用"
-                
-                # 验证金额
-                if amount <= 0:
-                    return False, "存款金额必须大于0"
-                
-                # 执行存款
-                success = card.deposit(amount, description or "存款")
-                if not success:
-                    return False, "存款失败"
-                
-                # 记录交易
-                await self._record_transaction(
-                    user_id, card_id, 'deposit', amount, 
-                    description or "存款"
-                )
-                
-                await self.uow.commit()
-                
-                return True, f"成功存款 {amount} {card.currency.code if card.currency else 'JCY'}"
-                
+            # 验证账户
+            result = await self.uow.session.execute(select(BankAccount).filter_by(
+                account_id=account_id,
+                user_id=user_id,
+                is_enabled=True
+            ))
+            account = result.scalars().first()
+            
+            if not account:
+                return False, "账户不存在或未启用"
+            
+            # 验证金额
+            if amount <= 0:
+                return False, "存款金额必须大于0"
+            
+            # 执行存款
+            success, message = account.deposit(amount, description or "存款")
+            if not success:
+                return False, message
+            
+            # 记录交易
+            await self._record_transaction(
+                user_id, account_id, 'deposit', amount, 
+                description or "存款"
+            )
+            
+            return True, f"成功存款 {amount} {account.currency.code}"
+            
         except Exception as e:
-            await self.uow.rollback()
             return False, f"存款失败: {str(e)}"
     
-    async def withdraw(self, user_id: str, card_id: str, amount: Decimal, 
+    async def withdraw(self, user_id: str, account_id: str, amount: Decimal, 
                      description: str = None) -> Tuple[bool, str]:
         """取款
         
         Args:
             user_id: 用户ID
-            card_id: 银行卡ID（现在直接对应账户）
+            account_id: 账户ID
             amount: 取款金额
             description: 描述
             
@@ -278,57 +276,53 @@ class BankService:
             (是否成功, 消息)
         """
         try:
-            async with self.uow:
-                # 验证银行卡
-                result = await self.uow.session.execute(select(BankCard).filter_by(
-                    card_id=card_id,
-                    user_id=user_id,
-                    is_active=True
-                ))
-                card = result.scalars().first()
-                
-                if not card:
-                    return False, "银行卡不存在或未启用"
-                
-                # 验证金额
-                if amount <= 0:
-                    return False, "取款金额必须大于0"
-                
-                # 检查余额
-            if not card.can_withdraw(amount):
-                return False, f"余额不足，可用余额: {card.available_balance}"
+            # 验证账户
+            result = await self.uow.session.execute(select(BankAccount).filter_by(
+                account_id=account_id,
+                user_id=user_id,
+                is_enabled=True
+            ))
+            account = result.scalars().first()
+            
+            if not account:
+                return False, "账户不存在或未启用"
+            
+            # 验证金额
+            if amount <= 0:
+                return False, "取款金额必须大于0"
+            
+            # 检查余额
+            if not account.can_withdraw(amount):
+                return False, f"余额不足，可用余额: {account.available_balance}"
             
             # 执行取款
-            success = card.withdraw(amount, description or "取款")
+            success, message = account.withdraw(amount, description or "取款")
             if not success:
-                return False, "取款失败"
+                return False, message
             
             # 记录交易
             await self._record_transaction(
-                user_id, card_id, 'withdraw', amount, 
+                user_id, account_id, 'withdraw', -amount, 
                 description or "取款"
             )
             
-            await self.uow.commit()
+            return True, f"成功取款 {amount} {account.currency.code}"
             
-            return True, f"成功取款 {amount} {card.currency.code if card.currency else 'JCY'}"
-                
         except Exception as e:
-            await self.uow.rollback()
             return False, f"取款失败: {str(e)}"
     
     # ==================== 转账功能 ====================
     
-    async def transfer(self, from_user_id: str, from_card_id: str, 
-                     to_user_id: str, to_card_id: str, amount: Decimal, 
+    async def transfer(self, from_user_id: str, from_account_id: str, 
+                     to_user_id: str, to_account_id: str, amount: Decimal, 
                      description: str = None) -> Tuple[bool, str]:
         """转账
         
         Args:
             from_user_id: 转出用户ID
-            from_card_id: 转出银行卡ID
+            from_account_id: 转出账户ID
             to_user_id: 转入用户ID
-            to_card_id: 转入银行卡ID
+            to_account_id: 转入账户ID
             amount: 转账金额
             description: 描述
             
@@ -336,81 +330,77 @@ class BankService:
             (是否成功, 消息)
         """
         try:
-            async with self.uow:
-                # 验证转出银行卡
-                result = await self.uow.session.execute(select(BankCard).filter_by(
-                    card_id=from_card_id,
-                    user_id=from_user_id,
-                    is_active=True
-                ))
-                from_card = result.scalars().first()
-                
-                if not from_card:
-                    return False, "转出银行卡不存在或未启用"
-                
-                # 验证转入银行卡
-                result = await self.uow.session.execute(select(BankCard).filter_by(
-                    card_id=to_card_id,
-                    user_id=to_user_id,
-                    is_active=True
-                ))
-                to_card = result.scalars().first()
-                
-                if not to_card:
-                    return False, "转入银行卡不存在或未启用"
-                
-                # 验证金额
-                if amount <= 0:
-                    return False, "转账金额必须大于0"
-                
-                # 检查余额
-                if not from_card.can_withdraw(amount):
-                    return False, f"余额不足，可用余额: {from_card.available_balance}"
-                
-                # 检查转账限额
-                if not self._check_transfer_limit(from_card, amount):
-                    return False, "超出转账限额"
-                
-                # 货币转换
-                if from_card.currency_id != to_card.currency_id:
-                    converted_amount = await self._convert_currency(
-                        amount, from_card.currency.code, to_card.currency.code
-                    )
-                    if converted_amount is None:
-                        return False, "货币转换失败"
-                else:
-                    converted_amount = amount
-                
-                # 执行转账
-                # 转出
-                success, message = from_card.withdraw(amount, f"转账给 {to_user_id}")
-                if not success:
-                    return False, message
-                
-                # 转入
-                success, message = to_card.deposit(converted_amount, f"来自 {from_user_id} 的转账")
-                if not success:
-                    # 回滚转出操作
-                    from_card.deposit(amount, "转账失败回滚")
-                    return False, message
-                
-                # 记录交易
-                await self._record_transaction(
-                    from_user_id, from_card_id, 'transfer_out', -amount, 
-                    description or f"转账给 {to_user_id}"
+            # 验证转出账户
+            result = await self.uow.session.execute(select(BankAccount).filter_by(
+                account_id=from_account_id,
+                user_id=from_user_id,
+                is_enabled=True
+            ))
+            from_account = result.scalars().first()
+            
+            if not from_account:
+                return False, "转出账户不存在或未启用"
+            
+            # 验证转入账户
+            result = await self.uow.session.execute(select(BankAccount).filter_by(
+                account_id=to_account_id,
+                user_id=to_user_id,
+                is_enabled=True
+            ))
+            to_account = result.scalars().first()
+            
+            if not to_account:
+                return False, "转入账户不存在或未启用"
+            
+            # 验证金额
+            if amount <= 0:
+                return False, "转账金额必须大于0"
+            
+            # 检查余额
+            if not from_account.can_withdraw(amount):
+                return False, f"余额不足，可用余额: {from_account.available_balance}"
+            
+            # 检查转账限额
+            if not self._check_transfer_limit(from_account, amount):
+                return False, "超出转账限额"
+            
+            # 货币转换
+            if from_account.currency_id != to_account.currency_id:
+                converted_amount = await self._convert_currency(
+                    amount, from_account.currency.code, to_account.currency.code
                 )
-                
-                await self._record_transaction(
-                    to_user_id, to_card_id, 'transfer_in', converted_amount, 
-                    description or f"来自 {from_user_id} 的转账"
-                )
-                
-                await self.uow.commit()
-                
-                return True, f"成功转账 {amount} {from_card.currency.code if from_card.currency else 'JCY'}"
-                
+                if converted_amount is None:
+                    return False, "货币转换失败"
+            else:
+                converted_amount = amount
+            
+            # 执行转账
+            # 转出
+            success, message = from_account.withdraw(amount, f"转账给 {to_user_id}")
+            if not success:
+                return False, message
+            
+            # 转入
+            success, message = to_account.deposit(converted_amount, f"来自 {from_user_id} 的转账")
+            if not success:
+                # 回滚转出操作
+                from_account.deposit(amount, "转账失败回滚")
+                return False, message
+            
+            # 记录交易
+            await self._record_transaction(
+                from_user_id, from_account_id, 'transfer_out', -amount, 
+                description or f"转账给 {to_user_id}"
+            )
+            
+            await self._record_transaction(
+                to_user_id, to_account_id, 'transfer_in', converted_amount, 
+                description or f"来自 {from_user_id} 的转账"
+            )
+            
+            return True, f"成功转账 {amount} {from_account.currency.code}"
+            
         except Exception as e:
-            await self.uow.rollback()
             return False, f"转账失败: {str(e)}"
     
     # ==================== 贷款管理 ====================
@@ -430,131 +420,117 @@ class BankService:
             (是否成功, 消息, 贷款对象)
         """
         try:
-            async with self.uow:
-                # 检查用户信用档案
-                credit_profile = await self.credit_service.get_or_create_credit_profile(user_id)
-                
-                # 评估贷款资格
-                approval_probability = credit_profile.calculate_loan_approval_probability(
-                    amount, loan_type
-                )
-                
-                if approval_probability < 0.3:  # 30%以下拒绝
-                    return False, "信用评分不足，贷款申请被拒绝", None
-                
-                # 计算利率
-                interest_rate = credit_profile.suggest_interest_rate(loan_type, amount)
-                
-                # 创建贷款申请
-                loan = Loan(
-                    user_id=user_id,
-                    loan_type=loan_type,
-                    principal_amount=amount,
-                    interest_rate=interest_rate,
-                    term_months=term_months,
-                    purpose=purpose or "个人用途"
-                )
-                
-                self.uow.add(loan)
-                
-                # 如果概率高，自动批准
-                if approval_probability > 0.8:  # 80%以上自动批准
-                    success, message = loan.approve_loan("系统自动批准")
-                    if success:
-                        # 放款到用户默认银行卡
-                        default_card = await self.get_user_default_card(user_id)
-                        if default_card:
-                            await self.deposit(user_id, default_card.card_id, amount, 
-                                             f"贷款放款 - {loan.loan_number}")
-                
-                await self.uow.commit()
-                
-                status_msg = "已批准并放款" if loan.status == 'approved' else "申请已提交，等待审核"
-                return True, f"贷款申请成功，{status_msg}", loan
-                
+            # 检查用户信用档案
+            credit_profile = CreditProfile.get_or_create_profile(self.uow, user_id)
+            
+            # 评估贷款资格
+            approval_probability = credit_profile.calculate_loan_approval_probability(
+                amount, loan_type
+            )
+            
+            if approval_probability < 0.3:  # 30%以下拒绝
+                return False, "信用评分不足，贷款申请被拒绝", None
+            
+            # 计算利率
+            interest_rate = credit_profile.suggest_interest_rate(loan_type, amount)
+            
+            # 创建贷款申请
+            loan = Loan(
+                user_id=user_id,
+                loan_type=loan_type,
+                principal_amount=amount,
+                interest_rate=interest_rate,
+                term_months=term_months,
+                purpose=purpose or "个人用途"
+            )
+            
+            self.uow.add(loan)
+            
+            # 如果概率高，自动批准
+            if approval_probability > 0.8:  # 80%以上自动批准
+                success, message = loan.approve_loan("系统自动批准")
+                if success:
+                    # 放款到用户默认账户
+                    default_account = BankAccount.get_user_default_account(self.uow, user_id)
+                    if default_account:
+                        # 直接执行存款操作，不调用deposit方法避免嵌套事务
+                        success, message = default_account.deposit(amount, f"贷款放款 - {loan.loan_number}")
+                        if success:
+                            # 记录交易
+                            await self._record_transaction(
+                                user_id, default_account.account_id, 'loan_disbursement', amount, 
+                                f"贷款放款 - {loan.loan_number}"
+                            )
+            
+            status_msg = "已批准并放款" if loan.status == 'approved' else "申请已提交，等待审核"
+            return True, f"贷款申请成功，{status_msg}", loan
+            
         except Exception as e:
-            await self.uow.rollback()
             return False, f"贷款申请失败: {str(e)}", None
     
     async def repay_loan(self, user_id: str, loan_id: str, amount: Decimal, 
-                       card_id: str = None) -> Tuple[bool, str]:
+                       account_id: str = None) -> Tuple[bool, str]:
         """还款
         
         Args:
             user_id: 用户ID
             loan_id: 贷款ID
             amount: 还款金额
-            card_id: 还款银行卡ID
+            account_id: 还款账户ID
             
         Returns:
             (是否成功, 消息)
         """
         try:
-            async with self.uow:
-                # 验证贷款
-                result = await self.uow.session.execute(select(Loan).filter_by(
-                    loan_id=loan_id,
+            # 验证贷款
+            result = await self.uow.session.execute(select(Loan).filter_by(
+                loan_id=loan_id,
+                user_id=user_id,
+                status='approved'
+            ))
+            loan = result.scalars().first()
+            
+            if not loan:
+                return False, "贷款不存在或状态异常"
+            
+            # 获取还款账户
+            if account_id:
+                result = await self.uow.session.execute(select(BankAccount).filter_by(
+                    account_id=account_id,
                     user_id=user_id,
-                    status='approved'
+                    is_enabled=True
                 ))
-                loan = result.scalars().first()
-                
-                if not loan:
-                    return False, "贷款不存在或状态异常"
-                
-                # 获取还款银行卡
-                if card_id:
-                    result = await self.uow.session.execute(select(BankCard).filter_by(
-                        card_id=card_id,
-                        user_id=user_id,
-                        is_active=True
-                    ))
-                    card = result.scalars().first()
-                else:
-                    card = await self.get_user_default_card(user_id)
-                
-                if not card:
-                    return False, "还款银行卡不存在"
-                
-                # 检查余额
-                if not card.can_withdraw(amount):
-                    return False, f"银行卡余额不足，可用余额: {card.available_balance}"
-                
-                # 执行还款
-                success, message = loan.make_payment(amount, 'bank_transfer')
-                if not success:
-                    return False, message
-                
-                # 从银行卡扣款
-                success, message = card.withdraw(amount, f"贷款还款 - {loan.loan_number}")
-                if not success:
-                    return False, message
-                
-                # 记录交易
-                await self._record_transaction(
-                    user_id, card.card_id, 'loan_repayment', -amount, 
-                    f"贷款还款 - {loan.loan_number}"
-                )
-                
-                await self.uow.commit()
-                
-                return True, f"成功还款 {amount}，剩余欠款: {loan.outstanding_balance}"
-                
-        except Exception as e:
-            await self.uow.rollback()
-            return False, f"还款失败: {str(e)}"
-    
-    async def get_user_default_card(self, user_id: str) -> Optional[BankCard]:
-        """获取用户的默认银行卡"""
-        try:
-            result = await self.uow.session.execute(
-                select(BankCard).filter_by(user_id=user_id, is_active=True)
-                .order_by(BankCard.created_at.asc())
+                account = result.scalars().first()
+            else:
+                account = await BankAccount.get_user_default_account(self.uow, user_id)
+            
+            if not account:
+                return False, "还款账户不存在"
+            
+            # 检查余额
+            if not account.can_withdraw(amount):
+                return False, f"账户余额不足，可用余额: {account.available_balance}"
+            
+            # 执行还款
+            success, message = loan.make_payment(amount, 'bank_transfer')
+            if not success:
+                return False, message
+            
+            # 从账户扣款
+            success, message = account.withdraw(amount, f"贷款还款 - {loan.loan_number}")
+            if not success:
+                return False, message
+            
+            # 记录交易
+            await self._record_transaction(
+                user_id, account.account_id, 'loan_repayment', -amount, 
+                f"贷款还款 - {loan.loan_number}"
             )
-            return result.scalars().first()
+            
+            return True, f"成功还款 {amount}，剩余欠款: {loan.outstanding_balance}"
+            
         except Exception as e:
-            self.logger.error(f"获取用户 {user_id} 的默认银行卡时出错: {e}")
-            return None
+            return False, f"还款失败: {str(e)}"
     
     async def get_user_accounts(self, user_id: str, is_active: bool = True) -> List[BankAccount]:
         """获取用户的所有银行账户"""
@@ -603,21 +579,16 @@ class BankService:
             (是否成功, 消息, 用户任务对象)
         """
         try:
-            async with self.uow:
-                result = await self.uow.session.execute(select(BankTask).filter_by(task_id=task_id))
-                task = result.scalars().first()
-                if not task:
-                    return False, "任务不存在", None
-                
-                success, message, user_task = await task.accept_task(user_id, self.uow)
-                
-                if success:
-                    await self.uow.commit()
-                
-                return success, message, user_task
-                
+            result = await self.uow.session.execute(select(BankTask).filter_by(task_id=task_id))
+            task = result.scalars().first()
+            if not task:
+                return False, "任务不存在", None
+            
+            success, message, user_task = await task.accept_task(user_id, self.uow)
+            
+            return success, message, user_task
+            
         except Exception as e:
-            await self.uow.rollback()
             return False, f"接取任务失败: {str(e)}", None
     
     async def submit_task(self, user_id: str, task_id: str, 
@@ -633,21 +604,16 @@ class BankService:
             (是否成功, 消息)
         """
         try:
-            async with self.uow:
-                result = await self.uow.session.execute(select(BankTask).filter_by(task_id=task_id))
-                task = result.scalars().first()
-                if not task:
-                    return False, "任务不存在"
-                
-                success, message = await task.complete_task(user_id, self.uow, submission_data)
-                
-                if success:
-                    await self.uow.commit()
-                
-                return success, message
-                
+            result = await self.uow.session.execute(select(BankTask).filter_by(task_id=task_id))
+            task = result.scalars().first()
+            if not task:
+                return False, "任务不存在"
+            
+            success, message = await task.complete_task(user_id, self.uow, submission_data)
+            
+            return success, message
+            
         except Exception as e:
-            await self.uow.rollback()
             return False, f"提交任务失败: {str(e)}"
     
     async def get_user_tasks(self, user_id: str, status: str = None) -> List[UserBankTask]:
@@ -739,8 +705,8 @@ class BankService:
         Raises:
             ValueError: 如果获取概览失败
         """
-        try:
-            async with self.uow:
+        async with self.uow:
+            try:
                 # 获取银行卡
                 print("Getting bank cards...")
                 bank_cards = await self.get_user_bank_cards(user_id)
@@ -766,9 +732,9 @@ class BankService:
                 total_debt = sum(loan.outstanding_balance or 0 for loan in loans)
                 print(f"Total debt: {total_debt}")
 
-                # 获取信用档案 - 在新的session中执行以避免嵌套上下文问题
+                # 获取信用档案
                 print("Getting credit profile...")
-                credit_profile = await self._get_credit_profile_safely(user_id)
+                credit_profile = await CreditProfile.get_or_create_profile(self.uow, user_id)
                 print("Credit profile obtained.")
 
                 return {
@@ -784,21 +750,6 @@ class BankService:
                     'loan_count': len(loans)
                 }
 
-        except Exception as e:
-            import traceback
-            print(f"Error in get_account_overview: {e}")
-            print(traceback.format_exc())
-            raise ValueError(f"获取账户概览失败") from e
-    
-    async def _get_credit_profile_safely(self, user_id: str) -> 'CreditProfile':
-        """安全地获取信用档案，避免嵌套异步上下文问题
-        
-        Args:
-            user_id: 用户ID
-            
-        Returns:
-            信用档案对象
-        """
-        # 使用credit_service来避免嵌套异步上下文问题
-        profile = await self.credit_service.get_or_create_credit_profile(user_id)
-        return profile
+            except Exception as e:
+                print(f"Error in get_account_overview: {e}")
+                raise ValueError(f"获取账户概览失败") from e

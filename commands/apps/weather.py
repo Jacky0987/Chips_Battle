@@ -123,71 +123,177 @@ class WeatherCommand(AppCommand):
     
     async def _get_current_weather(self, city: str, context: CommandContext) -> CommandResult:
         """获取当前天气"""
-        # TODO: 实现天气API调用
-        return self.success(f"""
+        import random
+        from datetime import datetime, timedelta
+        
+        # 模拟天气数据（实际项目中应该调用真实的天气API）
+        weather_conditions = ["晴", "多云", "阴", "小雨", "中雨", "雷阵雨", "雪"]
+        wind_directions = ["北风", "东北风", "东风", "东南风", "南风", "西南风", "西风", "西北风"]
+        
+        # 生成模拟数据
+        temperature = random.randint(-10, 35)
+        feels_like = temperature + random.randint(-3, 3)
+        condition = random.choice(weather_conditions)
+        humidity = random.randint(30, 90)
+        pressure = random.randint(1000, 1030)
+        visibility = random.randint(5, 20)
+        wind_direction = random.choice(wind_directions)
+        wind_speed = random.randint(0, 15)
+        uv_index = random.randint(0, 11)
+        
+        # 计算日出日落时间（模拟）
+        now = datetime.now()
+        sunrise = now.replace(hour=6, minute=random.randint(0, 59), second=0, microsecond=0)
+        sunset = now.replace(hour=18, minute=random.randint(0, 59), second=0, microsecond=0)
+        
+        weather_report = f"""
 🌤️ {city} 当前天气:
 
-当前天气查询功能待实现...
-
-将显示:
 📊 基本信息:
-  - 当前温度
-  - 体感温度
-  - 天气状况
-  - 湿度
-  - 气压
-  - 能见度
+  🌡️ 当前温度: {temperature}°C
+  🤚 体感温度: {feels_like}°C
+  ☁️ 天气状况: {condition}
+  💧 湿度: {humidity}%
+  📊 气压: {pressure} hPa
+  👁️ 能见度: {visibility} km
 
 🌬️ 风力信息:
-  - 风向
-  - 风速
-  - 阵风
+  🧭 风向: {wind_direction}
+  💨 风速: {wind_speed} km/h
+  💨 阵风: {wind_speed + random.randint(0, 5)} km/h
 
 ☀️ 日照信息:
-  - 日出时间
-  - 日落时间
-  - 紫外线指数
+  🌅 日出时间: {sunrise.strftime('%H:%M')}
+  🌇 日落时间: {sunset.strftime('%H:%M')}
+  ☀️ 紫外线指数: {uv_index} ({self._get_uv_level(uv_index)})
 
-📱 数据来源:
-  - 中国气象局
-  - OpenWeatherMap
-  - AccuWeather
+📱 数据来源: 模拟天气数据
+🔄 更新时间: {now.strftime('%Y-%m-%d %H:%M:%S')}
 
-🔄 更新时间: 每10分钟
-""")
+💡 温馨提示: {self._get_weather_tip(condition, temperature)}
+"""
+        
+        return self.success(weather_report)
+    
+    def _get_uv_level(self, uv_index: int) -> str:
+        """获取紫外线等级描述"""
+        if uv_index <= 2:
+            return "低"
+        elif uv_index <= 5:
+            return "中等"
+        elif uv_index <= 7:
+            return "高"
+        elif uv_index <= 10:
+            return "很高"
+        else:
+            return "极高"
+    
+    def _get_weather_tip(self, condition: str, temperature: int) -> str:
+        """获取天气建议"""
+        if "雨" in condition:
+            return "记得带伞出门哦！"
+        elif "雪" in condition:
+            return "路面湿滑，注意安全！"
+        elif temperature > 30:
+            return "天气炎热，注意防暑降温！"
+        elif temperature < 0:
+            return "天气寒冷，注意保暖！"
+        elif condition == "晴":
+            return "天气不错，适合户外活动！"
+        else:
+            return "关注天气变化，合理安排出行！"
     
     async def _get_forecast(self, city: str, context: CommandContext) -> CommandResult:
         """获取天气预报"""
-        # TODO: 实现天气预报功能
-        return self.success(f"""
-📅 {city} 7天天气预报:
-
-天气预报功能待实现...
-
-将显示:
-📊 每日信息:
-  - 日期和星期
-  - 最高/最低温度
-  - 白天/夜间天气
-  - 降水概率
-  - 风力风向
-
-🌧️ 降水信息:
-  - 降雨/降雪概率
-  - 降水量预测
-  - 降水时间段
-
-📈 趋势分析:
-  - 温度变化趋势
-  - 天气模式分析
-  - 适宜活动建议
+        import random
+        from datetime import datetime, timedelta
+        
+        weather_conditions = ["晴", "多云", "阴", "小雨", "中雨", "雷阵雨"]
+        wind_directions = ["北风", "东北风", "东风", "东南风", "南风", "西南风", "西风", "西北风"]
+        weekdays = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
+        
+        forecast_text = f"📅 {city} 7天天气预报:\n\n"
+        
+        base_temp = random.randint(10, 25)
+        
+        for i in range(7):
+            date = datetime.now() + timedelta(days=i)
+            weekday = weekdays[date.weekday()]
+            
+            # 生成每日天气数据
+            day_condition = random.choice(weather_conditions)
+            night_condition = random.choice(weather_conditions)
+            high_temp = base_temp + random.randint(-5, 8)
+            low_temp = high_temp - random.randint(5, 12)
+            rain_chance = random.randint(0, 80)
+            wind_dir = random.choice(wind_directions)
+            wind_level = random.randint(1, 4)
+            
+            day_label = "今天" if i == 0 else "明天" if i == 1 else f"{date.month}/{date.day}"
+            
+            forecast_text += f"""
+📅 {day_label} ({weekday}):
+  🌡️ 温度: {low_temp}°C ~ {high_temp}°C
+  ☀️ 白天: {day_condition}
+  🌙 夜间: {night_condition}
+  🌧️ 降水概率: {rain_chance}%
+  🌬️ 风力: {wind_dir} {wind_level}级
+"""
+        
+        # 添加生活指数
+        forecast_text += f"""
 
 💡 生活指数:
-  - 穿衣指数
-  - 运动指数
-  - 洗车指数
-  - 旅游指数
-""")
+  👔 穿衣指数: {self._get_clothing_index(base_temp)}
+  🏃 运动指数: {self._get_exercise_index(weather_conditions[0])}
+  🚗 洗车指数: {self._get_car_wash_index(rain_chance)}
+  🎒 旅游指数: {self._get_travel_index(weather_conditions[0], base_temp)}
+
+📱 数据来源: 模拟天气数据
+🔄 更新时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+"""
+        
+        return self.success(forecast_text)
+    
+    def _get_clothing_index(self, temp: int) -> str:
+        """获取穿衣指数"""
+        if temp < 0:
+            return "寒冷 - 建议穿厚羽绒服、毛衣"
+        elif temp < 10:
+            return "较冷 - 建议穿外套、毛衣"
+        elif temp < 20:
+            return "舒适 - 建议穿薄外套、长袖"
+        elif temp < 30:
+            return "温暖 - 建议穿短袖、薄长袖"
+        else:
+            return "炎热 - 建议穿短袖、短裤"
+    
+    def _get_exercise_index(self, condition: str) -> str:
+        """获取运动指数"""
+        if condition == "晴":
+            return "适宜 - 天气良好，适合户外运动"
+        elif "雨" in condition:
+            return "不适宜 - 有降水，建议室内运动"
+        else:
+            return "较适宜 - 可进行适度户外运动"
+    
+    def _get_car_wash_index(self, rain_chance: int) -> str:
+        """获取洗车指数"""
+        if rain_chance > 60:
+            return "不适宜 - 降水概率高"
+        elif rain_chance > 30:
+            return "较不适宜 - 可能有降水"
+        else:
+            return "适宜 - 天气良好，适合洗车"
+    
+    def _get_travel_index(self, condition: str, temp: int) -> str:
+        """获取旅游指数"""
+        if condition == "晴" and 15 <= temp <= 25:
+            return "非常适宜 - 天气优良"
+        elif "雨" in condition or temp < 0 or temp > 35:
+            return "不适宜 - 天气条件不佳"
+        else:
+            return "较适宜 - 天气尚可"
     
     async def _get_hourly_forecast(self, city: str, context: CommandContext) -> CommandResult:
         """获取小时预报"""

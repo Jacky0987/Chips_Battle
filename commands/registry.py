@@ -19,7 +19,7 @@ from services.news_service import NewsService
 class CommandRegistry:
     """命令注册器"""
     
-    def __init__(self, auth_service=None, app_service=None, news_service=None):
+    def __init__(self, auth_service=None, app_service=None, news_service=None, stock_service=None):
         self._commands: Dict[str, Command] = {}
         self._aliases: Dict[str, str] = {}  # alias -> command_name
         self._categories: Dict[str, List[str]] = {}  # category -> [command_names]
@@ -27,6 +27,7 @@ class CommandRegistry:
         self._auth_service = auth_service
         self._app_service = app_service
         self._news_service = news_service
+        self._stock_service = stock_service
     
     async def discover_commands(self, commands_dir: str = None):
         """自动发现并注册命令
@@ -86,25 +87,30 @@ class CommandRegistry:
             
             # 查找命令类
             for name, obj in inspect.getmembers(module, inspect.isclass):
-                if (issubclass(obj, Command) and 
-                    obj != Command and 
-                    not inspect.isabstract(obj)):
-                    
-                    # 实例化并注册命令
-                    try:
-                        # 特殊处理需要依赖注入的命令
-                        if name == 'SudoCommand' and self._auth_service:
-                            command_instance = obj(auth_service=self._auth_service)
-                        elif name == 'MarketCommand' and self._app_service:
-                            command_instance = obj(app_service=self._app_service)
-                        elif name == 'NewsCommand' and self._news_service:
-                            command_instance = obj(news_service=self._news_service)
-                        else:
-                            command_instance = obj()
-                        self.register_command(command_instance)
-                        self._logger.debug(f"注册命令: {command_instance.name} (来自 {module_name})")
-                    except Exception as e:
-                        self._logger.error(f"实例化命令失败 {name}: {e}")
+                try:
+                    if (issubclass(obj, Command) and 
+                        obj != Command and 
+                        not inspect.isabstract(obj)):
+                        # 实例化并注册命令
+                        try:
+                            # 特殊处理需要依赖注入的命令
+                            if name == 'SudoCommand' and self._auth_service:
+                                command_instance = obj(auth_service=self._auth_service)
+                            elif name == 'MarketCommand' and self._app_service:
+                                command_instance = obj(app_service=self._app_service)
+                            elif name == 'NewsCommand' and self._news_service:
+                                command_instance = obj(news_service=self._news_service)
+                            elif name == 'JCMarketCommand' and self._stock_service:
+                                command_instance = obj(stock_service=self._stock_service)
+                            else:
+                                command_instance = obj()
+                            self.register_command(command_instance)
+                            self._logger.debug(f"注册命令: {command_instance.name} (来自 {module_name})")
+                        except Exception as e:
+                            self._logger.error(f"实例化命令失败 {name}: {e}")
+                except TypeError:
+                     # 跳过不是类的对象或无法进行issubclass检查的对象
+                     continue
         
         except ImportError as e:
             self._logger.warning(f"导入模块失败 {module_path}: {e}")

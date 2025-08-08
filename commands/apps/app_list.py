@@ -10,7 +10,7 @@ class AppListCommand(Command):
         self.app_service = app_service
     
     def execute(self, args: list, context: Dict[str, Any]) -> str:
-        user_id = context.get('user_id')
+        user_id = getattr(context.user, 'user_id', None) if hasattr(context, 'user') and context.user else None
         if not user_id:
             return "❌ 请先登录"
         

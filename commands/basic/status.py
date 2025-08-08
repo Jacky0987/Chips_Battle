@@ -77,7 +77,7 @@ class StatusCommand(BasicCommand):
         game_status = self._create_game_status_panel(context)
         
         # 创建财务状态面板
-        finance_status = self._create_finance_status_panel(user)
+        finance_status = await self._create_finance_status_panel(user, context)
         
         # 创建统计信息面板
         stats_panel = self._create_stats_panel(user)
@@ -186,11 +186,12 @@ class StatusCommand(BasicCommand):
             padding=(1, 1)
         )
     
-    def _create_finance_status_panel(self, user) -> Panel:
+    async def _create_finance_status_panel(self, user, context: CommandContext) -> Panel:
         """创建财务状态面板
         
         Args:
             user: 用户对象
+            context: 命令上下文
             
         Returns:
             财务状态面板
@@ -199,24 +200,64 @@ class StatusCommand(BasicCommand):
         table.add_column("货币", style="cyan", no_wrap=True)
         table.add_column("余额", style="white", justify="right")
         
-        # 模拟钱包数据
-        # 实际实现中应该从数据库或钱包服务获取
-        currencies = {
-            "💰 JCY (游戏币)": "10,000.00",
-            "💴 CNY (人民币)": "5,000.00",
-            "💵 USD (美元)": "1,000.00",
-            "💶 EUR (欧元)": "800.00"
-        }
-        
-        for currency, balance in currencies.items():
-            table.add_row(currency, balance)
-        
-        # 添加总价值（以JCY计算）
-        table.add_row("", "")  # 空行
-        table.add_row(
-            Text("💎 总价值 (JCY)", style="bold yellow"),
-            Text("16,800.00", style="bold yellow")
-        )
+        try:
+            # 尝试从银行服务获取账户信息
+            from services.bank_service import BankService
+            from dal.unit_of_work import UnitOfWork
+            from dal.database import get_session
+            from sqlalchemy.orm import selectinload
+            from sqlalchemy import select
+            from models.bank.bank_account import BankAccount
+            
+            async with get_session() as session:
+                # 直接查询账户并加载currency关系
+                result = await session.execute(
+                    select(BankAccount)
+                    .options(selectinload(BankAccount.currency))
+                    .filter_by(user_id=user.user_id, is_active=True)
+                    .order_by(BankAccount.is_default.desc(), BankAccount.created_at.desc())
+                )
+                accounts = result.scalars().all()
+                
+                if accounts:
+                    total_jcy_value = 0
+                    for account in accounts:
+                        currency_code = account.currency.code if account.currency else 'UNKNOWN'
+                        currency_symbol = {
+                            'JCY': '💰',
+                            'CNY': '💴', 
+                            'USD': '💵',
+                            'EUR': '💶'
+                        }.get(currency_code, '💱')
+                        
+                        balance_str = f"{account.balance:,.2f}"
+                        table.add_row(f"{currency_symbol} {currency_code}", balance_str)
+                        
+                        # 简单汇率转换到JCY（实际应该从汇率服务获取）
+                        if currency_code == 'JCY':
+                            total_jcy_value += account.balance
+                        elif currency_code == 'CNY':
+                            total_jcy_value += account.balance * 2  # 假设1CNY=2JCY
+                        elif currency_code == 'USD':
+                            total_jcy_value += account.balance * 10  # 假设1USD=10JCY
+                        elif currency_code == 'EUR':
+                            total_jcy_value += account.balance * 12  # 假设1EUR=12JCY
+                    
+                    # 添加总价值
+                    if len(accounts) > 1:
+                        table.add_row("", "")  # 空行
+                        table.add_row(
+                            Text("💎 总价值 (JCY)", style="bold yellow"),
+                            Text(f"{total_jcy_value:,.2f}", style="bold yellow")
+                        )
+                else:
+                    table.add_row("💰 JCY", "0.00")
+                    table.add_row(Text("ℹ️ 提示", style="dim"), Text("请先申请银行卡", style="dim"))
+                    
+        except Exception as e:
+            # 如果获取银行数据失败，显示默认信息
+            table.add_row("💰 JCY", "--")
+            table.add_row(Text("⚠️ 错误", style="red"), Text("无法获取财务数据", style="red"))
         
         return Panel(
             table,

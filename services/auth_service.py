@@ -199,6 +199,7 @@ class AuthService:
                 
                 # 认证成功
                 user.last_login = datetime.now()
+                user.login_count += 1  # 更新登录次数
                 await self.uow.commit()
                 
                 # 清除失败尝试记录

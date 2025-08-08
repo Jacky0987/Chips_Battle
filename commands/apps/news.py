@@ -23,7 +23,7 @@ class NewsCommand(AppCommand):
     
     async def execute(self, args: list, context: CommandContext) -> CommandResult:
         if not args:
-            return self._show_latest_news()
+            return await self._show_latest_news()
         
         subcommand = args[0].lower()
         
@@ -31,19 +31,19 @@ class NewsCommand(AppCommand):
             return self.format_success("新闻命令帮助\n\n用法:\n  news                         - 显示最新新闻\n  news latest [数量]           - 显示最新新闻 (默认10条)\n  news view <ID>               - 查看新闻详情\n  news market                  - 显示有市场影响的新闻\n  news categories              - 显示新闻分类\n  news sources                 - 显示新闻来源\n  news category <分类>         - 按分类查看新闻\n  news search <关键词>         - 搜索新闻\n  news stats                   - 显示新闻统计")
         elif subcommand == 'latest':
             limit = int(args[1]) if len(args) > 1 else 10
-            return self._show_latest_news(limit)
+            return await self._show_latest_news(limit)
         elif subcommand == 'view':
             if len(args) < 2:
                 return self.format_error("用法: news view <新闻ID>")
             try:
                 news_id = int(args[1])
-                return self._view_news_detail(news_id)
+                return await self._view_news_detail(news_id)
             except ValueError:
                 return self.format_error("新闻ID必须是数字")
         elif subcommand == 'market':
-            return self._show_market_news()
+            return await self._show_market_news()
         elif subcommand == 'categories':
-            return self._show_categories()
+            return await self._show_categories()
         elif subcommand == 'sources':
             return self._show_sources()
         elif subcommand in ['tech', 'finance', 'sports', 'politics']:
@@ -66,16 +66,16 @@ class NewsCommand(AppCommand):
             keyword = ' '.join(args[1:])
             return self._search_news(keyword)
         elif subcommand == 'stats':
-            return self._show_news_stats()
+            return await self._show_news_stats()
         elif subcommand.isdigit():
             # Handle number-only commands
             return self._show_latest_news(int(subcommand))
         else:
             return self.format_error("未知的子命令。可用命令: latest, view, market, categories, category, source, search, stats")
     
-    def _show_latest_news(self, limit: int = 10) -> CommandResult:
+    async def _show_latest_news(self, limit: int = 10) -> CommandResult:
         """显示最新新闻"""
-        news_list = self.news_service.get_latest_news(limit)
+        news_list = await self.news_service.get_latest_news(limit)
         
         if not news_list:
             return self.format_success("新闻头条\n📰 暂无新闻")
@@ -102,12 +102,12 @@ class NewsCommand(AppCommand):
             
             # 市场影响指示器
             impact_indicator = ""
-            if news.market_impact:
-                if news.market_impact > 0.5:
+            if news.impact_strength:
+                if news.impact_strength > 0.5:
                     impact_indicator = " 🔥"
-                elif news.market_impact > 0.3:
+                elif news.impact_strength > 0.3:
                     impact_indicator = " ⚡"
-                elif news.market_impact > 0.1:
+                elif news.impact_strength > 0.1:
                     impact_indicator = " 📊"
             
             # 截断标题以适应显示
@@ -115,12 +115,14 @@ class NewsCommand(AppCommand):
             
             output.append(f"│ {i:>2}. {icon} [{time_str}] {title:<40}{impact_indicator:<3} │")
             
-            # 如果有市场影响，显示相关股票
-            if news.affected_stocks:
-                stocks_str = ", ".join(news.affected_stocks[:3])  # 只显示前3个
-                if len(news.affected_stocks) > 3:
-                    stocks_str += f" +{len(news.affected_stocks)-3}更多"
-                output.append(f"│     📊 影响股票: {stocks_str:<45} │")
+            # 如果有市场影响，显示相关股票 (从tags中提取)
+            if news.tags:
+                stock_tags = [tag.strip() for tag in news.tags.split(',') if tag.strip()]
+                if stock_tags:
+                    stocks_str = ", ".join(stock_tags[:3])  # 只显示前3个
+                    if len(stock_tags) > 3:
+                        stocks_str += f" +{len(stock_tags)-3}更多"
+                    output.append(f"│     📊 影响股票: {stocks_str:<45} │")
         
         output.append("├─────────────────────────────────────────────────────────────┤")
         output.append("│ 💡 使用提示                                                 │")
@@ -131,9 +133,9 @@ class NewsCommand(AppCommand):
         
         return self.format_success("新闻头条\n" + "\n".join(output))
     
-    def _view_news_detail(self, news_id: int) -> CommandResult:
+    async def _view_news_detail(self, news_id: int) -> CommandResult:
         """查看新闻详情"""
-        news = self.news_service.get_news_by_id(news_id)
+        news = await self.news_service.get_news_by_id(news_id)
         
         if not news:
             return self.format_error(f"新闻ID {news_id} 不存在")
@@ -170,10 +172,10 @@ class NewsCommand(AppCommand):
         output.append(f"│ 📂 新闻分类: {news.category:<20}                        │")
         
         # 市场影响
-        if news.market_impact is not None:
-            impact_level = "高" if news.market_impact > 0.5 else "中" if news.market_impact > 0.3 else "低"
-            impact_color = "🔥" if news.market_impact > 0.5 else "⚡" if news.market_impact > 0.3 else "📊"
-            output.append(f"│ {impact_color} 市场影响: {impact_level} ({news.market_impact:.1%})                           │")
+        if news.impact_strength is not None:
+            impact_level = "高" if news.impact_strength > 0.5 else "中" if news.impact_strength > 0.3 else "低"
+            impact_color = "🔥" if news.impact_strength > 0.5 else "⚡" if news.impact_strength > 0.3 else "📊"
+            output.append(f"│ {impact_color} 市场影响: {impact_level} ({news.impact_strength:.1%})                           │")
         
         output.append("├─────────────────────────────────────────────────────────────┤")
         
@@ -185,17 +187,18 @@ class NewsCommand(AppCommand):
         for line in content_lines:
             output.append(f"│ {line:<59} │")
         
-        # 相关股票
-        if news.affected_stocks:
-            output.append("├─────────────────────────────────────────────────────────────┤")
-            output.append("│ 📊 相关股票                                                 │")
-            
-            # 每行显示3个股票代码
-            stocks = news.affected_stocks
-            for i in range(0, len(stocks), 3):
-                stock_group = stocks[i:i+3]
-                stocks_str = "  ".join(f"{stock:<8}" for stock in stock_group)
-                output.append(f"│ {stocks_str:<59} │")
+        # 相关股票 (从tags中提取)
+        if news.tags:
+            stock_tags = [tag.strip() for tag in news.tags.split(',') if tag.strip()]
+            if stock_tags:
+                output.append("├─────────────────────────────────────────────────────────────┤")
+                output.append("│ 📊 相关股票                                                 │")
+                
+                # 每行显示3个股票代码
+                for i in range(0, len(stock_tags), 3):
+                    stock_group = stock_tags[i:i+3]
+                    stocks_str = "  ".join(f"{stock:<8}" for stock in stock_group)
+                    output.append(f"│ {stocks_str:<59} │")
         
         # 新闻来源
         if hasattr(news, 'source') and news.source:
@@ -205,9 +208,11 @@ class NewsCommand(AppCommand):
         output.append("├─────────────────────────────────────────────────────────────┤")
         output.append("│ 💡 相关操作                                                 │")
         
-        if news.affected_stocks:
+        # 相关股票 (从tags中提取)
+        stock_tags = [tag.strip() for tag in news.tags.split(',') if tag.strip()] if news.tags else []
+        if stock_tags:
             # 显示相关股票的快速操作提示
-            main_stock = news.affected_stocks[0] if news.affected_stocks else None
+            main_stock = stock_tags[0] if stock_tags else None
             if main_stock:
                 output.append(f"│ • stock view {main_stock:<8} - 查看相关股票详情                │")
                 output.append(f"│ • stock buy {main_stock} <量>   - 买入相关股票                │")
@@ -218,9 +223,9 @@ class NewsCommand(AppCommand):
         
         return self.format_success("\n".join(output))
     
-    def _show_market_news(self) -> CommandResult:
+    async def _show_market_news(self) -> CommandResult:
         """显示有市场影响的新闻"""
-        market_news = self.news_service.get_market_impact_news()
+        market_news = await self.news_service.get_market_impact_news()
         
         if not market_news:
             return self.format_success("📰 暂无市场影响新闻")
@@ -236,9 +241,9 @@ class NewsCommand(AppCommand):
             time_str = news.created_at.strftime("%m-%d %H:%M")
             
             # 影响等级图标
-            if news.market_impact > 0.5:
+            if news.impact_strength > 0.5:
                 impact_icon = "🔥"
-            elif news.market_impact > 0.3:
+            elif news.impact_strength > 0.3:
                 impact_icon = "⚡"
             else:
                 impact_icon = "📊"
@@ -246,8 +251,9 @@ class NewsCommand(AppCommand):
             # 截断标题
             title = news.title[:25] + "..." if len(news.title) > 25 else news.title
             
-            # 相关股票 (只显示第一个)
-            main_stock = news.affected_stocks[0] if news.affected_stocks else "--"
+            # 相关股票 (只显示第一个，从tags中提取)
+            stock_tags = [tag.strip() for tag in news.tags.split(',') if tag.strip()] if news.tags else []
+            main_stock = stock_tags[0] if stock_tags else "--"
             
             output.append(f"│{news.id:>3} │ {impact_icon}   │ {time_str} │ {title:<27} │ {main_stock:<4} │")
         
@@ -259,9 +265,9 @@ class NewsCommand(AppCommand):
         
         return self.format_success("\n".join(output))
     
-    def _show_categories(self) -> CommandResult:
+    async def _show_categories(self) -> CommandResult:
         """显示新闻分类"""
-        categories = self.news_service.get_news_categories()
+        categories = await self.news_service.get_news_categories()
         
         output = []
         output.append("╭─────────────────────────────────────────────────────────────╮")
@@ -328,9 +334,9 @@ class NewsCommand(AppCommand):
         
         return self.format_success("\n".join(output))
     
-    def _show_news_stats(self) -> CommandResult:
+    async def _show_news_stats(self) -> CommandResult:
         """显示新闻统计"""
-        stats = self.news_service.get_news_stats()
+        stats = await self.news_service.get_news_stats()
         
         output = []
         output.append("╭─────────────────────────────────────────────────────────────╮")

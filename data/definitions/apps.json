@@ -159,6 +159,111 @@
       "file_size": "52.1KB",
       "rating": 4.3,
       "downloads": 3210
+    },
+    {
+      "name": "advanced_chart_analyzer",
+      "display_name": "高级图表分析工具",
+      "description": "专业的股票技术分析工具，提供详细的技术指标和图表分析",
+      "version": "2.1.0",
+      "price": 89.99,
+      "category": "金融",
+      "developer": "TradingPro Analytics",
+      "icon": "📊",
+      "features": [
+        "50+技术指标",
+        "多时间框架分析",
+        "自定义指标组合",
+        "趋势预测算法",
+        "支撑阻力位识别"
+      ],
+      "requirements": ["网络连接", "JCMarket账户", "股票追踪器"],
+      "file_size": "78.5KB",
+      "rating": 4.9,
+      "downloads": 2156
+    },
+    {
+      "name": "news_sentiment_analyzer",
+      "display_name": "新闻情感分析器",
+      "description": "AI驱动的新闻情感分析工具，自动分析新闻对市场的潜在影响",
+      "version": "1.3.2",
+      "price": 149.99,
+      "category": "金融",
+      "developer": "AI Finance Labs",
+      "icon": "🧠",
+      "features": [
+        "实时新闻情感分析",
+        "市场影响评估",
+        "情感趋势图表",
+        "智能预警系统",
+        "多语言支持"
+      ],
+      "requirements": ["网络连接", "JCMarket账户", "新闻阅读器"],
+      "file_size": "95.3KB",
+      "rating": 4.8,
+      "downloads": 1834
+    },
+    {
+      "name": "limit_order_bot",
+      "display_name": "限价单机器人",
+      "description": "自动化交易助手，支持限价单、止损单等高级交易功能",
+      "version": "3.0.1",
+      "price": 199.99,
+      "category": "金融",
+      "developer": "AutoTrade Systems",
+      "icon": "🤖",
+      "features": [
+        "限价单自动执行",
+        "止损止盈设置",
+        "条件单触发",
+        "风险管理系统",
+        "交易策略回测"
+      ],
+      "requirements": ["网络连接", "JCMarket账户", "银行账户", "股票追踪器"],
+      "file_size": "125.7KB",
+      "rating": 4.7,
+      "downloads": 987
+    },
+    {
+      "name": "portfolio_optimizer",
+      "display_name": "投资组合优化器",
+      "description": "基于现代投资组合理论的资产配置优化工具",
+      "version": "2.5.0",
+      "price": 299.99,
+      "category": "金融",
+      "developer": "Quant Finance Pro",
+      "icon": "⚖️",
+      "features": [
+        "风险收益优化",
+        "资产相关性分析",
+        "蒙特卡洛模拟",
+        "再平衡建议",
+        "压力测试"
+      ],
+      "requirements": ["网络连接", "JCMarket账户", "银行账户", "高级图表分析工具"],
+      "file_size": "156.2KB",
+      "rating": 4.9,
+      "downloads": 654
+    },
+    {
+      "name": "market_scanner",
+      "display_name": "市场扫描器",
+      "description": "实时扫描市场机会，发现符合条件的交易标的",
+      "version": "1.8.4",
+      "price": 79.99,
+      "category": "金融",
+      "developer": "MarketScan Technologies",
+      "icon": "🔍",
+      "features": [
+        "自定义筛选条件",
+        "实时扫描结果",
+        "技术形态识别",
+        "异动股票提醒",
+        "热点板块分析"
+      ],
+      "requirements": ["网络连接", "JCMarket账户", "股票追踪器"],
+      "file_size": "42.8KB",
+      "rating": 4.6,
+      "downloads": 3421
     }
   ],
   "categories": [
@@ -170,12 +275,16 @@
     "开发"
   ],
   "featured_apps": [
+    "limit_order_bot",
+    "news_sentiment_analyzer",
+    "advanced_chart_analyzer",
     "stock_tracker",
-    "news",
-    "calculator"
+    "portfolio_optimizer"
   ],
   "new_releases": [
-    "game_center",
-    "text_editor"
+    "portfolio_optimizer",
+    "market_scanner",
+    "limit_order_bot",
+    "news_sentiment_analyzer"
   ]
 }

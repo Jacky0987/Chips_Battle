@@ -6,7 +6,8 @@ from models.stock.stock_price import StockPrice
 from models.stock.portfolio import Portfolio, PortfolioItem
 from models.finance.account import Account
 from models.auth.user import User
-from core.event_bus import EventBus, TimeTickEvent
+from core.event_bus import EventBus
+from core.events import TimeTickEvent, NewsPublishedEvent
 from services.time_service import TimeService
 from services.currency_service import CurrencyService
 import json
@@ -28,7 +29,7 @@ class StockService:
         
         # 订阅事件
         self.event_bus.subscribe(TimeTickEvent, self._on_time_tick)
-        self.event_bus.subscribe('news_published', self._on_news_published)
+        self.event_bus.subscribe(NewsPublishedEvent, self._on_news_published)
     
     def _load_stock_definitions(self) -> Dict[str, Any]:
         """加载股票定义文件"""
@@ -44,10 +45,11 @@ class StockService:
             return
         await self._update_stock_prices(event.game_time)
     
-    async def _on_news_published(self, event_data: Dict[str, Any]):
+    async def _on_news_published(self, event: NewsPublishedEvent):
         """处理新闻发布事件，影响股价"""
-        impact_type = event_data.get('impact_type', 'neutral')
-        impact_strength = event_data.get('impact_strength', 0.0)
+        # 从事件数据中获取影响信息
+        impact_type = event.data.get('impact_type', 'neutral')
+        impact_strength = event.severity
         
         if impact_type != 'neutral' and impact_strength != 0.0:
             await self._apply_news_impact(impact_type, impact_strength)
@@ -395,3 +397,33 @@ class StockService:
                 'sectors': sectors,
                 'avg_price_change': avg_price_change,
             }
+    
+    async def get_market_statistics(self) -> Dict[str, Any]:
+        """获取市场统计数据"""
+        async with self.uow:
+            stmt = select(Stock)
+            result = await self.uow.session.execute(stmt)
+            stocks = result.scalars().all()
+            
+            if not stocks:
+                return {
+                    'total_stocks': 0,
+                    'total_market_cap': 0,
+                    'average_price': 0,
+                    'highest_price': 0,
+                    'lowest_price': 0,
+                    'total_volume': 0
+                }
+            
+            prices = [float(stock.current_price) for stock in stocks]
+            volumes = [float(stock.volume) for stock in stocks]
+            market_caps = [float(stock.market_cap) for stock in stocks]
+            
+            return {
+                'total_stocks': len(stocks),
+                'total_market_cap': sum(market_caps),
+                'average_price': sum(prices) / len(prices),
+                'highest_price': max(prices),
+                'lowest_price': min(prices),
+                'total_volume': sum(volumes)
+             }

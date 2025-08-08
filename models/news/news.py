@@ -5,10 +5,10 @@
 定义新闻的数据结构和业务逻辑
 """
 
-import uuid
 from sqlalchemy import Column, String, Text, DateTime, Boolean, Integer, Numeric
 from sqlalchemy.sql import func
 from models.base import Base
+import uuid
 
 
 class News(Base):

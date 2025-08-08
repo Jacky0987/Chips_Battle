@@ -1,12 +1,10 @@
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, Text, Integer, Numeric
+from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, Text, Integer
 from sqlalchemy.orm import relationship
 from datetime import datetime, timedelta
-from decimal import Decimal
 import random
 import string
 
 from models.base import BaseModel
-from models.finance.currency import Currency
 
 
 class BankCard(BaseModel):
@@ -37,31 +35,8 @@ class BankCard(BaseModel):
     # 额外信息
     description = Column(Text)
     
-    # 账户信息（整合后的默认账户字段）
-    currency_id = Column(Integer, ForeignKey('currencies.id'), nullable=False, default=1)
-    account_name = Column(String(100), default='默认账户')
-    account_type = Column(String(20), default='savings')  # savings, checking, investment
-    account_number = Column(String(20), unique=True, nullable=False)
-    
-    # 余额信息
-    balance = Column(Numeric(20, 8), default=0)  # 总余额
-    available_balance = Column(Numeric(20, 8), default=0)  # 可用余额
-    frozen_balance = Column(Numeric(20, 8), default=0)  # 冻结余额
-    
-    # 账户状态
-    is_default = Column(Boolean, default=True)
-    
-    # 限额设置
-    daily_transfer_limit = Column(Numeric(20, 8), default=100000)  # 日转账限额
-    monthly_transfer_limit = Column(Numeric(20, 8), default=1000000)  # 月转账限额
-    
-    # 利率信息
-    interest_rate = Column(Numeric(8, 6), default=0.015)  # 年利率
-    last_interest_date = Column(DateTime, default=datetime.utcnow)  # 上次计息日期
-    
     # 关系
     user = relationship("User", back_populates="bank_cards")
-    currency = relationship("Currency")
     accounts = relationship("BankAccount", back_populates="card", cascade="all, delete-orphan")
     
     # 银行信息映射
@@ -127,9 +102,6 @@ class BankCard(BaseModel):
         
         # 设置过期日期 (5年后)
         self.expiry_date = datetime.utcnow() + timedelta(days=365*5)
-        
-        # 生成账户号码
-        self.account_number = self._generate_account_number()
         
         # 应用其他参数
         for key, value in kwargs.items():
@@ -230,114 +202,6 @@ class BankCard(BaseModel):
         self.is_active = False
         self.updated_at = datetime.utcnow()
     
-    def get_total_balance(self) -> Decimal:
-        """获取总余额"""
-        return Decimal(str(self.balance or 0))
-    
-    def get_available_balance(self) -> Decimal:
-        """获取可用余额"""
-        return Decimal(str(self.available_balance or 0))
-    
-    def get_frozen_balance(self) -> Decimal:
-        """获取冻结余额"""
-        return Decimal(str(self.frozen_balance or 0))
-    
-    def can_withdraw(self, amount: Decimal) -> bool:
-        """检查是否可以提取指定金额"""
-        if not self.is_active:
-            return False
-        return self.get_available_balance() >= amount
-    
-    def deposit(self, amount: Decimal, description: str = None) -> bool:
-        """存款"""
-        if amount <= 0:
-            return False
-        
-        self.balance = (self.balance or 0) + amount
-        self.available_balance = (self.available_balance or 0) + amount
-        self.updated_at = datetime.utcnow()
-        
-        return True
-    
-    def withdraw(self, amount: Decimal, description: str = None) -> bool:
-        """取款"""
-        if not self.can_withdraw(amount):
-            return False
-        
-        self.balance = (self.balance or 0) - amount
-        self.available_balance = (self.available_balance or 0) - amount
-        self.updated_at = datetime.utcnow()
-        
-        return True
-    
-    def freeze_amount(self, amount: Decimal, reason: str = None) -> bool:
-        """冻结金额"""
-        if self.get_available_balance() < amount:
-            return False
-        
-        self.available_balance = (self.available_balance or 0) - amount
-        self.frozen_balance = (self.frozen_balance or 0) + amount
-        self.updated_at = datetime.utcnow()
-        
-        return True
-    
-    def unfreeze_amount(self, amount: Decimal, reason: str = None) -> bool:
-        """解冻金额"""
-        if self.get_frozen_balance() < amount:
-            return False
-        
-        self.frozen_balance = (self.frozen_balance or 0) - amount
-        self.available_balance = (self.available_balance or 0) + amount
-        self.updated_at = datetime.utcnow()
-        
-        return True
-    
-    def calculate_interest(self) -> Decimal:
-        """计算利息"""
-        if not self.last_interest_date:
-            return Decimal('0')
-        
-        # 计算天数
-        days = (datetime.utcnow() - self.last_interest_date).days
-        if days <= 0:
-            return Decimal('0')
-        
-        # 计算日利率
-        daily_rate = Decimal(str(self.interest_rate or 0)) / 365
-        
-        # 计算利息
-        interest = self.get_total_balance() * daily_rate * days
-        
-        return interest
-    
-    def apply_interest(self) -> Decimal:
-        """应用利息"""
-        interest = self.calculate_interest()
-        
-        if interest > 0:
-            self.deposit(interest, "利息收入")
-            self.last_interest_date = datetime.utcnow()
-        
-        return interest
-    
-    def _generate_account_number(self) -> str:
-        """生成账户号码"""
-        import random
-        
-        # 账户类型前缀
-        type_prefixes = {
-            'savings': '01',
-            'checking': '02',
-            'investment': '03'
-        }
-        
-        prefix = type_prefixes.get(self.account_type, '01')
-        
-        # 生成16位随机数字
-        random_digits = ''.join([str(random.randint(0, 9)) for _ in range(16)])
-        
-        return prefix + random_digits
-    
     def get_display_info(self) -> dict:
         """获取显示信息"""
         bank_info = self.get_bank_info()
@@ -351,17 +215,7 @@ class BankCard(BaseModel):
             'status': 'active' if self.can_use() else 'inactive',
             'is_active': self.is_active,
             'expiry_date': self.expiry_date.strftime('%m/%y'),
-            'issued_date': self.issued_date.strftime('%Y-%m-%d'),
-            'created_at': self.created_at.strftime('%Y-%m-%d'),
-            'account_number': self.account_number,
-            'account_name': self.account_name,
-            'account_type': self.account_type,
-            'currency_code': self.currency.code if self.currency else 'JCY',
-            'balance': float(self.get_total_balance()),
-            'available_balance': float(self.get_available_balance()),
-            'frozen_balance': float(self.get_frozen_balance()),
-            'is_default': self.is_default,
-            'interest_rate': float(self.interest_rate or 0)
+            'issued_date': self.issued_date.strftime('%Y-%m-%d')
         }
     
     @classmethod

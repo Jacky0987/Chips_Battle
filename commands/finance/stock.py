@@ -161,7 +161,7 @@ class StockCommand(FinanceCommand):
     
     def _buy_stock(self, ticker: str, quantity: int, context: Dict[str, Any]) -> str:
         """买入股票"""
-        user_id = context.get('user_id')
+        user_id = getattr(context.user, 'user_id', None) if hasattr(context, 'user') and context.user else None
         if not user_id:
             return "❌ 请先登录"
         
@@ -174,7 +174,7 @@ class StockCommand(FinanceCommand):
     
     def _sell_stock(self, ticker: str, quantity: int, context: Dict[str, Any]) -> str:
         """卖出股票"""
-        user_id = context.get('user_id')
+        user_id = getattr(context.user, 'user_id', None) if hasattr(context, 'user') and context.user else None
         if not user_id:
             return "❌ 请先登录"
         
@@ -187,7 +187,7 @@ class StockCommand(FinanceCommand):
     
     def _show_portfolio(self, context: Dict[str, Any]) -> str:
         """显示投资组合"""
-        user_id = context.get('user_id')
+        user_id = getattr(context.user, 'user_id', None) if hasattr(context, 'user') and context.user else None
         if not user_id:
             return "❌ 请先登录"
         

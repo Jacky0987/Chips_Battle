@@ -119,7 +119,13 @@ class NewsService:
                 await session.refresh(news)
             
             # 发布新闻事件
-            await self.event_bus.publish(NewsPublishedEvent(news_id=news.id, title=news.title, category=news.category, impact_type=news.impact_type, impact_strength=float(news.impact_strength)))
+            impact_tags = [f"{news.category}:{news.impact_type}"]
+            await self.event_bus.publish(NewsPublishedEvent(
+                news_id=news.id, 
+                headline=news.title, 
+                impact_tags=impact_tags, 
+                severity=float(news.impact_strength)
+            ))
             
             return news
     

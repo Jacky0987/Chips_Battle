@@ -177,8 +177,6 @@
     - stock buy <ticker> <shares>: 购买股票。
     - stock sell <ticker> <shares>: 出售股票。
     - portfolio: 查看当前持仓。
-
-    
 第三部：财富扩张 (Part III: Wealth Expansion)
 - 游戏流程阶段: 当玩家通过初级市场和银行系统积累了第一笔可观的财富后（例如，流动资产达到 1,000,000 J$），游戏将引导其进入更广阔的投资领域。此阶段的核心是“消费升级”和“资产配置”，解锁应用市场和家园体系。
 第五章：应用市场与高级交易 (App Market & Advanced Trading)

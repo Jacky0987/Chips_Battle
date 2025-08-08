@@ -145,6 +145,10 @@ class CommandDispatcher:
         if execution_time > 1.0:  # 如果执行时间超过1秒，记录警告
             self._logger.warning(f"命令执行耗时过长: {command.name} ({execution_time:.2f}秒)")
         
+        # 更新用户统计信息
+        if result.success:
+            await self._update_user_stats(context.user, command.name)
+        
         return result
     
     async def _check_permissions(self, command: Command, user: Any) -> bool:
@@ -167,6 +171,87 @@ class CommandDispatcher:
                 return False
         
         return True
+    
+    async def _update_user_stats(self, user: Any, command_name: str) -> None:
+        """更新用户统计信息
+        
+        Args:
+            user: 用户对象
+            command_name: 执行的命令名
+        """
+        try:
+            from dal.database import get_session
+            from sqlalchemy import update
+            from models.auth.user import User
+            
+            # 更新命令执行次数
+            user.command_count = getattr(user, 'command_count', 0) + 1
+            
+            # 根据命令类型增加经验值
+            experience_gain = self._calculate_experience_gain(command_name)
+            user.experience = getattr(user, 'experience', 0) + experience_gain
+            
+            # 检查是否升级
+            new_level = self._calculate_level(user.experience)
+            if new_level > user.level:
+                user.level = new_level
+                self._logger.info(f"用户 {user.username} 升级到 {new_level} 级!")
+            
+            # 更新数据库
+            async with get_session() as session:
+                await session.execute(
+                    update(User)
+                    .where(User.user_id == user.user_id)
+                    .values(
+                        command_count=user.command_count,
+                        experience=user.experience,
+                        level=user.level
+                    )
+                )
+                await session.commit()
+                
+        except Exception as e:
+            self._logger.error(f"更新用户统计信息失败: {e}", exc_info=True)
+    
+    def _calculate_experience_gain(self, command_name: str) -> int:
+        """计算命令执行获得的经验值
+        
+        Args:
+            command_name: 命令名
+            
+        Returns:
+            经验值增量
+        """
+        # 不同类型的命令给予不同的经验值
+        experience_map = {
+            'help': 1,
+            'status': 1,
+            'profile': 1,
+            'bank': 5,
+            'transfer': 10,
+            'loan': 15,
+            'stock': 20,
+            'jcmarket': 20,
+            'market': 10,
+            'calc': 3,
+            'news': 5,
+            'weather': 2,
+            'sudo': 25,  # 管理员命令给予更多经验
+        }
+        
+        return experience_map.get(command_name, 2)  # 默认给予2点经验
+    
+    def _calculate_level(self, experience: int) -> int:
+        """根据经验值计算等级
+        
+        Args:
+            experience: 总经验值
+            
+        Returns:
+            用户等级
+        """
+        # 简单的等级计算：每1000经验升1级
+        return max(1, experience // 1000 + 1)
     
     async def _handle_unknown_command(self, command_name: str, args: List[str], user: Any) -> CommandResult:
         """处理未知命令
