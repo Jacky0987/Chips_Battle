@@ -1,0 +1,341 @@
+2025-08-11 19:26:14,881 - launcher - INFO - Chips Battle 启动器开始运行
+2025-08-11 19:26:14,881 - launcher - INFO - Python版本: 3.13.5 | packaged by Anaconda, Inc. | (main, Jun 12 2025, 11:23:37) [Clang 14.0.6 ]
+2025-08-11 19:26:14,881 - launcher - INFO - 工作目录: /Users/bytedance/Desktop/chipsbattle/Chips_Battle
+2025-08-11 19:26:14,881 - launcher - INFO - 项目根目录: /Users/bytedance/Desktop/chipsbattle/Chips_Battle
+2025-08-11 19:26:15,065 - launcher - INFO - 检测到图形环境，但默认使用控制台模式
+2025-08-11 19:26:15,065 - launcher - INFO - 选择的启动模式: console
+2025-08-11 19:26:15,066 - launcher - INFO - 启动控制台模式
+2025-08-11 19:26:17,386 - console - INFO - 开始初始化游戏系统
+2025-08-11 19:26:17,689 - console - INFO - 正在初始化数据库引擎
+2025-08-11 19:26:17,689 - dal.database - INFO - 开始初始化数据库引擎
+2025-08-11 19:26:17,717 - dal.database - INFO - 数据库表创建完成
+2025-08-11 19:26:17,717 - dal.database - INFO - 数据库引擎初始化成功: sqlite+aiosqlite:////Users/bytedance/Desktop/chipsbattle/Chips_Battle/data/database/chips_battle.db
+2025-08-11 19:26:17,717 - console - INFO - 数据库引擎初始化完成
+2025-08-11 19:26:18,120 - console - INFO - 正在初始化时间服务
+2025-08-11 19:26:18,120 - core.game_time_manager - INFO - 游戏时间管理器已初始化，开始时间: 2024-01-01 09:00:00
+2025-08-11 19:26:18,120 - core.time_event_scheduler - INFO - 时间事件调度器已初始化
+2025-08-11 19:26:18,120 - core.game_time - INFO - 游戏时间服务已设置
+2025-08-11 19:26:18,120 - console - INFO - 时间服务初始化完成
+2025-08-11 19:26:18,321 - console - INFO - 正在初始化货币服务
+2025-08-11 19:26:18,322 - services.currency_service - INFO - 货币服务已初始化
+2025-08-11 19:26:18,322 - console - INFO - 货币服务初始化完成
+2025-08-11 19:26:18,523 - console - INFO - 正在初始化认证服务
+2025-08-11 19:26:18,523 - console - INFO - 认证服务初始化完成
+2025-08-11 19:26:18,725 - console - INFO - 正在初始化应用服务
+2025-08-11 19:26:18,725 - console - INFO - 应用服务初始化完成
+2025-08-11 19:26:18,926 - console - INFO - 正在初始化股票服务
+2025-08-11 19:26:19,128 - console - INFO - 正在加载股票数据
+2025-08-11 19:26:19,173 - console - INFO - 股票服务初始化完成
+2025-08-11 19:26:19,374 - console - INFO - 正在初始化新闻服务
+2025-08-11 19:26:19,375 - console - INFO - 新闻服务初始化完成
+2025-08-11 19:26:19,576 - console - INFO - 正在创建命令注册器
+2025-08-11 19:26:19,576 - console - INFO - 命令注册器创建完成
+2025-08-11 19:26:19,877 - console - INFO - 正在发现和注册命令
+2025-08-11 19:26:19,877 - commands.registry - INFO - 开始发现命令: /Users/bytedance/Desktop/chipsbattle/Chips_Battle/commands
+2025-08-11 19:26:19,921 - commands.registry - WARNING - 命令名冲突: quit，将覆盖现有命令
+2025-08-11 19:26:19,921 - commands.registry - WARNING - 别名冲突: exit，将覆盖现有别名
+2025-08-11 19:26:19,921 - commands.registry - WARNING - 别名冲突: stop，将覆盖现有别名
+2025-08-11 19:26:19,921 - commands.registry - WARNING - 别名冲突: shutdown，将覆盖现有别名
+2025-08-11 19:26:19,921 - commands.registry - WARNING - 命令名冲突: status，将覆盖现有命令
+2025-08-11 19:26:19,921 - commands.registry - WARNING - 别名冲突: stat，将覆盖现有别名
+2025-08-11 19:26:19,921 - commands.registry - WARNING - 别名冲突: info，将覆盖现有别名
+2025-08-11 19:26:19,927 - commands.registry - INFO - 命令发现完成，共注册 22 个命令
+2025-08-11 19:26:20,028 - console - INFO - 正在启动时间服务
+2025-08-11 19:26:20,029 - services.time_service - INFO - 时间服务已启动 (tick间隔: 1秒, 每tick: 1小时)
+2025-08-11 19:26:20,029 - console - INFO - 命令系统初始化完成
+2025-08-11 19:26:20,029 - console - INFO - 游戏系统初始化完成
+2025-08-11 19:26:20,036 - services.time_service - INFO - 时间循环开始
+2025-08-11 19:26:21,041 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:26:22,057 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:26:22,564 - services.auth_service - INFO - 用户 hahaha 认证成功，IP: unknown
+2025-08-11 19:26:23,068 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:26:24,079 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:26:24,956 - services.command_dispatcher - INFO - 执行命令: help (用户: hahaha)
+2025-08-11 19:26:24,956 - HelpCommand - INFO - 命令执行成功: 
+🎮 游戏帮助
+
+欢迎来到 Chips Battle Remake v3.0 Alpha!
+
+这是一个命令驱动的游戏世界，你可以通过输入命令来与游戏互动。
+输入命令名称来执行操作，使用 'help <命令>' 查看特定命令的详细说明。
+
+📋 可用命令:
+
+⚙️ Admin命令: auth, role, sudo, user
+📱 Apps命令: app, calc, market, news, weather
+🔧 Basic命令: help, profile, quit, status
+💰 Finance命令: bank
+📈 Stock命令: jcmarket
+📋 游戏控制命令: quit, status, uptime, version
+📋 系统命令: cls, color, debug, echo, log
+
+📂 可用的分类:
+admin, apps, basic, finance, stock, 游戏控制, 系统
+
+🌟 特殊帮助主题:
+whatsnew, tutorial, developers
+
+💡 使用技巧:
+• 命令不区分大小写
+• 可以使用命令别名（如 'h' 代替 'help'）
+• 输入 'quit' 或 'exit' 退出游戏
+• 输入 'status' 查看当前状态
+• 使用 'help <分类>' 查看分类命令
+• 使用 'help <主题>' 查看特殊主题
+
+2025-08-11 19:26:24,958 - services.command_dispatcher - INFO - 命令执行成功: help - 用户: hahaha
+2025-08-11 19:26:25,093 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:26:26,102 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:26:27,111 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:26:28,130 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:26:29,147 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:26:29,412 - services.command_dispatcher - INFO - 执行命令: help (用户: hahaha)
+2025-08-11 19:26:29,412 - HelpCommand - INFO - 命令执行成功: 
+🎮 游戏帮助
+
+欢迎来到 Chips Battle Remake v3.0 Alpha!
+
+这是一个命令驱动的游戏世界，你可以通过输入命令来与游戏互动。
+输入命令名称来执行操作，使用 'help <命令>' 查看特定命令的详细说明。
+
+📋 可用命令:
+
+⚙️ Admin命令: auth, role, sudo, user
+📱 Apps命令: app, calc, market, news, weather
+🔧 Basic命令: help, profile, quit, status
+💰 Finance命令: bank
+📈 Stock命令: jcmarket
+📋 游戏控制命令: quit, status, uptime, version
+📋 系统命令: cls, color, debug, echo, log
+
+📂 可用的分类:
+admin, apps, basic, finance, stock, 游戏控制, 系统
+
+🌟 特殊帮助主题:
+whatsnew, tutorial, developers
+
+💡 使用技巧:
+• 命令不区分大小写
+• 可以使用命令别名（如 'h' 代替 'help'）
+• 输入 'quit' 或 'exit' 退出游戏
+• 输入 'status' 查看当前状态
+• 使用 'help <分类>' 查看分类命令
+• 使用 'help <主题>' 查看特殊主题
+
+2025-08-11 19:26:29,413 - services.command_dispatcher - INFO - 命令执行成功: help - 用户: hahaha
+2025-08-11 19:26:30,162 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:26:31,182 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:26:32,195 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:26:33,211 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:26:34,275 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:26:34,572 - services.command_dispatcher - INFO - 执行命令: jcmarket (用户: hahaha)
+2025-08-11 19:26:34,582 - services.command_dispatcher - INFO - 命令执行成功: jcmarket - 用户: hahaha
+2025-08-11 19:26:35,284 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:26:36,294 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:26:37,310 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:26:38,319 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:26:39,325 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:26:40,336 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:26:41,351 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:26:42,361 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:26:43,369 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:26:44,378 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:26:45,386 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:26:46,394 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:26:47,399 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:48:56,357 - launcher - INFO - Chips Battle 启动器开始运行
+2025-08-11 19:48:56,357 - launcher - INFO - Python版本: 3.13.5 | packaged by Anaconda, Inc. | (main, Jun 12 2025, 11:23:37) [Clang 14.0.6 ]
+2025-08-11 19:48:56,357 - launcher - INFO - 工作目录: /Users/bytedance/Desktop/chipsbattle/Chips_Battle
+2025-08-11 19:48:56,357 - launcher - INFO - 项目根目录: /Users/bytedance/Desktop/chipsbattle/Chips_Battle
+2025-08-11 19:48:56,539 - launcher - INFO - 检测到图形环境，但默认使用控制台模式
+2025-08-11 19:48:56,540 - launcher - INFO - 选择的启动模式: console
+2025-08-11 19:48:56,540 - launcher - INFO - 启动控制台模式
+2025-08-11 19:48:58,856 - console - INFO - 开始初始化游戏系统
+2025-08-11 19:48:59,159 - console - INFO - 正在初始化数据库引擎
+2025-08-11 19:48:59,159 - dal.database - INFO - 开始初始化数据库引擎
+2025-08-11 19:48:59,195 - dal.database - INFO - 数据库表创建完成
+2025-08-11 19:48:59,195 - dal.database - INFO - 数据库引擎初始化成功: sqlite+aiosqlite:////Users/bytedance/Desktop/chipsbattle/Chips_Battle/data/database/chips_battle.db
+2025-08-11 19:48:59,195 - console - INFO - 数据库引擎初始化完成
+2025-08-11 19:48:59,598 - console - INFO - 正在初始化时间服务
+2025-08-11 19:48:59,598 - core.game_time_manager - INFO - 游戏时间管理器已初始化，开始时间: 2024-01-01 09:00:00
+2025-08-11 19:48:59,598 - core.time_event_scheduler - INFO - 时间事件调度器已初始化
+2025-08-11 19:48:59,598 - core.game_time - INFO - 游戏时间服务已设置
+2025-08-11 19:48:59,598 - console - INFO - 时间服务初始化完成
+2025-08-11 19:48:59,800 - console - INFO - 正在初始化货币服务
+2025-08-11 19:48:59,800 - services.currency_service - INFO - 货币服务已初始化
+2025-08-11 19:48:59,801 - console - INFO - 货币服务初始化完成
+2025-08-11 19:49:00,002 - console - INFO - 正在初始化认证服务
+2025-08-11 19:49:00,003 - console - INFO - 认证服务初始化完成
+2025-08-11 19:49:00,205 - console - INFO - 正在初始化应用服务
+2025-08-11 19:49:00,205 - console - INFO - 应用服务初始化完成
+2025-08-11 19:49:00,406 - console - INFO - 正在初始化股票服务
+2025-08-11 19:49:00,607 - console - INFO - 正在加载股票数据
+2025-08-11 19:49:00,652 - console - INFO - 股票服务初始化完成
+2025-08-11 19:49:00,853 - console - INFO - 正在初始化新闻服务
+2025-08-11 19:49:00,853 - console - INFO - 新闻服务初始化完成
+2025-08-11 19:49:01,054 - console - INFO - 正在创建命令注册器
+2025-08-11 19:49:01,055 - console - INFO - 命令注册器创建完成
+2025-08-11 19:49:01,356 - console - INFO - 正在发现和注册命令
+2025-08-11 19:49:01,357 - commands.registry - INFO - 开始发现命令: /Users/bytedance/Desktop/chipsbattle/Chips_Battle/commands
+2025-08-11 19:49:01,400 - commands.registry - WARNING - 命令名冲突: quit，将覆盖现有命令
+2025-08-11 19:49:01,400 - commands.registry - WARNING - 别名冲突: exit，将覆盖现有别名
+2025-08-11 19:49:01,400 - commands.registry - WARNING - 别名冲突: stop，将覆盖现有别名
+2025-08-11 19:49:01,401 - commands.registry - WARNING - 别名冲突: shutdown，将覆盖现有别名
+2025-08-11 19:49:01,401 - commands.registry - WARNING - 命令名冲突: status，将覆盖现有命令
+2025-08-11 19:49:01,401 - commands.registry - WARNING - 别名冲突: stat，将覆盖现有别名
+2025-08-11 19:49:01,401 - commands.registry - WARNING - 别名冲突: info，将覆盖现有别名
+2025-08-11 19:49:01,407 - commands.registry - INFO - 命令发现完成，共注册 22 个命令
+2025-08-11 19:49:01,508 - console - INFO - 正在启动时间服务
+2025-08-11 19:49:01,509 - services.time_service - INFO - 时间服务已启动 (tick间隔: 1秒, 每tick: 1小时)
+2025-08-11 19:49:01,509 - console - INFO - 命令系统初始化完成
+2025-08-11 19:49:01,509 - console - INFO - 游戏系统初始化完成
+2025-08-11 19:49:01,519 - services.time_service - INFO - 时间循环开始
+2025-08-11 19:49:02,526 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:03,555 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:04,574 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:05,585 - services.auth_service - INFO - 用户 hahaha 认证成功，IP: unknown
+2025-08-11 19:49:05,594 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:06,610 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:07,449 - services.command_dispatcher - INFO - 执行命令: jcmarket (用户: hahaha)
+2025-08-11 19:49:07,456 - services.command_dispatcher - INFO - 命令执行成功: jcmarket - 用户: hahaha
+2025-08-11 19:49:07,638 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:08,657 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:09,671 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:10,682 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:11,693 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:12,708 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:13,726 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:14,743 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:15,761 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:16,775 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:17,791 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:18,807 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:19,818 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:20,832 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:21,840 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:22,851 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:23,868 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:24,882 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:25,898 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:26,910 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:27,922 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:28,939 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:29,953 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:30,967 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:32,016 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:33,029 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:34,041 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:35,053 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:36,070 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:37,083 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:38,094 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:39,109 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:40,119 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:41,137 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:42,155 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:43,169 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:44,181 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:45,192 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:46,200 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:47,213 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:48,222 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:49,233 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:50,244 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:51,256 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:52,266 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:53,276 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:54,283 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:55,291 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:56,300 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:57,310 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:58,321 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:49:59,333 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:57:22,072 - services.command_dispatcher - INFO - 执行命令: jcmarket (用户: hahaha)
+2025-08-11 19:57:22,083 - services.command_dispatcher - INFO - 命令执行成功: jcmarket - 用户: hahaha
+2025-08-11 19:58:20,821 - launcher - INFO - Chips Battle 启动器开始运行
+2025-08-11 19:58:20,821 - launcher - INFO - Python版本: 3.13.5 | packaged by Anaconda, Inc. | (main, Jun 12 2025, 11:23:37) [Clang 14.0.6 ]
+2025-08-11 19:58:20,821 - launcher - INFO - 工作目录: /Users/bytedance/Desktop/chipsbattle/Chips_Battle
+2025-08-11 19:58:20,822 - launcher - INFO - 项目根目录: /Users/bytedance/Desktop/chipsbattle/Chips_Battle
+2025-08-11 19:58:20,998 - launcher - INFO - 检测到图形环境，但默认使用控制台模式
+2025-08-11 19:58:20,998 - launcher - INFO - 选择的启动模式: console
+2025-08-11 19:58:20,998 - launcher - INFO - 启动控制台模式
+2025-08-11 19:58:23,327 - console - INFO - 开始初始化游戏系统
+2025-08-11 19:58:23,630 - console - INFO - 正在初始化数据库引擎
+2025-08-11 19:58:23,630 - dal.database - INFO - 开始初始化数据库引擎
+2025-08-11 19:58:23,669 - dal.database - INFO - 数据库表创建完成
+2025-08-11 19:58:23,669 - dal.database - INFO - 数据库引擎初始化成功: sqlite+aiosqlite:////Users/bytedance/Desktop/chipsbattle/Chips_Battle/data/database/chips_battle.db
+2025-08-11 19:58:23,669 - console - INFO - 数据库引擎初始化完成
+2025-08-11 19:58:24,070 - console - INFO - 正在初始化时间服务
+2025-08-11 19:58:24,071 - core.game_time_manager - INFO - 游戏时间管理器已初始化，开始时间: 2024-01-01 09:00:00
+2025-08-11 19:58:24,071 - core.time_event_scheduler - INFO - 时间事件调度器已初始化
+2025-08-11 19:58:24,071 - core.game_time - INFO - 游戏时间服务已设置
+2025-08-11 19:58:24,071 - console - INFO - 时间服务初始化完成
+2025-08-11 19:58:24,272 - console - INFO - 正在初始化货币服务
+2025-08-11 19:58:24,272 - services.currency_service - INFO - 货币服务已初始化
+2025-08-11 19:58:24,272 - console - INFO - 货币服务初始化完成
+2025-08-11 19:58:24,474 - console - INFO - 正在初始化认证服务
+2025-08-11 19:58:24,474 - console - INFO - 认证服务初始化完成
+2025-08-11 19:58:24,676 - console - INFO - 正在初始化应用服务
+2025-08-11 19:58:24,676 - console - INFO - 应用服务初始化完成
+2025-08-11 19:58:24,877 - console - INFO - 正在初始化股票服务
+2025-08-11 19:58:25,079 - console - INFO - 正在加载股票数据
+2025-08-11 19:58:25,111 - console - INFO - 股票服务初始化完成
+2025-08-11 19:58:25,312 - console - INFO - 正在初始化新闻服务
+2025-08-11 19:58:25,312 - console - INFO - 新闻服务初始化完成
+2025-08-11 19:58:25,513 - console - INFO - 正在创建命令注册器
+2025-08-11 19:58:25,513 - console - INFO - 命令注册器创建完成
+2025-08-11 19:58:25,815 - console - INFO - 正在发现和注册命令
+2025-08-11 19:58:25,815 - commands.registry - INFO - 开始发现命令: /Users/bytedance/Desktop/chipsbattle/Chips_Battle/commands
+2025-08-11 19:58:25,852 - commands.registry - WARNING - 命令名冲突: quit，将覆盖现有命令
+2025-08-11 19:58:25,852 - commands.registry - WARNING - 别名冲突: exit，将覆盖现有别名
+2025-08-11 19:58:25,852 - commands.registry - WARNING - 别名冲突: stop，将覆盖现有别名
+2025-08-11 19:58:25,852 - commands.registry - WARNING - 别名冲突: shutdown，将覆盖现有别名
+2025-08-11 19:58:25,852 - commands.registry - WARNING - 命令名冲突: status，将覆盖现有命令
+2025-08-11 19:58:25,853 - commands.registry - WARNING - 别名冲突: stat，将覆盖现有别名
+2025-08-11 19:58:25,853 - commands.registry - WARNING - 别名冲突: info，将覆盖现有别名
+2025-08-11 19:58:25,859 - commands.registry - INFO - 命令发现完成，共注册 22 个命令
+2025-08-11 19:58:25,960 - console - INFO - 正在启动时间服务
+2025-08-11 19:58:25,960 - services.time_service - INFO - 时间服务已启动 (tick间隔: 1秒, 每tick: 1小时)
+2025-08-11 19:58:25,960 - console - INFO - 命令系统初始化完成
+2025-08-11 19:58:25,960 - console - INFO - 游戏系统初始化完成
+2025-08-11 19:58:25,966 - services.time_service - INFO - 时间循环开始
+2025-08-11 19:58:26,978 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:28,006 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:29,023 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:30,041 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:31,057 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:32,073 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:33,086 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:34,099 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:35,117 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:36,125 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:37,133 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:37,492 - services.auth_service - INFO - 用户 hahaha 认证成功，IP: unknown
+2025-08-11 19:58:38,153 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:38,626 - services.command_dispatcher - INFO - 执行命令: jcmarket (用户: hahaha)
+2025-08-11 19:58:38,637 - services.command_dispatcher - INFO - 命令执行成功: jcmarket - 用户: hahaha
+2025-08-11 19:58:39,171 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:40,184 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:41,205 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:42,220 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:43,231 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:44,241 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:45,249 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:46,256 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:47,264 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:48,272 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:49,285 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:50,296 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:51,312 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:52,327 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:53,339 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:54,350 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:55,359 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:56,386 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:57,396 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:58,407 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:58:59,415 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:59:00,422 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:59:01,434 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:59:02,447 - services.currency_service - INFO - 汇率更新完成
+2025-08-11 19:59:03,460 - services.currency_service - INFO - 汇率更新完成

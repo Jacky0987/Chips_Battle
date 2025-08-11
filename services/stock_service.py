@@ -59,50 +59,180 @@ class StockService:
             await self._apply_news_impact(impact_type, impact_strength)
     
     async def _update_stock_prices(self, current_time: datetime):
-        """更新所有股票价格"""
+        """更新所有股票价格（基于参考体系改进）"""
         async with self.uow:
             stmt = select(Stock)
             result = await self.uow.session.execute(stmt)
             stocks = result.scalars().all()
             
             for stock in stocks:
-                new_price = self._calculate_new_price(stock)
-                
-                # 创建价格记录
-                price_record = StockPrice(
-                    id=str(uuid.uuid4()),
-                    stock_id=stock.id,
-                    price=new_price,
-                    volume=random.randint(1000, 100000),
-                    timestamp=current_time
-                )
-                self.uow.add(price_record)
-                
-                # 更新股票当前价格
-                stock.current_price = new_price
+                try:
+                    old_price = stock.current_price or 0
+                    new_price = self._calculate_new_price(stock)
+                    
+                    # 创建价格记录（参考体系）
+                    price_record = StockPrice(
+                        id=str(uuid.uuid4()),
+                        stock_id=stock.id,
+                        price=new_price,
+                        opening_price=stock.opening_price or new_price,
+                        closing_price=new_price,
+                        high_price=max(float(stock.day_high or new_price), float(new_price)),
+                        low_price=min(float(stock.day_low or new_price), float(new_price)),
+                        volume=int(stock.volume or 1000000) * random.randint(80, 120) // 100,
+                        timestamp=current_time
+                    )
+                    self.uow.add(price_record)
+                    
+                    # 更新股票当前价格和相关指标（参考体系）
+                    stock.current_price = new_price
+                    stock.previous_close = old_price
+                    stock.day_high = max(float(stock.day_high or new_price), float(new_price))
+                    stock.day_low = min(float(stock.day_low or new_price), float(new_price))
+                    stock.volume = price_record.volume
+                    
+                    # 计算价格变化
+                    price_change = float(new_price) - float(old_price)
+                    stock.closing_price = new_price
+                    
+                    # 更新PE比率（参考体系）
+                    if stock.eps and float(stock.eps) > 0:
+                        stock.pe_ratio = float(new_price) / float(stock.eps)
+                    
+                except Exception as e:
+                    print(f"更新股票 {stock.symbol} 价格时出错: {e}")
+                    continue
             
             await self.uow.commit()
     
     def _calculate_new_price(self, stock: Stock) -> Decimal:
-        """计算股票新价格"""
-        current_price = stock.current_price
-        volatility = stock.volatility
+        """计算股票新价格（更加复杂和贴切实际市场）"""
+        current_price = stock.current_price or 0
+        volatility = stock.volatility or 0.02
+        volume = stock.volume or 1000000
+        beta = stock.beta or 1.0
+        pe_ratio = stock.pe_ratio or 15.0
+        market_cap = stock.market_cap or 1000000000
+        rsi = stock.rsi or 50.0
+        moving_avg_50 = stock.moving_avg_50 or current_price
+        moving_avg_200 = stock.moving_avg_200 or current_price
         
-        # 基础随机波动
-        random_factor = random.gauss(0, float(volatility))
+        # 1. 基础随机波动（基于历史波动率）
+        random_change = random.gauss(0, float(volatility))
         
-        # 趋势因子（基于股票类型）
+        # 2. 技术指标因子
+        # RSI因子：超买超卖调整
+        rsi_factor = 1.0
+        if float(rsi) > 70:  # 超买状态，倾向于下跌
+            rsi_factor = 1.0 - (float(rsi) - 70) * 0.001
+        elif float(rsi) < 30:  # 超卖状态，倾向于上涨
+            rsi_factor = 1.0 + (30 - float(rsi)) * 0.001
+        
+        # 移动平均线因子
+        ma_factor = 1.0
+        if float(current_price) > float(moving_avg_50) > float(moving_avg_200):
+            ma_factor = 1.002  # 多头排列，轻微上涨倾向
+        elif float(current_price) < float(moving_avg_50) < float(moving_avg_200):
+            ma_factor = 0.998  # 空头排列，轻微下跌倾向
+        
+        # 3. 基本面因子
+        # PE比率因子：过高或过低的PE都有调整压力
+        pe_factor = 1.0
+        if float(pe_ratio) > 30:  # 高PE，估值偏高
+            pe_factor = 1.0 - (float(pe_ratio) - 30) * 0.0001
+        elif float(pe_ratio) < 10:  # 低PE，估值偏低
+            pe_factor = 1.0 + (10 - float(pe_ratio)) * 0.0001
+        
+        # 市值因子：小市值股票波动更大
+        market_cap_factor = 1.0
+        market_cap_float = float(market_cap)
+        if market_cap_float < 5000000000:  # 小市值
+            market_cap_factor = 1.02
+        elif market_cap_float > 50000000000:  # 大市值
+            market_cap_factor = 0.98
+        
+        # 4. 成交量因子（参考体系）
+        volume_factor = 1.0 - (min(float(volume), 100000000) / 100000000) * 0.15
+        
+        # 5. 趋势因子（基于股票类型）
         trend_factor = self._get_trend_factor(stock.sector)
         
-        # 计算价格变化
-        price_change = float(current_price) * (random_factor + trend_factor)
-        new_price = float(current_price) + price_change
+        # 6. 市场情绪因子（模拟市场整体情绪）
+        sentiment_factor = 1.0 + random.uniform(-0.02, 0.02)
         
-        # 确保价格不会过低
-        min_price = float(stock.ipo_price) * 0.1
+        # 7. 行业轮动因子
+        sector_rotation_factor = self._get_sector_rotation_factor()
+        
+        # 8. 事件影响因子（更复杂的模拟）
+        event_factor = 1.0
+        if random.random() < 0.15:  # 15%概率有事件影响
+            event_type = random.choice(['earnings', 'merger', 'regulation', 'market'])
+            magnitude = random.uniform(0.005, 0.08)
+            
+            if event_type == 'earnings':
+                # 财报事件影响更大
+                magnitude *= 1.5
+            elif event_type == 'merger':
+                # 并购事件影响中等
+                magnitude *= 1.2
+            elif event_type == 'regulation':
+                # 监管事件影响因行业而异
+                if stock.sector in ['金融', '医药']:
+                    magnitude *= 1.8
+            
+            if random.random() < 0.4:  # 40%概率是负面影响
+                magnitude = -magnitude
+            
+            event_factor = 1 + magnitude
+        
+        # 9. 综合所有因子计算价格变化
+        total_change = (random_change * 0.3 +  # 随机因素权重30%
+                       (rsi_factor - 1) * 0.15 +  # 技术指标权重15%
+                       (ma_factor - 1) * 0.1 +   # 移动平均线权重10%
+                       (pe_factor - 1) * 0.1 +    # PE比率权重10%
+                       (market_cap_factor - 1) * 0.05 +  # 市值因子权重5%
+                       volume_factor * 0.05 +     # 成交量因子权重5%
+                       trend_factor * 0.1 +      # 趋势因子权重10%
+                       (sentiment_factor - 1) * 0.05 +  # 市场情绪权重5%
+                       sector_rotation_factor * 0.05 +  # 行业轮动权重5%
+                       (event_factor - 1) * 0.1)  # 事件影响权重10%
+        
+        # 10. 应用贝塔系数放大/缩小波动
+        total_change *= float(beta)
+        
+        # 11. 限制单次变化幅度（更严格的限制）
+        max_change = 0.08  # 最大8%变化
+        if abs(total_change) > max_change:
+            total_change = max_change if total_change > 0 else -max_change
+        
+        new_price = float(current_price) * (1 + total_change)
+        
+        # 12. 确保价格不会过低（更严格的价格保护）
+        min_price = float(stock.ipo_price or 1) * 0.2  # 最低为IPO价格的20%
         new_price = max(new_price, min_price)
         
-        return Decimal(str(round(new_price, 2)))
+        # 13. 价格精度处理
+        new_price = round(new_price, 2)
+        
+        return Decimal(str(new_price))
+    
+    def _get_sector_rotation_factor(self) -> float:
+        """获取行业轮动因子，模拟市场热点切换"""
+        # 模拟行业轮动周期
+        rotation_cycle = {
+            '科技': 0.003,
+            '金融': 0.001,
+            '医药': 0.002,
+            '能源': -0.001,
+            '消费': 0.0015,
+            '工业': 0.0005,
+            '房地产': -0.002
+        }
+        
+        # 添加随机性模拟轮动不确定性
+        base_factor = random.uniform(-0.002, 0.002)
+        
+        return base_factor
     
     def _get_trend_factor(self, sector: str) -> float:
         """根据行业获取趋势因子"""
@@ -157,8 +287,9 @@ class StockService:
         return sensitivities.get(sector, {}).get(impact_type, 0.5)
     
     async def initialize_stocks(self):
-        """初始化股票数据"""
+        """初始化股票数据（更完整的初始化）"""
         stock_definitions = self._load_stock_definitions()
+        current_time = self.time_service.get_game_time()
         
         async with self.uow:
             for stock_data in stock_definitions['stocks']:
@@ -167,8 +298,11 @@ class StockService:
                 result = await self.uow.session.execute(stmt)
                 existing_stock = result.scalars().first()
                 if existing_stock:
+                    # 如果股票已存在，更新其数据
+                    await self._update_existing_stock(existing_stock, stock_data)
                     continue
                 
+                # 创建新股票
                 stock = Stock(
                     symbol=stock_data['ticker'],
                     name=stock_data['name'],
@@ -195,11 +329,112 @@ class StockService:
                     # 市场表现
                     year_high=Decimal(str(stock_data.get('year_high', 0))) if stock_data.get('year_high') else None,
                     year_low=Decimal(str(stock_data.get('year_low', 0))) if stock_data.get('year_low') else None,
-                    ytd_return=Decimal(str(stock_data.get('ytd_return', 0))) if stock_data.get('ytd_return') else None
+                    ytd_return=Decimal(str(stock_data.get('ytd_return', 0))) if stock_data.get('ytd_return') else None,
+                    
+                    # 初始化其他价格相关字段
+                    opening_price=Decimal(str(stock_data['current_price'])),
+                    closing_price=Decimal(str(stock_data['current_price'])),
+                    previous_close=Decimal(str(stock_data['current_price'])),
+                    day_high=Decimal(str(stock_data['current_price'])),
+                    day_low=Decimal(str(stock_data['current_price'])),
+                    volume=1000000  # 初始成交量
                 )
                 self.uow.add(stock)
+                await self.uow.flush()  # 确保股票已保存并获取ID
+                
+                # 为新股票创建初始价格历史记录
+                await self._create_initial_price_history(stock, current_time)
             
             await self.uow.commit()
+            print(f"成功初始化 {len(stock_definitions['stocks'])} 支股票")
+    
+    async def _update_existing_stock(self, stock: Stock, stock_data: dict):
+        """更新已存在的股票数据"""
+        # 更新基本信息
+        stock.name = stock_data['name']
+        stock.sector = stock_data['sector']
+        stock.description = stock_data.get('description', '')
+        
+        # 更新财务指标
+        if stock_data.get('pe_ratio'):
+            stock.pe_ratio = Decimal(str(stock_data['pe_ratio']))
+        if stock_data.get('beta'):
+            stock.beta = Decimal(str(stock_data['beta']))
+        if stock_data.get('dividend_yield'):
+            stock.dividend_yield = Decimal(str(stock_data['dividend_yield']))
+        if stock_data.get('eps'):
+            stock.eps = Decimal(str(stock_data['eps']))
+        if stock_data.get('book_value'):
+            stock.book_value = Decimal(str(stock_data['book_value']))
+        if stock_data.get('debt_to_equity'):
+            stock.debt_to_equity = Decimal(str(stock_data['debt_to_equity']))
+        
+        # 更新技术指标
+        if stock_data.get('rsi'):
+            stock.rsi = Decimal(str(stock_data['rsi']))
+        if stock_data.get('moving_avg_50'):
+            stock.moving_avg_50 = Decimal(str(stock_data['moving_avg_50']))
+        if stock_data.get('moving_avg_200'):
+            stock.moving_avg_200 = Decimal(str(stock_data['moving_avg_200']))
+        
+        # 更新市场表现
+        if stock_data.get('year_high'):
+            stock.year_high = Decimal(str(stock_data['year_high']))
+        if stock_data.get('year_low'):
+            stock.year_low = Decimal(str(stock_data['year_low']))
+        if stock_data.get('ytd_return'):
+            stock.ytd_return = Decimal(str(stock_data['ytd_return']))
+        
+        # 更新市值和波动率
+        stock.market_cap = Decimal(str(stock_data['market_cap']))
+        stock.volatility = Decimal(str(stock_data['volatility']))
+        
+        print(f"更新股票 {stock.symbol} 的数据")
+    
+    async def _create_initial_price_history(self, stock: Stock, current_time: datetime):
+        """为股票创建初始价格历史记录"""
+        base_price = float(stock.current_price)
+        
+        # 创建过去30天的价格历史
+        for i in range(30, 0, -1):
+            # 模拟历史价格波动
+            days_ago = current_time - timedelta(days=i)
+            
+            # 生成历史价格（基于当前价格的随机波动）
+            price_change = random.uniform(-0.05, 0.05)  # 5%的日波动范围
+            historical_price = base_price * (1 + price_change)
+            
+            # 确保价格不会过低
+            min_price = float(stock.ipo_price) * 0.2
+            historical_price = max(historical_price, min_price)
+            
+            # 创建价格记录
+            price_record = StockPrice(
+                id=str(uuid.uuid4()),
+                stock_id=stock.id,
+                price=Decimal(str(round(historical_price, 2))),
+                opening_price=Decimal(str(round(historical_price, 2))),
+                closing_price=Decimal(str(round(historical_price, 2))),
+                high_price=Decimal(str(round(historical_price * 1.02, 2))),  # 最高价略高
+                low_price=Decimal(str(round(historical_price * 0.98, 2))),   # 最低价略低
+                volume=random.randint(500000, 2000000),  # 随机成交量
+                timestamp=days_ago
+            )
+            self.uow.add(price_record)
+        
+        # 创建当前时间的价格记录
+        current_price_record = StockPrice(
+            id=str(uuid.uuid4()),
+            stock_id=stock.id,
+            price=stock.current_price,
+            opening_price=stock.opening_price or stock.current_price,
+            closing_price=stock.closing_price or stock.current_price,
+            high_price=stock.day_high or stock.current_price,
+            low_price=stock.day_low or stock.current_price,
+            volume=stock.volume or 1000000,
+            timestamp=current_time
+        )
+        self.uow.add(current_price_record)
     
     async def get_all_stocks(self) -> List[Stock]:
         """获取所有股票"""
@@ -441,12 +676,32 @@ class StockService:
                     'average_price': 0,
                     'highest_price': 0,
                     'lowest_price': 0,
-                    'total_volume': 0
+                    'total_volume': 0,
+                    'rising_stocks': 0,
+                    'falling_stocks': 0,
+                    'unchanged_stocks': 0
                 }
             
+            # 计算基本统计数据
             prices = [float(stock.current_price or 0) for stock in stocks]
             volumes = [float(stock.volume or 0) for stock in stocks]
             market_caps = [float(stock.market_cap or 0) for stock in stocks]
+            
+            # 计算上涨下跌股票数量
+            rising_stocks = 0
+            falling_stocks = 0
+            unchanged_stocks = 0
+            
+            for stock in stocks:
+                current_price = float(stock.current_price or 0)
+                previous_close = float(stock.previous_close or current_price)
+                
+                if current_price > previous_close:
+                    rising_stocks += 1
+                elif current_price < previous_close:
+                    falling_stocks += 1
+                else:
+                    unchanged_stocks += 1
             
             return {
                 'total_stocks': len(stocks),
@@ -454,5 +709,8 @@ class StockService:
                 'average_price': sum(prices) / len(prices),
                 'highest_price': max(prices),
                 'lowest_price': min(prices),
-                'total_volume': sum(volumes)
+                'total_volume': sum(volumes),
+                'rising_stocks': rising_stocks,
+                'falling_stocks': falling_stocks,
+                'unchanged_stocks': unchanged_stocks
              }
