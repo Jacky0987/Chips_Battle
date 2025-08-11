@@ -217,6 +217,8 @@ class DatabaseInitializer:
             password_hash = auth_service._hash_password("admin123")
             
             # 创建用户
+            from core.game_time import GameTime
+            current_time = GameTime.now() if GameTime.is_initialized() else datetime.now()
             admin_user = User(
                 username="admin",
                 email="admin@chipsbattle.local",
@@ -226,8 +228,8 @@ class DatabaseInitializer:
                 is_active=True,
                 level=100,
                 experience=999999,
-                created_at=datetime.now(),
-                updated_at=datetime.now()
+                created_at=current_time,
+                updated_at=current_time
             )
             
             session.add(admin_user)
@@ -243,7 +245,7 @@ class DatabaseInitializer:
                 # 为管理员分配管理员角色
                 session.execute(
                     text("INSERT INTO user_roles (user_id, role_id, assigned_at) VALUES (:user_id, :role_id, :assigned_at)"),
-                    {"user_id": admin_user.user_id, "role_id": admin_role_id, "assigned_at": datetime.now()}
+                    {"user_id": admin_user.user_id, "role_id": admin_role_id, "assigned_at": current_time}
                 )
             
             session.commit()

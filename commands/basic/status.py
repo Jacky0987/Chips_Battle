@@ -159,13 +159,16 @@ class StatusCommand(BasicCommand):
         table.add_column("值", style="white")
         
         # 当前时间
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        from core.game_time import GameTime
+        current_time = (GameTime.now() if GameTime.is_initialized() else datetime.now()).strftime("%Y-%m-%d %H:%M:%S")
         table.add_row("🕐 当前时间", current_time)
         
-        # 游戏时间（如果有时间服务）
-        # 这里需要从上下文或服务中获取游戏时间
-        # 暂时使用当前时间
-        table.add_row("🎮 游戏时间", current_time)
+        # 游戏时间
+        if GameTime.is_initialized():
+            game_time = GameTime.now().strftime("%Y-%m-%d %H:%M:%S")
+            table.add_row("🎮 游戏时间", game_time)
+        else:
+            table.add_row("🎮 游戏时间", "未初始化")
         
         # 服务器状态
         table.add_row("🖥️ 服务器", "🟢 正常运行")
@@ -175,7 +178,8 @@ class StatusCommand(BasicCommand):
         
         # 会话时长
         if hasattr(context, 'session_start_time'):
-            session_duration = datetime.now() - context.session_start_time
+            current_time = GameTime.now() if GameTime.is_initialized() else datetime.now()
+            session_duration = current_time - context.session_start_time
             duration_str = str(session_duration).split('.')[0]  # 去掉微秒
             table.add_row("⏱️ 会话时长", duration_str)
         

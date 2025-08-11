@@ -10,10 +10,12 @@ from core.event_bus import EventBus
 from core.events import TimeTickEvent, NewsPublishedEvent
 from services.time_service import TimeService
 from services.currency_service import CurrencyService
+from core.game_time import GameTime
 import json
 import os
 import random
 import math
+import uuid
 from decimal import Decimal
 from sqlalchemy import select
 
@@ -41,9 +43,11 @@ class StockService:
     
     async def _on_time_tick(self, event: TimeTickEvent):
         """处理时间滴答事件，更新股价"""
-        if not self.time_service.get_game_time().is_market_hours():
+        if not self.time_service.is_market_hours():
             return
-        await self._update_stock_prices(event.game_time)
+        # 使用time_service获取当前游戏时间，避免GUI事件循环问题
+        current_time = self.time_service.get_game_time()
+        await self._update_stock_prices(current_time)
     
     async def _on_news_published(self, event: NewsPublishedEvent):
         """处理新闻发布事件，影响股价"""
@@ -66,6 +70,7 @@ class StockService:
                 
                 # 创建价格记录
                 price_record = StockPrice(
+                    id=str(uuid.uuid4()),
                     stock_id=stock.id,
                     price=new_price,
                     volume=random.randint(1000, 100000),
@@ -123,15 +128,18 @@ class StockService:
                 sector_sensitivity = self._get_sector_sensitivity(stock.sector, impact_type)
                 impact_factor = impact_strength * sector_sensitivity
                 
+                current_price = stock.current_price or 0
+                ipo_price = stock.ipo_price or 1
+                
                 if impact_type == 'positive':
-                    price_change = float(stock.current_price) * impact_factor
+                    price_change = float(current_price) * impact_factor
                 elif impact_type == 'negative':
-                    price_change = -float(stock.current_price) * impact_factor
+                    price_change = -float(current_price) * impact_factor
                 else:
                     continue
                 
-                new_price = float(stock.current_price) + price_change
-                new_price = max(new_price, float(stock.ipo_price) * 0.1)
+                new_price = float(current_price) + price_change
+                new_price = max(new_price, float(ipo_price) * 0.1)
                 stock.current_price = Decimal(str(round(new_price, 2)))
             
             await self.uow.commit()
@@ -169,7 +177,25 @@ class StockService:
                     current_price=Decimal(str(stock_data['current_price'])),
                     market_cap=Decimal(str(stock_data['market_cap'])),
                     volatility=Decimal(str(stock_data['volatility'])),
-                    description=stock_data.get('description', '')
+                    description=stock_data.get('description', ''),
+                    
+                    # 财务指标
+                    pe_ratio=Decimal(str(stock_data.get('pe_ratio', 0))) if stock_data.get('pe_ratio') else None,
+                    beta=Decimal(str(stock_data.get('beta', 0))) if stock_data.get('beta') else None,
+                    dividend_yield=Decimal(str(stock_data.get('dividend_yield', 0))) if stock_data.get('dividend_yield') else None,
+                    eps=Decimal(str(stock_data.get('eps', 0))) if stock_data.get('eps') else None,
+                    book_value=Decimal(str(stock_data.get('book_value', 0))) if stock_data.get('book_value') else None,
+                    debt_to_equity=Decimal(str(stock_data.get('debt_to_equity', 0))) if stock_data.get('debt_to_equity') else None,
+                    
+                    # 技术指标
+                    rsi=Decimal(str(stock_data.get('rsi', 0))) if stock_data.get('rsi') else None,
+                    moving_avg_50=Decimal(str(stock_data.get('moving_avg_50', 0))) if stock_data.get('moving_avg_50') else None,
+                    moving_avg_200=Decimal(str(stock_data.get('moving_avg_200', 0))) if stock_data.get('moving_avg_200') else None,
+                    
+                    # 市场表现
+                    year_high=Decimal(str(stock_data.get('year_high', 0))) if stock_data.get('year_high') else None,
+                    year_low=Decimal(str(stock_data.get('year_low', 0))) if stock_data.get('year_low') else None,
+                    ytd_return=Decimal(str(stock_data.get('ytd_return', 0))) if stock_data.get('ytd_return') else None
                 )
                 self.uow.add(stock)
             
@@ -262,11 +288,12 @@ class StockService:
             await self.uow.commit()
             
             # 发布事件
+            current_price = stock.current_price or 0
             self.event_bus.publish('stock_purchased', {
                 'user_id': user_id,
                 'ticker': ticker,
                 'quantity': quantity,
-                'price': float(stock.current_price),
+                'price': float(current_price),
                 'total_cost': float(total_cost)
             })
             
@@ -319,11 +346,12 @@ class StockService:
             await self.uow.commit()
             
             # 发布事件
+            current_price = stock.current_price or 0
             self.event_bus.publish('stock_sold', {
                 'user_id': user_id,
                 'ticker': ticker,
                 'quantity': quantity,
-                'price': float(stock.current_price),
+                'price': float(current_price),
                 'total_revenue': float(total_revenue)
             })
             
@@ -356,12 +384,13 @@ class StockService:
                     profit_loss = current_value - cost_value
                     profit_loss_pct = (profit_loss / cost_value) * 100 if cost_value > 0 else 0
                     
+                    current_price = stock.current_price or 0
                     result.append({
                         'ticker': stock.symbol,
                         'name': stock.name,
                         'quantity': item.quantity,
                         'average_cost': float(item.average_cost),
-                        'current_price': float(stock.current_price),
+                        'current_price': float(current_price),
                         'current_value': float(current_value),
                         'cost_value': float(cost_value),
                         'profit_loss': float(profit_loss),
@@ -415,9 +444,9 @@ class StockService:
                     'total_volume': 0
                 }
             
-            prices = [float(stock.current_price) for stock in stocks]
-            volumes = [float(stock.volume) for stock in stocks]
-            market_caps = [float(stock.market_cap) for stock in stocks]
+            prices = [float(stock.current_price or 0) for stock in stocks]
+            volumes = [float(stock.volume or 0) for stock in stocks]
+            market_caps = [float(stock.market_cap or 0) for stock in stocks]
             
             return {
                 'total_stocks': len(stocks),

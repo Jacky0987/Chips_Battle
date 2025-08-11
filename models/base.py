@@ -10,6 +10,13 @@ from sqlalchemy import Column, DateTime, String, Text, Boolean, Integer
 from datetime import datetime
 from typing import Dict, Any, Optional
 import json
+from core.game_time import GameTime
+
+
+def get_game_time_now():
+    """获取当前游戏时间或真实时间"""
+    # 在数据库模型中使用系统时间，避免GUI事件循环问题
+    return datetime.now()
 
 
 
@@ -21,8 +28,8 @@ class BaseModel(Base):
     __abstract__ = True
     
     # 通用字段
-    created_at = Column(DateTime, default=datetime.now, nullable=False, comment='创建时间')
-    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False, comment='更新时间')
+    created_at = Column(DateTime, default=get_game_time_now, nullable=False, comment='创建时间')
+    updated_at = Column(DateTime, default=get_game_time_now, onupdate=get_game_time_now, nullable=False, comment='更新时间')
     
     def __init__(self, **kwargs):
         """初始化模型
@@ -125,7 +132,7 @@ class BaseModel(Base):
                 
                 setattr(self, key, value)
         
-        self.updated_at = datetime.now()
+        self.updated_at = GameTime.now() if GameTime.is_initialized() else datetime.now()
     
     def to_json(self, **kwargs) -> str:
         """转换为JSON字符串
@@ -257,7 +264,7 @@ class BaseModel(Base):
     
     def refresh_timestamps(self):
         """刷新时间戳"""
-        self.updated_at = datetime.now()
+        self.updated_at = GameTime.now() if GameTime.is_initialized() else datetime.now()
     
     @classmethod
     def get_table_name(cls) -> str:
@@ -301,8 +308,8 @@ class BaseModel(Base):
 class TimestampMixin:
     """时间戳混入类"""
     
-    created_at = Column(DateTime, default=datetime.now, nullable=False, comment='创建时间')
-    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False, comment='更新时间')
+    created_at = Column(DateTime, default=get_game_time_now, nullable=False, comment='创建时间')
+    updated_at = Column(DateTime, default=get_game_time_now, onupdate=get_game_time_now, nullable=False, comment='更新时间')
 
 
 class SoftDeleteMixin:
@@ -314,14 +321,21 @@ class SoftDeleteMixin:
     def soft_delete(self):
         """软删除"""
         self.is_deleted = True
-        self.deleted_at = datetime.now()
-        self.updated_at = datetime.now()
+        if GameTime.is_initialized():
+            self.deleted_at = GameTime.now()
+            self.updated_at = GameTime.now()
+        else:
+            self.deleted_at = get_game_time_now()
+            self.updated_at = get_game_time_now()
     
     def restore(self):
         """恢复"""
         self.is_deleted = False
         self.deleted_at = None
-        self.updated_at = datetime.now()
+        if GameTime.is_initialized():
+            self.updated_at = GameTime.now()
+        else:
+            self.updated_at = get_game_time_now()
 
 
 class AuditMixin:
@@ -334,7 +348,7 @@ class AuditMixin:
     def increment_version(self):
         """增加版本号"""
         self.version += 1
-        self.updated_at = datetime.now()
+        self.updated_at = GameTime.now() if GameTime.is_initialized() else datetime.now()
 
 
 class MetadataMixin:

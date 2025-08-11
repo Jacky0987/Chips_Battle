@@ -4,8 +4,10 @@ from sqlalchemy import select, func
 from dal.database import get_session
 from models.news.news import News
 from models.stock.stock import Stock
-from core.event_bus import EventBus, TimeTickEvent, NewsPublishedEvent
+from core.event_bus import EventBus
+from core.events import TimeTickEvent, NewsPublishedEvent
 from services.time_service import TimeService
+from core.game_time import GameTime
 import json
 import os
 import random
@@ -80,7 +82,7 @@ class NewsService:
             stock = await self._get_random_stock()
             if stock:
                 template = template.replace('{stock_name}', stock.name)
-                template = template.replace('{ticker}', stock.ticker)
+                template = template.replace('{ticker}', stock.symbol)
         
         # 替换价格变化
         if '{price_change}' in template:
@@ -106,13 +108,15 @@ class NewsService:
         """创建新闻记录"""
         async with get_session() as session:
             async with session.begin():
+                # 使用time_service获取当前游戏时间，避免GUI事件循环问题
+                current_time = self.time_service.get_game_time()
                 news = News(
                     title=title,
                     content=content,
                     category=category,
                     impact_type=impact_type,
                     impact_strength=Decimal(str(impact_strength)),
-                    published_at=self.time_service.get_game_time().current_time
+                    published_at=current_time
                 )
                 session.add(news)
                 await session.flush()

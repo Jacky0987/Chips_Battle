@@ -77,7 +77,9 @@ class JCMarketCommand(StockCommand):
             stats_table.add_row("📊 上市公司", f"{len(stocks)} 家")
             stats_table.add_row("📈 上涨股票", f"{market_stats.get('rising_stocks', 0)} 只")
             stats_table.add_row("📉 下跌股票", f"{market_stats.get('falling_stocks', 0)} 只")
-            stats_table.add_row("⏰ 更新时间", datetime.now().strftime("%H:%M:%S"))
+            from core.game_time import GameTime
+            current_time = GameTime.now() if GameTime.is_initialized() else datetime.now()
+            stats_table.add_row("⏰ 更新时间", current_time.strftime("%H:%M:%S"))
             
             overview_content.append(Panel(
                 stats_table,
@@ -96,8 +98,10 @@ class JCMarketCommand(StockCommand):
                 
                 # 显示前5只股票
                 for stock in stocks[:5]:
-                    change = stock.current_price - stock.previous_close
-                    change_pct = (change / stock.previous_close * 100) if stock.previous_close > 0 else 0
+                    current_price = stock.current_price or 0
+                    previous_close = stock.previous_close or current_price
+                    change = current_price - previous_close
+                    change_pct = (change / previous_close * 100) if previous_close > 0 else 0
                     
                     change_color = "green" if change >= 0 else "red"
                     change_symbol = "+" if change >= 0 else ""
@@ -105,7 +109,7 @@ class JCMarketCommand(StockCommand):
                     hot_table.add_row(
                         stock.symbol,
                         stock.name,
-                        f"{stock.current_price:.2f}",
+                        f"{current_price:.2f}",
                         f"[{change_color}]{change_symbol}{change:.2f}[/{change_color}]",
                         f"[{change_color}]{change_symbol}{change_pct:.2f}%[/{change_color}]"
                     )
@@ -167,9 +171,12 @@ class JCMarketCommand(StockCommand):
             table.add_column("市值", style="blue", width=12)
             
             for stock in stocks:
-                change = stock.current_price - stock.previous_close
-                change_pct = (change / stock.previous_close * 100) if stock.previous_close > 0 else 0
-                market_cap = stock.current_price * stock.total_shares
+                current_price = stock.current_price or 0
+                previous_close = stock.previous_close or current_price
+                total_shares = stock.total_shares or 0
+                change = current_price - previous_close
+                change_pct = (change / previous_close * 100) if previous_close > 0 else 0
+                market_cap = current_price * total_shares
                 
                 change_color = "green" if change >= 0 else "red"
                 change_symbol = "+" if change >= 0 else ""
@@ -177,7 +184,7 @@ class JCMarketCommand(StockCommand):
                 table.add_row(
                     stock.symbol,
                     stock.name,
-                    f"{stock.current_price:.2f}",
+                    f"{current_price:.2f}",
                     f"[{change_color}]{change_symbol}{change:.2f}[/{change_color}]",
                     f"[{change_color}]{change_symbol}{change_pct:.2f}%[/{change_color}]",
                     f"{stock.volume:,}",
@@ -219,10 +226,15 @@ class JCMarketCommand(StockCommand):
                     message=f"未找到股票代码: {symbol}"
                 )
             
-            # 计算相关数据
-            change = stock.current_price - stock.previous_close
-            change_pct = (change / stock.previous_close * 100) if stock.previous_close > 0 else 0
-            market_cap = stock.current_price * stock.total_shares
+            # 计算涨跌
+            current_price = stock.current_price or 0
+            previous_close = stock.previous_close or current_price
+            day_high = stock.day_high or current_price
+            day_low = stock.day_low or current_price
+            total_shares = stock.total_shares or 0
+            change = current_price - previous_close
+            change_pct = (change / previous_close * 100) if previous_close > 0 else 0
+            market_cap = current_price * total_shares
             
             # 创建股票信息面板
             info_table = Table(show_header=False, box=None, padding=(0, 1))
@@ -234,16 +246,15 @@ class JCMarketCommand(StockCommand):
             
             info_table.add_row("📊 股票代码", stock.symbol)
             info_table.add_row("🏢 公司名称", stock.name)
-            info_table.add_row("💰 当前价格", f"{stock.current_price:.2f} JCY")
-            info_table.add_row("📈 涨跌金额", f"[{change_color}]{change_symbol}{change:.2f} JCY[/{change_color}]")
-            info_table.add_row("📊 涨跌幅度", f"[{change_color}]{change_symbol}{change_pct:.2f}%[/{change_color}]")
-            info_table.add_row("📅 昨日收盘", f"{stock.previous_close:.2f} JCY")
-            info_table.add_row("📈 今日最高", f"{stock.day_high:.2f} JCY")
-            info_table.add_row("📉 今日最低", f"{stock.day_low:.2f} JCY")
-            info_table.add_row("📊 成交量", f"{stock.volume:,} 股")
-            info_table.add_row("🏛️ 总股本", f"{stock.total_shares:,} 股")
-            info_table.add_row("💎 市值", f"{market_cap:,.0f} JCY")
-            info_table.add_row("⏰ 更新时间", stock.last_updated.strftime("%Y-%m-%d %H:%M:%S"))
+            info_table.add_row("💰 当前价格", f"{current_price:.2f} JCY")
+            info_table.add_row("📊 涨跌额", f"[{change_color}]{change_symbol}{change:.2f} JCY[/{change_color}]")
+            info_table.add_row("📈 涨跌幅", f"[{change_color}]{change_symbol}{change_pct:.2f}%[/{change_color}]")
+            info_table.add_row("📅 昨日收盘", f"{previous_close:.2f} JCY")
+            info_table.add_row("📈 今日最高", f"{day_high:.2f} JCY")
+            info_table.add_row("📉 今日最低", f"{day_low:.2f} JCY")
+            info_table.add_row("💹 市值", f"{market_cap:,.0f} JCY")
+            info_table.add_row("🏛️ 总股本", f"{total_shares:,} 股")
+            info_table.add_row("⏰ 更新时间", stock.last_updated.strftime("%Y-%m-%d %H:%M:%S") if stock.last_updated else "未知")
             
             panel = Panel(
                 info_table,
@@ -387,7 +398,8 @@ class JCMarketCommand(StockCommand):
                     continue
                 
                 cost = holding.average_cost * holding.quantity
-                current_value = stock.current_price * holding.quantity
+                current_price = stock.current_price or 0
+                current_value = current_price * holding.quantity
                 profit_loss = current_value - cost
                 profit_loss_pct = (profit_loss / cost * 100) if cost > 0 else 0
                 
@@ -402,7 +414,7 @@ class JCMarketCommand(StockCommand):
                     stock.name,
                     f"{holding.quantity:,}",
                     f"{holding.average_cost:.2f}",
-                    f"{stock.current_price:.2f}",
+                    f"{current_price:.2f}",
                     f"{current_value:.2f}",
                     f"[{pl_color}]{pl_symbol}{profit_loss:.2f}[/{pl_color}]",
                     f"[{pl_color}]{pl_symbol}{profit_loss_pct:.2f}%[/{pl_color}]"

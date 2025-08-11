@@ -173,7 +173,7 @@ class Permission(BaseModel):
         """
         import json
         self.required_permissions = json.dumps(permissions) if permissions else None
-        self.updated_at = datetime.now()
+        self.updated_at = GameTime.now() if GameTime.is_initialized() else datetime.now()
     
     def add_required_permission(self, permission_name: str):
         """添加依赖权限
@@ -350,22 +350,22 @@ class Permission(BaseModel):
     def activate(self):
         """激活权限"""
         self.is_active = True
-        self.updated_at = datetime.now()
+        self.updated_at = GameTime.now() if GameTime.is_initialized() else datetime.now()
     
     def deactivate(self):
         """停用权限"""
         self.is_active = False
-        self.updated_at = datetime.now()
+        self.updated_at = GameTime.now() if GameTime.is_initialized() else datetime.now()
     
     def mark_as_dangerous(self):
         """标记为危险权限"""
         self.is_dangerous = True
-        self.updated_at = datetime.now()
+        self.updated_at = GameTime.now() if GameTime.is_initialized() else datetime.now()
     
     def unmark_as_dangerous(self):
         """取消危险权限标记"""
         self.is_dangerous = False
-        self.updated_at = datetime.now()
+        self.updated_at = GameTime.now() if GameTime.is_initialized() else datetime.now()
     
     @classmethod
     def create_system_defaults(cls) -> List['Permission']:

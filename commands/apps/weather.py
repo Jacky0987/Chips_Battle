@@ -142,7 +142,8 @@ class WeatherCommand(AppCommand):
         uv_index = random.randint(0, 11)
         
         # 计算日出日落时间（模拟）
-        now = datetime.now()
+        from core.game_time import GameTime
+        now = GameTime.now() if GameTime.is_initialized() else datetime.now()
         sunrise = now.replace(hour=6, minute=random.randint(0, 59), second=0, microsecond=0)
         sunset = now.replace(hour=18, minute=random.randint(0, 59), second=0, microsecond=0)
         
@@ -217,7 +218,8 @@ class WeatherCommand(AppCommand):
         base_temp = random.randint(10, 25)
         
         for i in range(7):
-            date = datetime.now() + timedelta(days=i)
+            current_time = GameTime.now() if GameTime.is_initialized() else datetime.now()
+            date = current_time + timedelta(days=i)
             weekday = weekdays[date.weekday()]
             
             # 生成每日天气数据
@@ -250,7 +252,7 @@ class WeatherCommand(AppCommand):
   🎒 旅游指数: {self._get_travel_index(weather_conditions[0], base_temp)}
 
 📱 数据来源: 模拟天气数据
-🔄 更新时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+🔄 更新时间: {(GameTime.now() if GameTime.is_initialized() else datetime.now()).strftime('%Y-%m-%d %H:%M:%S')}
 """
         
         return self.success(forecast_text)

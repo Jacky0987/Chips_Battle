@@ -360,7 +360,8 @@ def validate_date_range(start_date: datetime, end_date: datetime) -> tuple[bool,
         return False, "开始日期必须早于结束日期"
     
     # 检查日期是否过于久远
-    now = datetime.now()
+    from core.game_time import GameTime
+    now = GameTime.now() if GameTime.is_initialized() else datetime.now()
     if start_date > now:
         return False, "开始日期不能是未来时间"
     

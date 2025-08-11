@@ -10,6 +10,7 @@ from services.currency_service import CurrencyService
 from decimal import Decimal
 import json
 import os
+import logging
 
 class AppService:
     """应用市场服务，管理应用购买和所有权"""
@@ -19,13 +20,20 @@ class AppService:
         self.event_bus = event_bus
         self.currency_service = currency_service
         self._apps_cache = None
+        self._logger = logging.getLogger(__name__)
     
     def _load_app_definitions(self) -> Dict[str, Any]:
         """加载应用定义文件"""
         if self._apps_cache is None:
             apps_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'definitions', 'apps.json')
-            with open(apps_file, 'r', encoding='utf-8') as f:
-                self._apps_cache = json.load(f)
+            self._logger.debug(f"正在加载应用定义文件: {apps_file}")
+            try:
+                with open(apps_file, 'r', encoding='utf-8') as f:
+                    self._apps_cache = json.load(f)
+                self._logger.info(f"成功加载应用定义文件，包含 {len(self._apps_cache.get('apps', []))} 个应用")
+            except Exception as e:
+                self._logger.error(f"加载应用定义文件失败: {e}", exc_info=True)
+                self._apps_cache = {'apps': []}
         return self._apps_cache
     
     def get_available_apps(self) -> List[Dict[str, Any]]:
@@ -50,13 +58,17 @@ class AppService:
     
     async def purchase_app(self, user_id: int, app_name: str) -> Dict[str, Any]:
         """购买应用"""
+        self._logger.info(f"用户 {user_id} 尝试购买应用: {app_name}")
+        
         app_info = self.get_app_by_name(app_name)
         if not app_info:
+            self._logger.warning(f"应用不存在: {app_name}")
             return {'success': False, 'message': f'应用 {app_name} 不存在'}
         
         # 检查用户是否已拥有该应用
         owned_apps = await self.get_user_owned_apps(user_id)
         if app_name in owned_apps:
+            self._logger.info(f"用户 {user_id} 已拥有应用: {app_name}")
             return {'success': False, 'message': f'您已拥有应用 {app_name}'}
         
         async with self.uow:
@@ -64,21 +76,25 @@ class AppService:
             user_result = await self.uow.session.execute(select(User).filter_by(id=user_id))
             user = user_result.scalars().first()
             if not user:
+                self._logger.error(f"用户不存在: {user_id}")
                 return {'success': False, 'message': '用户不存在'}
             
             account_result = await self.uow.session.execute(select(Account).filter_by(user_id=user_id, currency_code='JCC'))
             account = account_result.scalars().first()
             if not account:
+                self._logger.error(f"用户 {user_id} 的JCC账户不存在")
                 return {'success': False, 'message': '用户账户不存在'}
             
             # 查找App记录
             app_result = await self.uow.session.execute(select(App).filter_by(name=app_name))
             app = app_result.scalars().first()
             if not app:
+                self._logger.error(f"应用 {app_name} 在数据库中不存在")
                 return {'success': False, 'message': f'应用 {app_name} 在数据库中不存在'}
             
             price = Decimal(str(app_info['price']))
             if account.balance < price:
+                self._logger.warning(f"用户 {user_id} 余额不足购买应用 {app_name}，需要 {price} JCC，当前 {account.balance} JCC")
                 return {'success': False, 'message': f'余额不足，需要 {price} JCC'}
             
             # 扣除费用
@@ -92,6 +108,8 @@ class AppService:
             )
             self.uow.session.add(ownership)
             await self.uow.commit()
+            
+            self._logger.info(f"用户 {user_id} 成功购买应用 {app_name}，花费 {price} JCC")
             
             # 发布事件
             self.event_bus.publish('app_purchased', {
@@ -140,6 +158,7 @@ class AppService:
     async def check_market_unlock_eligibility(self, user_id: int) -> Dict[str, Any]:
         """检查用户是否有资格解锁应用市场"""
         unlock_threshold = Decimal('1000000')  # 100万JCC解锁阈值
+        self._logger.debug(f"检查用户 {user_id} 的应用市场解锁资格")
         
         async with self.uow:
             # 获取用户所有账户余额
@@ -166,6 +185,8 @@ class AppService:
             
             is_eligible = total_balance >= unlock_threshold
             
+            self._logger.info(f"用户 {user_id} 应用市场解锁检查结果: 总资产 {total_balance} JCC, 是否符合条件: {is_eligible}")
+            
             return {
                 'eligible': is_eligible,
                 'total_balance': float(total_balance),
@@ -175,9 +196,12 @@ class AppService:
     
     async def unlock_app_market(self, user_id: int) -> Dict[str, Any]:
         """解锁应用市场功能"""
+        self._logger.info(f"用户 {user_id} 尝试解锁应用市场")
+        
         eligibility = await self.check_market_unlock_eligibility(user_id)
         
         if not eligibility['eligible']:
+            self._logger.warning(f"用户 {user_id} 资金不足，无法解锁应用市场")
             return {
                 'success': False,
                 'message': f"资金不足，需要至少 {eligibility['required_balance']} JCC 才能解锁应用市场。\n" +
@@ -192,15 +216,19 @@ class AppService:
             user = user_result.scalars().first()
             
             if not user:
+                self._logger.error(f"用户不存在: {user_id}")
                 return {'success': False, 'message': '用户不存在'}
             
             # 检查用户是否已有市场解锁标记
             if hasattr(user, 'market_unlocked') and user.market_unlocked:
+                self._logger.info(f"用户 {user_id} 的应用市场已经解锁")
                 return {'success': False, 'message': '应用市场已经解锁'}
             
             # 设置市场解锁标记（如果User模型有这个字段）
             # user.market_unlocked = True
             # await self.uow.commit()
+            
+            self._logger.info(f"用户 {user_id} 成功解锁应用市场，总资产: {eligibility['total_balance']} JCC")
             
             # 发布解锁事件
             self.event_bus.publish('app_market_unlocked', {

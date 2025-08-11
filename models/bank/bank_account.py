@@ -261,7 +261,8 @@ class BankAccount(BaseModel):
             'is_default': self.is_default,
             'interest_rate': float(self.interest_rate or 0),
             'opened_date': self.opened_date.strftime('%Y-%m-%d'),
-            'bank_name': self.card.get_bank_info()['name'] if self.card else 'Unknown'
+            'bank_name': self.card.get_bank_info()['name'] if self.card else 'Unknown',
+            'card_id': self.card_id  # 添加card_id字段用于卡账合一关联
         }
     
     @classmethod

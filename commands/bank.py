@@ -107,7 +107,7 @@ class BankCommands:
     # ==================== 银行概览 ====================
     
     async def _show_bank_overview(self, user_id: str) -> str:
-        """显示银行概览"""
+        """显示银行概览 - 卡账合一"""
         try:
             overview = await self.bank_service.get_account_overview(user_id)
             
@@ -126,25 +126,34 @@ class BankCommands:
             result.append(f"  信用分: {overview['credit_score']}")
             result.append("")
             
-            # 银行卡信息
+            # 卡账合一展示
             if overview['bank_cards']:
-                result.append("💳 银行卡:")
+                result.append("💳 银行卡及账户:")
+                
+                # 为每张银行卡创建账户映射
+                card_accounts = {}
+                for account in overview['accounts']:
+                    if account['card_id'] not in card_accounts:
+                        card_accounts[account['card_id']] = []
+                    card_accounts[account['card_id']].append(account)
+                
+                # 展示每张银行卡及其关联的账户
                 for card in overview['bank_cards']:
                     status = "✅" if card['is_active'] else "❌"
                     result.append(f"  {status} {card['bank_name']} - {card['card_number']}")
+                    
+                    # 显示该银行卡关联的账户
+                    associated_accounts = card_accounts.get(card['card_id'], [])
+                    if associated_accounts:
+                        for account in associated_accounts:
+                            default_mark = "⭐" if account['is_default'] else "  "
+                            result.append(f"    {default_mark} {account['account_name']}: {format_currency(account['balance'], account['currency_code'])}")
+                    else:
+                        result.append("    📭 无关联账户")
+                    result.append("")
             else:
                 result.append("💳 银行卡: 暂无")
-            result.append("")
-            
-            # 账户信息
-            if overview['accounts']:
-                result.append("🏛️ 银行账户:")
-                for account in overview['accounts']:
-                    default_mark = "⭐" if account['is_default'] else "  "
-                    result.append(f"  {default_mark} {account['account_name']}: {format_currency(account['balance'], account['currency_code'])}")
-            else:
-                result.append("🏛️ 银行账户: 暂无")
-            result.append("")
+                result.append("")
             
             # 贷款信息
             if overview['loans']:
@@ -204,17 +213,26 @@ class BankCommands:
         return "\n".join(result)
     
     async def _show_cards(self, user_id: str) -> str:
-        """显示银行卡列表"""
+        """显示银行卡列表 - 卡账合一"""
         try:
             cards = await self.bank_service.get_user_bank_cards(user_id)
+            accounts = await self.bank_service.get_user_accounts(user_id)
             
             if not cards:
                 return "💳 您还没有银行卡\n使用 'bank apply_card' 申请银行卡"
             
             result = []
-            result.append("💳 您的银行卡:")
+            result.append("💳 您的银行卡及账户:")
             result.append("")
             
+            # 为每张银行卡创建账户映射
+            card_accounts = {}
+            for account in accounts:
+                if account.card_id not in card_accounts:
+                    card_accounts[account.card_id] = []
+                card_accounts[account.card_id].append(account)
+            
+            # 展示每张银行卡及其关联的账户
             for card in cards:
                 info = card.get_display_info()
                 status = "✅ 正常" if info['is_active'] else "❌ 停用"
@@ -223,7 +241,17 @@ class BankCommands:
                 result.append(f"   卡号: {info['card_number']}")
                 result.append(f"   类型: {info['card_type']}")
                 result.append(f"   状态: {status}")
-                result.append(f"   开卡日期: {info['created_at']}")
+                result.append(f"   开卡日期: {info['issued_date']}")
+                
+                # 显示该银行卡关联的账户
+                associated_accounts = card_accounts.get(info['card_id'], [])
+                if associated_accounts:
+                    result.append("   📋 关联账户:")
+                    for account in associated_accounts:
+                        default_mark = "⭐" if account.is_default else "  "
+                        result.append(f"     {default_mark} {account.account_name}: {format_currency(account.balance, account.currency.code if account.currency else 'JCY')}")
+                else:
+                    result.append("   📭 无关联账户")
                 result.append("")
             
             return "\n".join(result)

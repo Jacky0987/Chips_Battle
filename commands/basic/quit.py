@@ -26,7 +26,7 @@ class QuitCommand(BasicCommand):
     
     @property
     def aliases(self) -> List[str]:
-        return ["exit", "bye", "logout"]
+        return ["exit", "bye", "logout", "stop", "shutdown"]
     
     @property
     def description(self) -> str:
@@ -165,8 +165,9 @@ class QuitCommand(BasicCommand):
         try:
             # 更新最后活动时间
             from datetime import datetime
+            from core.game_time import GameTime
             if hasattr(context.user, 'last_activity'):
-                context.user.last_activity = datetime.now()
+                context.user.last_activity = GameTime.now() if GameTime.is_initialized() else datetime.now()
             
             # 如果有工作单元，提交更改
             if hasattr(context, 'uow') and context.uow:

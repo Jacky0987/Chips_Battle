@@ -3,6 +3,7 @@
 命令分发器
 
 负责解析用户输入并分发给相应的命令对象执行。
+支持多种UI模式的适配器模式。
 """
 
 import logging
@@ -12,25 +13,27 @@ from datetime import datetime
 from commands.registry import CommandRegistry
 from commands.base import Command, CommandResult, CommandContext, CommandParser
 from services.auth_service import AuthService
-from core.event_bus import EventBus, UserActionEvent
-from rich.console import Console
-from rich.table import Table
-from rich.panel import Panel
-from rich.text import Text
+from core.event_bus import EventBus
+from core.events import UserActionEvent
+from core.game_time import GameTime
+from interfaces.ui_interface import UIAdapter, MessageType
 
 
 class CommandDispatcher:
-    """命令分发器"""
+    """命令分发器
+    
+    支持多种UI模式的命令分发器，通过UI适配器来显示结果。
+    """
     
     def __init__(self, 
                  command_registry: CommandRegistry,
                  auth_service: AuthService,
                  event_bus: EventBus,
-                 console: Console = None):
+                 ui_adapter: Optional[UIAdapter] = None):
         self.command_registry = command_registry
         self.auth_service = auth_service
         self.event_bus = event_bus
-        self.console = console or Console()
+        self.ui_adapter = ui_adapter
         self._logger = logging.getLogger(__name__)
         
         # 会话状态
@@ -43,8 +46,68 @@ class CommandDispatcher:
             'successful_commands': 0,
             'failed_commands': 0,
             'unauthorized_attempts': 0,
-            'start_time': datetime.now()
+            'start_time': GameTime.now() if GameTime.is_initialized() else datetime.now()
         }
+    
+    def set_ui_adapter(self, ui_adapter: UIAdapter):
+        """设置UI适配器
+        
+        Args:
+            ui_adapter: UI适配器实例
+        """
+        self.ui_adapter = ui_adapter
+        self._logger.info("已设置UI适配器")
+    
+    def _ui_display(self, message: str, message_type: MessageType = MessageType.INFO):
+        """通过UI适配器显示消息
+        
+        Args:
+            message: 消息内容
+            message_type: 消息类型
+        """
+        if self.ui_adapter:
+            try:
+                if message_type == MessageType.SUCCESS:
+                    self.ui_adapter.display_success(message)
+                elif message_type == MessageType.ERROR:
+                    self.ui_adapter.display_error(message)
+                elif message_type == MessageType.WARNING:
+                    self.ui_adapter.display_warning(message)
+                elif message_type == MessageType.INFO:
+                    self.ui_adapter.display_info(message)
+                elif message_type == MessageType.DEBUG:
+                    self.ui_adapter.display_debug(message)
+                elif message_type == MessageType.SYSTEM:
+                    self.ui_adapter.display_system(message)
+                else:
+                    self.ui_adapter.display_info(message)
+            except Exception as e:
+                self._logger.error(f"UI显示失败: {e}", exc_info=True)
+                # 回退到日志输出
+                self._logger.info(f"[UI回退] {message}")
+        else:
+            # 如果没有UI适配器，使用日志输出
+            self._logger.info(f"[日志输出] {message}")
+    
+    def _format_command_message(self, message: str, success: bool) -> str:
+        """格式化命令消息
+        
+        Args:
+            message: 原始消息
+            success: 是否成功
+            
+        Returns:
+            格式化后的消息
+        """
+        # 如果消息已经有图标，直接返回
+        if message.startswith(('✅', '❌', '⚠', 'ℹ', '🎮')):
+            return message
+        
+        # 根据成功状态添加图标
+        if success:
+            return f"✅ {message}"
+        else:
+            return f"❌ {message}"
     
     async def dispatch(self, command_input: str, user: Any) -> Optional[CommandResult]:
         """分发命令
@@ -60,7 +123,8 @@ class CommandDispatcher:
             return None
         
         # 记录命令历史
-        self._add_to_history(user.user_id, command_input)
+        user_id = user.get('user_id') if isinstance(user, dict) else user.user_id
+        self._add_to_history(user_id, command_input)
         
         # 解析命令
         command_name, args = CommandParser.parse(command_input)
@@ -69,23 +133,35 @@ class CommandDispatcher:
             return CommandResult(success=False, message="请输入有效的命令")
         
         # 查找命令
+        self._logger.debug(f"查找命令: {command_name}")
         command = self.command_registry.get_command(command_name)
         if not command:
+            self._logger.debug(f"未找到命令: {command_name}")
             result = await self._handle_unknown_command(command_name, args, user)
             self._display_result(result)
             return result
+        else:
+            self._logger.debug(f"找到命令: {command_name} -> {command.__class__.__name__}")
         
         # 创建命令上下文
         context = CommandContext(
             user=user,
-            session_data=self._get_session_data(user.user_id),
-            game_time=datetime.now(),  # 这里应该从时间服务获取游戏时间
+            session_data=self._get_session_data(user_id),
+            game_time=GameTime.now() if GameTime.is_initialized() else datetime.now(),
             registry=self.command_registry
         )
         
         # 执行命令
         try:
+            username = user.get('username') if isinstance(user, dict) else user.username
+            self._logger.debug(f"用户 {username} 执行命令: {command_name} {' '.join(args)}")
             result = await self._execute_command(command, args, context)
+            
+            # 记录命令执行结果
+            if result.success:
+                self._logger.info(f"命令执行成功: {command_name} - 用户: {username}")
+            else:
+                self._logger.warning(f"命令执行失败: {command_name} - 用户: {username} - 错误: {result.message}")
             
             # 发布用户行为事件
             await self._publish_user_action_event(user, command_name, args, result)
@@ -99,7 +175,8 @@ class CommandDispatcher:
             return result
             
         except Exception as e:
-            self._logger.error(f"命令执行异常: {e}", exc_info=True)
+            username = user.get('username') if isinstance(user, dict) else user.username
+            self._logger.error(f"用户 {username} 命令 {command_name} 执行异常: {e}", exc_info=True)
             error_result = CommandResult(
                 success=False, 
                 message=f"命令执行时发生错误: {str(e)}"
@@ -135,11 +212,13 @@ class CommandDispatcher:
             )
         
         # 执行命令
-        self._logger.info(f"执行命令: {command.name} (用户: {context.user.username})")
+        username = context.user.get('username') if isinstance(context.user, dict) else context.user.username
+        self._logger.info(f"执行命令: {command.name} (用户: {username})")
         
-        start_time = datetime.now()
+        start_time = GameTime.now() if GameTime.is_initialized() else datetime.now()
         result = await command.execute(args, context)
-        execution_time = (datetime.now() - start_time).total_seconds()
+        end_time = GameTime.now() if GameTime.is_initialized() else datetime.now()
+        execution_time = (end_time - start_time).total_seconds()
         
         # 记录执行时间
         if execution_time > 1.0:  # 如果执行时间超过1秒，记录警告
@@ -176,7 +255,7 @@ class CommandDispatcher:
         """更新用户统计信息
         
         Args:
-            user: 用户对象
+            user: 用户对象或字典
             command_name: 执行的命令名
         """
         try:
@@ -184,31 +263,43 @@ class CommandDispatcher:
             from sqlalchemy import update
             from models.auth.user import User
             
-            # 更新命令执行次数
-            user.command_count = getattr(user, 'command_count', 0) + 1
+            # 获取用户ID和用户名，支持字典和对象两种类型
+            user_id = user.get('user_id') if isinstance(user, dict) else user.user_id
+            username = user.get('username') if isinstance(user, dict) else user.username
             
-            # 根据命令类型增加经验值
-            experience_gain = self._calculate_experience_gain(command_name)
-            user.experience = getattr(user, 'experience', 0) + experience_gain
-            
-            # 检查是否升级
-            new_level = self._calculate_level(user.experience)
-            if new_level > user.level:
-                user.level = new_level
-                self._logger.info(f"用户 {user.username} 升级到 {new_level} 级!")
-            
-            # 更新数据库
-            async with get_session() as session:
-                await session.execute(
-                    update(User)
-                    .where(User.user_id == user.user_id)
-                    .values(
-                        command_count=user.command_count,
-                        experience=user.experience,
-                        level=user.level
+            # 更新命令执行次数（只在内存中，不更新到数据库）
+            if isinstance(user, dict):
+                user['command_count'] = user.get('command_count', 0) + 1
+                user['experience'] = user.get('experience', 0) + self._calculate_experience_gain(command_name)
+                
+                # 检查是否升级
+                new_level = self._calculate_level(user['experience'])
+                if new_level > user.get('level', 1):
+                    user['level'] = new_level
+                    self._logger.info(f"用户 {username} 升级到 {new_level} 级!")
+            else:
+                # 如果是用户对象，更新到数据库
+                user.command_count = getattr(user, 'command_count', 0) + 1
+                user.experience = getattr(user, 'experience', 0) + self._calculate_experience_gain(command_name)
+                
+                # 检查是否升级
+                new_level = self._calculate_level(user.experience)
+                if new_level > user.level:
+                    user.level = new_level
+                    self._logger.info(f"用户 {username} 升级到 {new_level} 级!")
+                
+                # 更新数据库
+                async with get_session() as session:
+                    await session.execute(
+                        update(User)
+                        .where(User.user_id == user_id)
+                        .values(
+                            command_count=user.command_count,
+                            experience=user.experience,
+                            level=user.level
+                        )
                     )
-                )
-                await session.commit()
+                    await session.commit()
                 
         except Exception as e:
             self._logger.error(f"更新用户统计信息失败: {e}", exc_info=True)
@@ -369,9 +460,10 @@ class CommandDispatcher:
             result: 执行结果
         """
         try:
+            current_time = GameTime.now() if GameTime.is_initialized() else datetime.now()
             event = UserActionEvent(
-                timestamp=datetime.now(),
-                event_id=f"user_action_{user.user_id}_{datetime.now().timestamp()}",
+                timestamp=current_time,
+                event_id=f"user_action_{user.user_id}_{current_time.timestamp()}",
                 source="command_dispatcher",
                 user_id=user.user_id,
                 action=command_name,
@@ -391,23 +483,70 @@ class CommandDispatcher:
     def _display_result(self, result: CommandResult):
         """显示命令执行结果
         
-        Args:
+        args:
             result: 命令执行结果
         """
         if not result.message:
             return
         
+        # 格式化消息
+        formatted_message = self._format_command_message(result.message, result.success)
+        
         # 根据结果类型选择显示样式
         if result.success:
-            if result.message.startswith('✅'):
-                self.console.print(result.message, style="green")
-            else:
-                self.console.print(result.message)
+            self._ui_display(formatted_message, MessageType.SUCCESS)
         else:
-            if result.message.startswith('❌'):
-                self.console.print(result.message, style="red")
-            else:
-                self.console.print(f"❌ {result.message}", style="red")
+            self._ui_display(formatted_message, MessageType.ERROR)
+    
+    def _display_info(self, message: str):
+        """显示信息消息
+        
+        args:
+            message: 消息内容
+        """
+        self._ui_display(message, MessageType.INFO)
+    
+    def _display_success(self, message: str):
+        """显示成功消息
+        
+        args:
+            message: 消息内容
+        """
+        formatted_message = self._format_command_message(message, True)
+        self._ui_display(formatted_message, MessageType.SUCCESS)
+    
+    def _display_warning(self, message: str):
+        """显示警告消息
+        
+        args:
+            message: 消息内容
+        """
+        self._ui_display(message, MessageType.WARNING)
+    
+    def _display_error(self, message: str):
+        """显示错误消息
+        
+        args:
+            message: 消息内容
+        """
+        formatted_message = self._format_command_message(message, False)
+        self._ui_display(formatted_message, MessageType.ERROR)
+    
+    def _display_debug(self, message: str):
+        """显示调试消息
+        
+        args:
+            message: 消息内容
+        """
+        self._ui_display(message, MessageType.DEBUG)
+    
+    def _display_system(self, message: str):
+        """显示系统消息
+        
+        args:
+            message: 消息内容
+        """
+        self._ui_display(message, MessageType.SYSTEM)
     
     def _get_session_data(self, user_id: str) -> Dict[str, Any]:
         """获取用户会话数据
@@ -483,7 +622,8 @@ class CommandDispatcher:
         Returns:
             统计信息字典
         """
-        uptime = (datetime.now() - self._stats['start_time']).total_seconds()
+        current_time = GameTime.now() if GameTime.is_initialized() else datetime.now()
+        uptime = (current_time - self._stats['start_time']).total_seconds()
         
         return {
             **self._stats,

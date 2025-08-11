@@ -479,8 +479,8 @@ class SudoCommand(Command):
                 role_id=str(uuid.uuid4()),
                 name=role_name,
                 description=f"管理员创建的角色: {role_name}",
-                created_at=datetime.now(),
-                updated_at=datetime.now()
+                created_at=GameTime.now() if GameTime.is_initialized() else datetime.now(),
+                updated_at=GameTime.now() if GameTime.is_initialized() else datetime.now()
             )
             
             context.uow.session.add(new_role)
@@ -563,7 +563,7 @@ class SudoCommand(Command):
                 user_role_id=str(uuid.uuid4()),
                 user_id=user.user_id,
                 role_id=role.role_id,
-                assigned_at=datetime.now()
+                assigned_at=GameTime.now() if GameTime.is_initialized() else datetime.now()
             )
             
             context.uow.session.add(user_role)
@@ -675,7 +675,7 @@ class SudoCommand(Command):
             table.add_row("CPU使用率", f"{cpu_percent}%")
             table.add_row("内存使用率", f"{memory.percent}%")
             table.add_row("磁盘使用率", f"{disk.percent}%")
-            table.add_row("系统时间", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            table.add_row("系统时间", (GameTime.now() if GameTime.is_initialized() else datetime.now()).strftime("%Y-%m-%d %H:%M:%S"))
             
             # 渲染表格
             console = Console(width=80, legacy_windows=False)
@@ -704,29 +704,34 @@ class SudoCommand(Command):
             from datetime import datetime
             from rich.table import Table
             from rich.console import Console
+            from core.game_time import GameTime
+            
+            # 获取当前时间
+            current_time = GameTime.now() if GameTime.is_initialized() else datetime.now()
+            time_str = current_time.strftime("%Y-%m-%d %H:%M:%S")
             
             # 模拟系统日志（实际项目中应该从日志文件或数据库读取）
             logs = [
                 {
-                    "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "time": time_str,
                     "level": "INFO",
                     "module": "system",
                     "message": "系统正常运行"
                 },
                 {
-                    "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "time": time_str,
                     "level": "INFO",
                     "module": "auth",
                     "message": "用户认证服务正常"
                 },
                 {
-                    "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "time": time_str,
                     "level": "INFO",
                     "module": "bank",
                     "message": "银行服务正常运行"
                 },
                 {
-                    "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "time": time_str,
                     "level": "INFO",
                     "module": "database",
                     "message": "数据库连接正常"

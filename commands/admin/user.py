@@ -68,7 +68,7 @@ class UserCommand(AdminCommand):
                 return self.error(f"未知的用户管理操作: {action}\n使用 'user help' 查看帮助")
             
         except Exception as e:
-            self.logger.error(f"用户管理命令执行失败: {e}")
+            self.logger.error(f"用户管理命令执行失败: {e}", exc_info=True)
             return self.error(f"用户管理命令执行失败: {str(e)}")
     
     def _show_help(self) -> CommandResult:
@@ -105,8 +105,10 @@ class UserCommand(AdminCommand):
     
     async def _list_users(self, context: CommandContext) -> CommandResult:
         """列出所有用户"""
+        self.logger.debug(f"管理员 {context.user.username} 请求查看用户列表")
         # TODO: 实现用户列表功能
         # 这里应该调用用户服务来获取用户列表
+        self.logger.info("用户列表功能待实现")
         return self.success("""
 📋 用户列表:
 
@@ -124,7 +126,9 @@ class UserCommand(AdminCommand):
     
     async def _user_info(self, username: str, context: CommandContext) -> CommandResult:
         """查看用户详细信息"""
+        self.logger.debug(f"管理员 {context.user.username} 请求查看用户 {username} 的详细信息")
         # TODO: 实现用户信息查看功能
+        self.logger.info(f"用户信息查看功能待实现，目标用户: {username}")
         return self.success(f"""
 👤 用户信息: {username}
 
@@ -141,7 +145,9 @@ class UserCommand(AdminCommand):
     
     async def _create_user(self, args: List[str], context: CommandContext) -> CommandResult:
         """创建新用户"""
+        self.logger.debug(f"管理员 {context.user.username} 请求创建新用户，参数: {args}")
         # TODO: 实现用户创建功能
+        self.logger.info("用户创建功能待实现")
         return self.success("""
 ✨ 创建新用户:
 
@@ -156,8 +162,10 @@ class UserCommand(AdminCommand):
     
     async def _edit_user(self, username: str, fields: List[str], context: CommandContext) -> CommandResult:
         """编辑用户信息"""
+        self.logger.debug(f"管理员 {context.user.username} 请求编辑用户 {username}，字段: {fields}")
         # TODO: 实现用户编辑功能
         field_str = ', '.join(fields) if fields else '所有字段'
+        self.logger.info(f"用户编辑功能待实现，目标用户: {username}，编辑字段: {field_str}")
         return self.success(f"""
 ✏️ 编辑用户: {username}
 字段: {field_str}
@@ -173,7 +181,9 @@ class UserCommand(AdminCommand):
     
     async def _delete_user(self, username: str, context: CommandContext) -> CommandResult:
         """删除用户"""
+        self.logger.warning(f"管理员 {context.user.username} 请求删除用户 {username}")
         # TODO: 实现用户删除功能
+        self.logger.info(f"用户删除功能待实现，目标用户: {username}")
         return self.success(f"""
 🗑️ 删除用户: {username}
 
@@ -190,7 +200,9 @@ class UserCommand(AdminCommand):
     
     async def _ban_user(self, username: str, context: CommandContext) -> CommandResult:
         """封禁用户"""
+        self.logger.warning(f"管理员 {context.user.username} 请求封禁用户 {username}")
         # TODO: 实现用户封禁功能
+        self.logger.info(f"用户封禁功能待实现，目标用户: {username}")
         return self.success(f"""
 🚫 封禁用户: {username}
 
@@ -205,7 +217,9 @@ class UserCommand(AdminCommand):
     
     async def _unban_user(self, username: str, context: CommandContext) -> CommandResult:
         """解封用户"""
+        self.logger.info(f"管理员 {context.user.username} 请求解封用户 {username}")
         # TODO: 实现用户解封功能
+        self.logger.info(f"用户解封功能待实现，目标用户: {username}")
         return self.success(f"""
 ✅ 解封用户: {username}
 

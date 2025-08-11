@@ -167,14 +167,19 @@ class AppCommand(AppCommand):
         """处理市场相关命令"""
         try:
             from services.app_service import AppService
-            from dal.unit_of_work import UnitOfWork
+            from dal.unit_of_work import SqlAlchemyUnitOfWork
             from core.event_bus import EventBus
             from services.currency_service import CurrencyService
+            from dal.database import get_global_engine
             
-            # 创建服务实例
-            uow = UnitOfWork()
+            # 获取全局数据库引擎并创建UnitOfWork
+            db_engine = get_global_engine()
+            if not db_engine:
+                return self.error("数据库引擎未初始化")
+            
+            uow = SqlAlchemyUnitOfWork(db_engine.sessionmaker)
             event_bus = EventBus()
-            currency_service = CurrencyService(uow)
+            currency_service = CurrencyService(uow, event_bus)
             app_service = AppService(uow, event_bus, currency_service)
             
             user_id = getattr(context.user, 'user_id', None) if hasattr(context, 'user') and context.user else None
@@ -207,14 +212,19 @@ class AppCommand(AppCommand):
         """升级计算机硬件以解锁应用市场"""
         try:
             from services.app_service import AppService
-            from dal.unit_of_work import UnitOfWork
+            from dal.unit_of_work import SqlAlchemyUnitOfWork
             from core.event_bus import EventBus
             from services.currency_service import CurrencyService
+            from dal.database import get_global_engine
             
-            # 创建服务实例
-            uow = UnitOfWork()
+            # 获取全局数据库引擎并创建UnitOfWork
+            db_engine = get_global_engine()
+            if not db_engine:
+                return self.error("数据库引擎未初始化")
+            
+            uow = SqlAlchemyUnitOfWork(db_engine.sessionmaker)
             event_bus = EventBus()
-            currency_service = CurrencyService(uow)
+            currency_service = CurrencyService(uow, event_bus)
             app_service = AppService(uow, event_bus, currency_service)
             
             user_id = getattr(context.user, 'user_id', None) if hasattr(context, 'user') and context.user else None

@@ -9,16 +9,18 @@ import logging
 import hashlib
 import secrets
 import uuid
-from typing import Optional, List, Dict, Any, Set
+from typing import Optional, List, Dict, Any, Set, Callable
 from datetime import datetime, timedelta
 from dataclasses import dataclass
 from enum import Enum
+from functools import wraps
 from sqlalchemy import select
 from dal.unit_of_work import AbstractUnitOfWork
 from models.auth.user import User
 from models.auth.role import Role
 from models.auth.permission import Permission
 from core.event_bus import EventBus, UserActionEvent
+from core.game_time import GameTime
 
 
 class AuthResult(Enum):
@@ -88,7 +90,7 @@ class AuthService:
             'failed_logins': 0,
             'active_sessions': 0,
             'users_created': 0,
-            'start_time': datetime.now()
+            'start_time': GameTime.now() if GameTime.is_initialized() else datetime.now()
         }
     
     async def register_user(self, username: str, password: str, email: str = None) -> tuple[bool, str, Optional[User]]:
@@ -130,7 +132,7 @@ class AuthService:
                     username=username,
                     password_hash=password_hash,
                     email=email,
-                    created_at=datetime.now(),
+                    created_at=GameTime.now() if GameTime.is_initialized() else datetime.now(),
                     is_active=True,
                     last_login=None
                 )
@@ -192,13 +194,15 @@ class AuthService:
                 
                 # 验证密码
                 if not self._verify_password(password, user.password_hash):
+                    self._logger.warning(f"用户 {username} 密码验证失败，IP: {ip_address}")
                     await self._record_failed_attempt(user.user_id)
                     await self._record_login_attempt(user.user_id, ip_address, False, "invalid_password")
                     self._stats['failed_logins'] += 1
                     return AuthResult.INVALID_CREDENTIALS, None
                 
                 # 认证成功
-                user.last_login = datetime.now()
+                self._logger.info(f"用户 {username} 认证成功，IP: {ip_address}")
+                user.last_login = GameTime.now() if GameTime.is_initialized() else datetime.now()
                 user.login_count += 1  # 更新登录次数
                 await self.uow.commit()
                 
@@ -215,7 +219,7 @@ class AuthService:
                 return AuthResult.SUCCESS, user
                 
         except Exception as e:
-            self._logger.error(f"认证过程异常: {e}", exc_info=True)
+            self._logger.error(f"用户 {username} 认证过程异常: {e}", exc_info=True)
             self._stats['failed_logins'] += 1
             return AuthResult.INVALID_CREDENTIALS, None
     
@@ -231,11 +235,12 @@ class AuthService:
         """
         session_id = secrets.token_urlsafe(32)
         
+        current_time = GameTime.now() if GameTime.is_initialized() else datetime.now()
         session = Session(
             session_id=session_id,
             user_id=user.user_id,
-            created_at=datetime.now(),
-            last_activity=datetime.now(),
+            created_at=current_time,
+            last_activity=current_time,
             ip_address=ip_address
         )
         
@@ -266,12 +271,13 @@ class AuthService:
             return None
         
         # 检查会话是否过期
-        if datetime.now() - session.last_activity > self.session_timeout:
+        current_time = GameTime.now() if GameTime.is_initialized() else datetime.now()
+        if current_time - session.last_activity > self.session_timeout:
             await self.destroy_session(session_id)
             return None
         
         # 更新最后活动时间
-        session.last_activity = datetime.now()
+        session.last_activity = current_time
         
         return session
     
@@ -479,7 +485,8 @@ class AuthService:
         failed_times = self._failed_attempts[user_id]
         
         # 清理过期的失败记录
-        cutoff_time = datetime.now() - self.lockout_duration
+        current_time = GameTime.now() if GameTime.is_initialized() else datetime.now()
+        cutoff_time = current_time - self.lockout_duration
         failed_times = [t for t in failed_times if t > cutoff_time]
         self._failed_attempts[user_id] = failed_times
         
@@ -494,7 +501,7 @@ class AuthService:
         if user_id not in self._failed_attempts:
             self._failed_attempts[user_id] = []
         
-        self._failed_attempts[user_id].append(datetime.now())
+        self._failed_attempts[user_id].append(GameTime.now() if GameTime.is_initialized() else datetime.now())
     
     async def _record_login_attempt(self, user_id: Optional[str], ip_address: str, success: bool, failure_reason: str = None):
         """记录登录尝试
@@ -508,7 +515,7 @@ class AuthService:
         attempt = LoginAttempt(
             user_id=user_id or "unknown",
             ip_address=ip_address,
-            timestamp=datetime.now(),
+            timestamp=GameTime.now() if GameTime.is_initialized() else datetime.now(),
             success=success,
             failure_reason=failure_reason
         )
@@ -551,9 +558,10 @@ class AuthService:
             details: 详细信息
         """
         try:
+            current_time = GameTime.now() if GameTime.is_initialized() else datetime.now()
             event = UserActionEvent(
-                timestamp=datetime.now(),
-                event_id=f"auth_{action}_{user.user_id}_{datetime.now().timestamp()}",
+                timestamp=current_time,
+                event_id=f"auth_{action}_{user.user_id}_{current_time.timestamp()}",
                 source="auth_service",
                 user_id=user.user_id,
                 action=action,
@@ -571,7 +579,8 @@ class AuthService:
         Returns:
             统计信息字典
         """
-        uptime = (datetime.now() - self._stats['start_time']).total_seconds()
+        current_time = GameTime.now() if GameTime.is_initialized() else datetime.now()
+        uptime = (current_time - self._stats['start_time']).total_seconds()
         
         return {
             **self._stats,
@@ -587,9 +596,10 @@ class AuthService:
     async def cleanup_expired_sessions(self):
         """清理过期会话"""
         expired_sessions = []
+        current_time = GameTime.now() if GameTime.is_initialized() else datetime.now()
         
         for session_id, session in self._sessions.items():
-            if datetime.now() - session.last_activity > self.session_timeout:
+            if current_time - session.last_activity > self.session_timeout:
                 expired_sessions.append(session_id)
         
         for session_id in expired_sessions:
@@ -597,3 +607,140 @@ class AuthService:
         
         if expired_sessions:
             self._logger.info(f"清理了 {len(expired_sessions)} 个过期会话")
+    
+    async def has_permission(self, user: User, permission_name: str) -> bool:
+        """检查用户是否具有指定权限
+        
+        Args:
+            user: 用户对象
+            permission_name: 权限名称
+            
+        Returns:
+            是否具有权限
+        """
+        try:
+            async with self.uow:
+                # 查询用户的所有角色
+                user_roles_result = await self.uow.session.execute(
+                    select(Role).join(User.roles).filter(User.user_id == user.user_id)
+                )
+                user_roles = user_roles_result.scalars().all()
+                
+                # 检查每个角色的权限
+                for role in user_roles:
+                    role_permissions_result = await self.uow.session.execute(
+                        select(Permission).join(Role.permissions).filter(Role.role_id == role.role_id)
+                    )
+                    role_permissions = role_permissions_result.scalars().all()
+                    
+                    # 检查是否有匹配的权限
+                    for permission in role_permissions:
+                        if permission.name == permission_name:
+                            return True
+                
+                return False
+                
+        except Exception as e:
+            self._logger.error(f"检查权限失败: {e}")
+            return False
+    
+    async def get_user_permissions(self, user: User) -> List[str]:
+        """获取用户的所有权限
+        
+        Args:
+            user: 用户对象
+            
+        Returns:
+            权限名称列表
+        """
+        try:
+            async with self.uow:
+                # 查询用户的所有角色
+                user_roles_result = await self.uow.session.execute(
+                    select(Role).join(User.roles).filter(User.user_id == user.user_id)
+                )
+                user_roles = user_roles_result.scalars().all()
+                
+                permissions = set()
+                
+                # 收集所有角色的权限
+                for role in user_roles:
+                    role_permissions_result = await self.uow.session.execute(
+                        select(Permission).join(Role.permissions).filter(Role.role_id == role.role_id)
+                    )
+                    role_permissions = role_permissions_result.scalars().all()
+                    
+                    for permission in role_permissions:
+                        permissions.add(permission.name)
+                
+                return list(permissions)
+                
+        except Exception as e:
+            self._logger.error(f"获取用户权限失败: {e}")
+            return []
+
+
+# 全局权限装饰器
+def permission_required(permission_name: str, auth_service: 'AuthService' = None):
+    """权限检查装饰器
+    
+    Args:
+        permission_name: 所需权限名称
+        auth_service: 认证服务实例（可选，如果不提供会从上下文中获取）
+        
+    Returns:
+        装饰器函数
+    """
+    def decorator(func: Callable) -> Callable:
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            from commands.base import CommandContext, CommandResult
+            
+            # 查找CommandContext参数
+            context = None
+            for arg in args:
+                if isinstance(arg, CommandContext):
+                    context = arg
+                    break
+            
+            # 从kwargs中查找context
+            if context is None:
+                context = kwargs.get('context')
+            
+            if context is None:
+                return CommandResult(
+                    success=False,
+                    message="❌ 无法获取命令执行上下文"
+                )
+            
+            if context.user is None:
+                return CommandResult(
+                    success=False,
+                    message="❌ 用户未登录"
+                )
+            
+            # 获取认证服务
+            service = auth_service
+            if service is None and hasattr(context, 'registry') and context.registry:
+                # 尝试从命令注册器获取认证服务
+                service = getattr(context.registry, '_auth_service', None)
+            
+            if service is None:
+                return CommandResult(
+                    success=False,
+                    message="❌ 认证服务不可用"
+                )
+            
+            # 检查权限
+            has_perm = await service.has_permission(context.user, permission_name)
+            if not has_perm:
+                return CommandResult(
+                    success=False,
+                    message=f"❌ 权限不足，需要权限: {permission_name}"
+                )
+            
+            # 执行原函数
+            return await func(*args, **kwargs)
+        
+        return wrapper
+    return decorator

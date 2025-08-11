@@ -33,26 +33,35 @@ class DatabaseEngine:
     async def initialize(self):
         """初始化数据库引擎"""
         try:
+            self._logger.info("开始初始化数据库引擎")
+            
             # 创建数据库引擎
+            database_url = self.settings.get_database_url()
+            self._logger.debug(f"数据库URL: {database_url}")
+            
             self.engine = create_async_engine(
-                self.settings.get_database_url(),
+                database_url,
                 echo=self.settings.DATABASE_ECHO,
                 # SQLite特定配置
                 poolclass=StaticPool,
                 connect_args={
                     "check_same_thread": False,  # 允许多线程访问
                     "timeout": 20  # 连接超时
-                } if "sqlite" in self.settings.get_database_url() else {},
+                } if "sqlite" in database_url else {},
                 # 连接池配置
                 pool_pre_ping=True,  # 连接前检查
                 pool_recycle=3600,   # 1小时回收连接
             )
             
+            self._logger.debug("数据库引擎创建完成")
+            
             # 配置SQLite特定设置
-            if "sqlite" in self.settings.get_database_url():
+            if "sqlite" in database_url:
+                self._logger.debug("配置SQLite特定设置")
                 self._configure_sqlite()
             
             # 创建会话工厂
+            self._logger.debug("创建会话工厂")
             self.sessionmaker = async_sessionmaker(
                 bind=self.engine,
                 autocommit=False,
@@ -62,12 +71,14 @@ class DatabaseEngine:
             )
             
             # 创建所有表
+            self._logger.debug("开始创建数据库表")
             await self._create_tables()
+            self._logger.debug("数据库表创建完成")
             
-            self._logger.info(f"数据库引擎初始化成功: {self.settings.get_database_url()}")
+            self._logger.info(f"数据库引擎初始化成功: {database_url}")
             
         except Exception as e:
-            self._logger.error(f"数据库引擎初始化失败: {e}")
+            self._logger.error(f"数据库引擎初始化失败: {e}", exc_info=True)
             raise
     
     def _configure_sqlite(self):
@@ -77,25 +88,31 @@ class DatabaseEngine:
             """设置SQLite编译指示"""
             cursor = dbapi_connection.cursor()
             
-            # 启用外键约束
-            cursor.execute("PRAGMA foreign_keys=ON")
-            
-            # 设置WAL模式以提高并发性能
-            cursor.execute("PRAGMA journal_mode=WAL")
-            
-            # 设置同步模式
-            cursor.execute("PRAGMA synchronous=NORMAL")
-            
-            # 设置缓存大小 (负数表示KB)
-            cursor.execute("PRAGMA cache_size=-64000")  # 64MB
-            
-            # 设置临时存储
-            cursor.execute("PRAGMA temp_store=MEMORY")
-            
-            # 设置mmap大小
-            cursor.execute("PRAGMA mmap_size=268435456")  # 256MB
-            
-            cursor.close()
+            try:
+                # 启用外键约束
+                cursor.execute("PRAGMA foreign_keys=ON")
+                
+                # 设置WAL模式以提高并发性能
+                cursor.execute("PRAGMA journal_mode=WAL")
+                
+                # 设置同步模式
+                cursor.execute("PRAGMA synchronous=NORMAL")
+                
+                # 设置缓存大小 (负数表示KB)
+                cursor.execute("PRAGMA cache_size=-64000")  # 64MB
+                
+                # 设置临时存储
+                cursor.execute("PRAGMA temp_store=MEMORY")
+                
+                # 设置mmap大小
+                cursor.execute("PRAGMA mmap_size=268435456")  # 256MB
+                
+                self._logger.debug("SQLite PRAGMA设置完成")
+                
+            except Exception as e:
+                self._logger.error(f"SQLite PRAGMA设置失败: {e}")
+            finally:
+                cursor.close()
     
     async def _create_tables(self):
         """创建所有数据库表"""
@@ -237,6 +254,20 @@ def set_global_engine(engine: DatabaseEngine):
     """
     global _global_engine
     _global_engine = engine
+
+
+def get_global_engine() -> DatabaseEngine:
+    """获取全局数据库引擎实例
+    
+    Returns:
+        全局数据库引擎实例
+        
+    Raises:
+        RuntimeError: 如果全局引擎未初始化
+    """
+    if _global_engine is None:
+        raise RuntimeError("全局数据库引擎未初始化，请先调用 set_global_engine()")
+    return _global_engine
 
 
 def get_session() -> AsyncSession:

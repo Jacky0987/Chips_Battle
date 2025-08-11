@@ -16,6 +16,7 @@ import weakref
 import inspect
 
 from .events import Event, TimeTickEvent, NewsPublishedEvent, UserActionEvent, MarketUpdateEvent
+from .game_time import GameTime
 
 
 class EventHandler:
@@ -49,7 +50,7 @@ class EventHandler:
             return None
         
         self.call_count += 1
-        self.last_called = datetime.now()
+        self.last_called = GameTime.now() if GameTime.is_initialized() else datetime.now()
         
         try:
             if self.is_async:

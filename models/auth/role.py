@@ -9,7 +9,7 @@ from sqlalchemy import Column, String, Boolean, Text, Integer, Table, ForeignKey
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from typing import List, Dict, Any, Optional
-from models.base import BaseModel
+from models.base import BaseModel, get_game_time_now
 
 
 # 用户-角色关联表
@@ -18,7 +18,7 @@ user_roles = Table(
     BaseModel.metadata,
     Column('user_id', String(36), ForeignKey('users.user_id'), primary_key=True),
     Column('role_id', String(36), ForeignKey('roles.role_id'), primary_key=True),
-    Column('assigned_at', DateTime, default=datetime.now, nullable=False),
+    Column('assigned_at', DateTime, default=get_game_time_now, nullable=False),
     Column('assigned_by', String(36), nullable=True),
     comment='用户角色关联表'
 )
@@ -30,7 +30,7 @@ role_permissions = Table(
     BaseModel.metadata,
     Column('role_id', String(36), ForeignKey('roles.role_id'), primary_key=True),
     Column('permission_id', String(36), ForeignKey('permissions.permission_id'), primary_key=True),
-    Column('granted_at', DateTime, default=datetime.now, nullable=False),
+    Column('granted_at', DateTime, default=get_game_time_now, nullable=False),
     Column('granted_by', String(36), nullable=True),
     comment='角色权限关联表'
 )
@@ -344,22 +344,22 @@ class Role(BaseModel):
     def activate(self):
         """激活角色"""
         self.is_active = True
-        self.updated_at = datetime.now()
+        self.updated_at = GameTime.now() if GameTime.is_initialized() else datetime.now()
     
     def deactivate(self):
         """停用角色"""
         self.is_active = False
-        self.updated_at = datetime.now()
+        self.updated_at = GameTime.now() if GameTime.is_initialized() else datetime.now()
     
     def set_as_default(self):
         """设置为默认角色"""
         self.is_default = True
-        self.updated_at = datetime.now()
+        self.updated_at = GameTime.now() if GameTime.is_initialized() else datetime.now()
     
     def unset_as_default(self):
         """取消默认角色"""
         self.is_default = False
-        self.updated_at = datetime.now()
+        self.updated_at = GameTime.now() if GameTime.is_initialized() else datetime.now()
     
     @classmethod
     def create_system_defaults(cls) -> List['Role']:

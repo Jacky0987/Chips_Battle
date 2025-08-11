@@ -9,8 +9,9 @@ from sqlalchemy import Column, String, DateTime, Boolean, Text, Integer, Float
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from typing import Optional, Dict, Any
-from models.base import BaseModel
+from models.base import BaseModel, get_game_time_now
 from models.bank.bank_card import BankCard
+from core.game_time import GameTime
 
 
 class User(BaseModel):
@@ -34,9 +35,9 @@ class User(BaseModel):
     is_verified = Column(Boolean, default=False, nullable=False, comment='是否已验证')
     is_banned = Column(Boolean, default=False, nullable=False, comment='是否被封禁')
     
-    # 时间信息
-    created_at = Column(DateTime, default=datetime.now, nullable=False, comment='创建时间')
-    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False, comment='更新时间')
+    # 时间字段
+    created_at = Column(DateTime, default=get_game_time_now, nullable=False, comment='创建时间')
+    updated_at = Column(DateTime, default=get_game_time_now, onupdate=get_game_time_now, nullable=False, comment='更新时间')
     last_login = Column(DateTime, nullable=True, comment='最后登录时间')
     last_activity = Column(DateTime, nullable=True, comment='最后活动时间')
     
@@ -137,12 +138,20 @@ class User(BaseModel):
     
     def update_activity(self):
         """更新最后活动时间"""
-        self.last_activity = datetime.now()
+        if GameTime.is_initialized():
+            self.last_activity = GameTime.now()
+        else:
+            # 如果游戏时间未初始化，使用实际时间
+            self.last_activity = GameTime.now() if GameTime.is_initialized() else datetime.now()
     
     def increment_login_count(self):
         """增加登录次数"""
         self.login_count += 1
-        self.last_login = datetime.now()
+        if GameTime.is_initialized():
+            self.last_login = GameTime.now()
+        else:
+            # 如果游戏时间未初始化，使用实际时间
+            self.last_login = GameTime.now() if GameTime.is_initialized() else datetime.now()
         self.update_activity()
     
     def increment_command_count(self):
@@ -203,7 +212,8 @@ class User(BaseModel):
         
         from datetime import timedelta
         timeout = timedelta(minutes=timeout_minutes)
-        return datetime.now() - self.last_activity < timeout
+        current_time = GameTime.now() if GameTime.is_initialized() else datetime.now()
+        return current_time - self.last_activity < timeout
     
     def get_status(self) -> str:
         """获取用户状态
@@ -276,7 +286,10 @@ class User(BaseModel):
             if field in allowed_fields and hasattr(self, field):
                 setattr(self, field, value)
         
-        self.updated_at = datetime.now()
+        if GameTime.is_initialized():
+            self.updated_at = GameTime.now()
+        else:
+            self.updated_at = GameTime.now() if GameTime.is_initialized() else datetime.now()
     
     def ban(self, reason: str = None):
         """封禁用户
@@ -286,27 +299,42 @@ class User(BaseModel):
         """
         self.is_banned = True
         self.is_active = False
-        self.updated_at = datetime.now()
+        if GameTime.is_initialized():
+            self.updated_at = GameTime.now()
+        else:
+            self.updated_at = GameTime.now() if GameTime.is_initialized() else datetime.now()
         # 这里可以记录封禁日志
     
     def unban(self):
         """解封用户"""
         self.is_banned = False
         self.is_active = True
-        self.updated_at = datetime.now()
+        if GameTime.is_initialized():
+            self.updated_at = GameTime.now()
+        else:
+            self.updated_at = GameTime.now() if GameTime.is_initialized() else datetime.now()
         # 这里可以记录解封日志
     
     def verify(self):
         """验证用户"""
         self.is_verified = True
-        self.updated_at = datetime.now()
+        if GameTime.is_initialized():
+            self.updated_at = GameTime.now()
+        else:
+            self.updated_at = GameTime.now() if GameTime.is_initialized() else datetime.now()
     
     def deactivate(self):
         """停用账户"""
         self.is_active = False
-        self.updated_at = datetime.now()
+        if GameTime.is_initialized():
+            self.updated_at = GameTime.now()
+        else:
+            self.updated_at = GameTime.now() if GameTime.is_initialized() else datetime.now()
     
     def activate(self):
         """激活账户"""
         self.is_active = True
-        self.updated_at = datetime.now()
+        if GameTime.is_initialized():
+            self.updated_at = GameTime.now()
+        else:
+            self.updated_at = GameTime.now() if GameTime.is_initialized() else datetime.now()

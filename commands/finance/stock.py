@@ -103,11 +103,13 @@ class StockCommand(FinanceCommand):
         
         for stock in stocks:
             # 计算涨跌幅 (简化计算，实际应该基于历史价格)
-            price_change = ((float(stock.current_price) - float(stock.ipo_price)) / float(stock.ipo_price)) * 100
+            current_price = stock.current_price or 0
+            ipo_price = stock.ipo_price or 1  # 避免除零错误
+            price_change = ((float(current_price) - float(ipo_price)) / float(ipo_price)) * 100
             change_str = f"{price_change:+.1f}%"
             change_color = "📈" if price_change >= 0 else "📉"
             
-            price_str = f"{float(stock.current_price):.2f}"
+            price_str = f"{float(current_price):.2f}"
             
             output.append(f"│ {stock.ticker:<8} │ {stock.name:<15} │ {stock.sector:<6} │ {price_str:>8} JCC │ {change_color}{change_str:>6} │")
         
@@ -124,22 +126,26 @@ class StockCommand(FinanceCommand):
             return f"❌ 股票代码 '{ticker}' 不存在"
         
         # 计算涨跌幅
-        price_change = ((float(stock.current_price) - float(stock.ipo_price)) / float(stock.ipo_price)) * 100
+        current_price = stock.current_price or 0
+        ipo_price = stock.ipo_price or 1  # 避免除零错误
+        market_cap = stock.market_cap or 0
+        price_change = ((float(current_price) - float(ipo_price)) / float(ipo_price)) * 100
         change_str = f"{price_change:+.1f}%"
         change_color = "📈" if price_change >= 0 else "📉"
         
-        market_cap_str = self.currency_service.format_amount(float(stock.market_cap), 'JCC')
+        market_cap_str = self.currency_service.format_amount(float(market_cap), 'JCC')
         
         output = []
         output.append("╭─────────────────────────────────────────────────────────────╮")
         output.append(f"│ 📊 {stock.name} ({stock.ticker})                            │")
         output.append("├─────────────────────────────────────────────────────────────┤")
-        output.append(f"│ 💰 当前价格: {float(stock.current_price):>8.2f} JCC                      │")
-        output.append(f"│ 📈 IPO价格:  {float(stock.ipo_price):>8.2f} JCC                      │")
+        output.append(f"│ 💰 当前价格: {float(current_price):>8.2f} JCC                      │")
+        output.append(f"│ 📈 IPO价格:  {float(ipo_price):>8.2f} JCC                      │")
         output.append(f"│ 📊 涨跌幅:   {change_color} {change_str:>8}                           │")
         output.append(f"│ 🏭 行业:     {stock.sector:<20}                      │")
         output.append(f"│ 💎 市值:     {market_cap_str:>20}                │")
-        output.append(f"│ ⚡ 波动率:   {float(stock.volatility)*100:>6.1f}%                        │")
+        volatility = stock.volatility or 0
+        output.append(f"│ ⚡ 波动率:   {float(volatility)*100:>6.1f}%                        │")
         
         if stock.description:
             output.append("├─────────────────────────────────────────────────────────────┤")

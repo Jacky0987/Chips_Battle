@@ -19,7 +19,7 @@ from services.news_service import NewsService
 class CommandRegistry:
     """命令注册器"""
     
-    def __init__(self, auth_service=None, app_service=None, news_service=None, stock_service=None):
+    def __init__(self, auth_service=None, app_service=None, news_service=None, stock_service=None, time_service=None):
         self._commands: Dict[str, Command] = {}
         self._aliases: Dict[str, str] = {}  # alias -> command_name
         self._categories: Dict[str, List[str]] = {}  # category -> [command_names]
@@ -28,6 +28,7 @@ class CommandRegistry:
         self._app_service = app_service
         self._news_service = news_service
         self._stock_service = stock_service
+        self._time_service = time_service
     
     async def discover_commands(self, commands_dir: str = None):
         """自动发现并注册命令
@@ -98,10 +99,16 @@ class CommandRegistry:
                                 command_instance = obj(auth_service=self._auth_service)
                             elif name == 'MarketCommand' and self._app_service:
                                 command_instance = obj(app_service=self._app_service)
+                            elif name == 'AppCommand' and self._app_service:
+                                command_instance = obj(app_service=self._app_service)
                             elif name == 'NewsCommand' and self._news_service:
                                 command_instance = obj(news_service=self._news_service)
                             elif name == 'JCMarketCommand' and self._stock_service:
                                 command_instance = obj(stock_service=self._stock_service)
+                            elif name == 'TimeCommands':
+                                # TimeCommands需要特殊处理，在GameTime设置后再实例化
+                                # 这里跳过，避免在初始化过程中出现事件循环问题
+                                continue
                             else:
                                 command_instance = obj()
                             self.register_command(command_instance)
