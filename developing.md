@@ -1,5 +1,4 @@
-核心世界观
-玩家并非凡人，而是一位在未来“芯片战争”的终极对决中失败，却意外重生回到战争黎明期的“先知”。凭借对未来几十年的重大科技突破、市场脉络、关键人才的记忆，玩家拥有了改写历史、铸造传奇的唯一机会。
+
 主要货币为J$
 所有文件夹与文件名不允许带复数s。
 架构核心原则
@@ -8,16 +7,6 @@
 - 数据访问层 (Data Access Layer): 业务逻辑与数据库操作将通过严格的DAL和工作单元(Unit of Work)模式进行解耦。
 - 事件驱动 (Event-Driven): 系统内部的关键活动将通过一个全局的事件总线进行广播和监听，实现模块间的低耦合通信。
 
-当前实现进度总览
-- 第一章：创世与核心系统 (Genesis & Core Systems)：完成度 90%
-- 第二章：神谕与身份 (The Oracle & Identity)：完成度 80%
-- 第2章 Extra：应用市场 (App Market)：完成度 85%
-- 第三章：金融中枢 (The Financial Hub)：完成度 90%
-- 第四章：JCMarket 初体验 (First Steps in JCMarket)：完成度 85%
-- 第三部·第五章：应用市场与高级交易 (App Market & Advanced Trading)：完成度 65%
-- 第三部·第六章：家园体系与实物资产 (The Home System & Physical Assets)：完成度 40%
-- 第四部·第七章：从车库到巨头 (From Garage to Goliath)：完成度 20%
-- 总体进度：72%
 
 目录（按优先级与阶段）
 - 第一部：世界基石 (The Foundation)
